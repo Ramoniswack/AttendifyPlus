@@ -1,55 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <title>Attentify+</title>
-</head>
-<body>
-    
-    <div class="right-side"></div>
-    <div class="container">
-    <img src="logo.png" class="logo" alt="Logo">
-        <h1>LOGIN</h1>
+<!-- <?php
+session_start();
 
-<form action="#" method="POST" autocomplete="off">
-        <div class="form">
-           <input type="text" name="username" class="textfield" placeholder="Username">
-           <input type="password" name="password" class="textfield" placeholder="Password">  
-        <div class="forgetpassword"><a href="#" class="link" onclick="message()"> Forget Password ?</a></div>
-        <input type="submit" name="login" value="Login" class="btn">
-        <div class="signup">New Member? <a href="#" class="link">SignUp Here</a> </div>
-    </div>
-    </div>
-</form>
+if($_SERVER["REQUEST_METHOD"]=="POST"){
+  
+  $con=mysqli_connect("localhost","root","", "attendifyplus_db");
 
-<script>
-    function message(){
-    alert("Remember Password");
-    }
-    </script>
-</body>
-</html>
+  if(!$con){
+      die("Connection Failed:".mysqli_connect_error());
+  }
 
 
+  
 
-<?php
-include("connection.php");
-if(isset($_POST['login'])){
-    $username=$_POST['username'];
-    $pwd=$_POST['password'];
-    $query="SELECT * FROM form WHERE username='$username' && password='$pwd'";
-    $data=mysqli_query($conn, $query);
-    
-    $total=mysqli_num_rows($data);
-    //echo $total;
+  $Name=$_POST['Name'];
+  $Email=$_POST['email'];
+  $Password=$_POST['password'];
+  $Role=$_POST['role'];
+  $Status=$_POST['status'];
 
-    if($total == 1){
-      echo "login successful";
-    }
-    else{
-        echo "login failed";
-    }
+
+  $query = "SELECT * FROM login_tbl WHERE Email='$Email' AND Status='active'";
+
+  $result = mysqli_query($con, $query);
+  // sn name     email    password   role  status
+  // 1 Namrata a@mail.com pass      admin active
+  $user = mysqli_fetch_assoc($result);
+
+
+  if( $user && $Password === $user['Password'])
+  {
+      $_SESSION['user_id'] = $user['UserID'];
+      $_SESSION['role']= $user['role'];
+
+     
+      if($user['role'] == 'student')
+      {
+          header("Location: student_dashboard.php");
+      }
+      else{
+          header("Location: teacher_dashboard.php");
+      }
+      exit;
+
+  }
+  else{
+      echo "Invalid login credentials.";
+  }
+
+
 }
+
+
 ?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ -->
