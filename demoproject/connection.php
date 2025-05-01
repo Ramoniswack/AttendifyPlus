@@ -8,15 +8,12 @@ $conn= "";
 try{
 $conn= mysqli_connect($db_server, $db_user, $db_password, $db_name);
 }
-catch(mysql_sql_exception){
+catch(mysqli_sql_exception $e){
     echo "could not connect";
 }
 if (!$conn){
-    echo "connection" ."<br>";
+    echo "no connection" ."<br>";
     
 }
-    else{
-        echo "no connection";
-    }
-
+    
 ?>
