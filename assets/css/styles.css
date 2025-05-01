@@ -1,88 +1,59 @@
-/* style.css */
-
-/* Reset some default styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* Basic body style */
-body {
+/* Color Variables */
+:root {
+    --primary-dark: #362E54;
+    --primary-accent: #5A5183;
+    --text-muted: #868EBB;
+    --highlight: #7A7143;
+    --highlight-light: #AC9E74;
+  }
+  
+  /* Body base */
+  body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f5f5f5;
-}
-
-/* Navigation bar */
-nav {
-    background-color: #4CAF50;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.8rem 2rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Logo */
-.logo {
-    color: white;
-    font-size: 1.8rem;
+  }
+  
+  /* Navbar */
+  #mainNavbar {
+    background-color: var(--primary-dark);
+  }
+  
+  .logo {
+    color: var(--highlight-light);
     font-weight: bold;
-    cursor: pointer;
-}
-
-/* Navigation Links */
-nav ul {
-    list-style: none;
-    display: flex;
-    gap: 2rem;
-}
-
-nav ul li a {
-    color: white;
-    text-decoration: none;
-    font-size: 1rem;
+    font-size: 1.5rem;
+  }
+  
+  .navbar-nav .nav-link {
+    color: var(--text-muted);
+    font-weight: 500;
     transition: color 0.3s ease;
-}
-
-nav ul li a:hover {
-    color: #d4f5d0;
-}
-
-/* Buttons */
-.navbtns {
-    display: flex;
-    gap: 1rem;
-}
-
-button.signup,
-button.login {
-    padding: 0.5rem 1.2rem;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button.signup {
-    background-color: white;
-    color: #4CAF50;
-    border: 2px solid white;
-}
-
-button.signup:hover {
-    background-color: #d4f5d0;
-    color: #4CAF50;
-}
-
-button.login {
-    background-color: #ffffff44;
+  }
+  
+  .navbar-nav .nav-link:hover {
+    color: var(--highlight-light);
+  }
+  
+  /* Buttons */
+  .signup {
+    background-color: var(--highlight);
     color: white;
-    border: 2px solid white;
-}
-
-button.login:hover {
-    background-color: #d4f5d0;
-    color: #4CAF50;
-}
+    border: 2px solid var(--highlight);
+  }
+  
+  .signup:hover {
+    background-color: var(--highlight-light);
+    color: var(--primary-dark);
+  }
+  
+  .login {
+    background-color: transparent;
+    color: var(--highlight-light);
+    border: 2px solid var(--highlight-light);
+  }
+  
+  .login:hover {
+    background-color: var(--highlight-light);
+    color: var(--primary-dark);
+  }
+  

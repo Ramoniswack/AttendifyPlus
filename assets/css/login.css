@@ -1,0 +1,60 @@
+:root {
+    --main-bg: #362E54;
+    --card-bg: #5A5183;
+    --input-bg: #868EBB;
+    --btn-bg: #7A7143;
+    --btn-hover: #AC9E74;
+}
+
+.bg-main {
+    background-color: var(--main-bg);
+}
+
+.login-card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    color: white;
+}
+
+.input-style {
+    background-color: var(--input-bg);
+    border: none;
+    border-radius: 0 8px 8px 0;
+    color: #000;
+}
+
+.input-group-text {
+    background-color: var(--input-bg);
+    border: none;
+    border-radius: 8px 0 0 8px;
+    color: #000;
+}
+
+.input-style::placeholder {
+    color: #333;
+}
+
+.btn-login {
+    background-color: var(--btn-bg);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.btn-login:hover {
+    background-color: var(--btn-hover);
+    color: white;
+}
+
+.forgot-link {
+    color: #ddd;
+    font-size: 0.9rem;
+}
+
+.forgot-link:hover {
+    color: #fff;
+}
