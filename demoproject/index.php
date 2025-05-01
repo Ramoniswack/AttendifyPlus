@@ -33,12 +33,13 @@
 </html>
 
 
+
 <?php
 include("connection.php");
-if(isset($_post['login'])){
-    $username=$_post['username'];
-    $pwd=$_post['password'];
-    $query="SELECT * FROM form WHERE email='$username' && password='$pwd'";
+if(isset($_POST['login'])){
+    $username=$_POST['username'];
+    $pwd=$_POST['password'];
+    $query="SELECT * FROM form WHERE username='$username' && password='$pwd'";
     $data=mysqli_query($conn, $query);
     
     $total=mysqli_num_rows($data);
