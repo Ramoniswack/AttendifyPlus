@@ -3,7 +3,7 @@ body{
     height: 100vh;
     margin: 0;
     font-family: Arial, sans-serif;
-  background-color: #5A5183; 
+    background-color: #5A5183; 
   
 
 }
@@ -17,7 +17,7 @@ body{
 
 }
 .container{
-    width: 30%;
+  width: 30%;
   height: 100%;
   background-color: white;
   padding: 30px 20px;
@@ -35,7 +35,7 @@ body{
 .container h1{
     text-align: center;
     padding-bottom: 20px;
-    border-bottom: 1px solid silver;
+    border-bottom: 2px solid silver;
     color: #362E54;
 }
 .form{
