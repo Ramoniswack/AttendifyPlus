@@ -24,7 +24,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION['UserID'] = $userID;
             $_SESSION['Username'] = $username;
             $_SESSION['Role'] = $role;
+            header("Location: views/dashboard.php");
+            exit;
             echo " Login success!";
+          
         } else {
             echo " Incorrect password.";
         }
