@@ -1,60 +1,85 @@
 :root {
-    --main-bg: #362E54;
-    --card-bg: #5A5183;
-    --input-bg: #868EBB;
-    --btn-bg: #7A7143;
-    --btn-hover: #AC9E74;
+  --bg-light: linear-gradient(to right, #f0f4f8, #e8f0fe);
+  --bg-dark: #121212;
+  --card-light: #ffffff;
+  --card-dark: #1f1f1f;
+  --text-light: #333;
+  --text-dark: #eee;
+  --accent-light: #1A73E8;
+  --accent-dark: #00ffc8;
 }
 
-.bg-main {
-    background-color: var(--main-bg);
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg-light);
+  color: var(--text-light);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  transition: all 0.3s ease;
+}
+
+body.dark-mode {
+  background: var(--bg-dark);
+  color: var(--text-dark);
 }
 
 .login-card {
-    background-color: var(--card-bg);
-    border-radius: 12px;
-    width: 100%;
-    max-width: 360px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    color: white;
+  background: var(--card-light);
+  padding: 2.5rem;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  max-width: 420px;
+  width: 100%;
+  transition: all 0.3s ease;
 }
 
-.input-style {
-    background-color: var(--input-bg);
-    border: none;
-    border-radius: 0 8px 8px 0;
-    color: #000;
+body.dark-mode .login-card {
+  background: var(--card-dark);
 }
 
-.input-group-text {
-    background-color: var(--input-bg);
-    border: none;
-    border-radius: 8px 0 0 8px;
-    color: #000;
+.login-title {
+  color: var(--accent-light);
+  margin-bottom: 1rem;
 }
 
-.input-style::placeholder {
-    color: #333;
+body.dark-mode .login-title {
+  color: var(--accent-dark);
 }
 
-.btn-login {
-    background-color: var(--btn-bg);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
+.form-control {
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  color: inherit;
 }
 
-.btn-login:hover {
-    background-color: var(--btn-hover);
-    color: white;
+body.dark-mode .form-control {
+  background-color: #2b2b2b;
+  border-color: #444;
+  color: #eee;
 }
 
-.forgot-link {
-    color: #ddd;
-    font-size: 0.9rem;
+.btn-primary {
+  background-color: var(--accent-light);
+  border: none;
+  font-weight: bold;
 }
 
-.forgot-link:hover {
-    color: #fff;
+body.dark-mode .btn-primary {
+  background-color: var(--accent-dark);
+  color: #000;
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+}
+
+.logo {
+  width: 170px;
+  display: block;
+  margin: 0 auto 10px;
 }
