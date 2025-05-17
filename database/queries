@@ -1,0 +1,91 @@
+-- ==========================================
+-- ✅ Attendify+ Complete Data Inserts (Admins, Teachers, Students, Batches, Subjects)
+-- ==========================================
+
+-- DEPARTMENTS
+INSERT INTO departments_tbl (DepartmentName)
+VALUES ('BCA'), ('BBA');
+
+-- LOGIN ACCOUNTS
+INSERT INTO login_tbl (Username, Password, Email, Role) VALUES
+-- Admins
+('admin', 'admin123', 'admin@mail.com', 'admin'),
+-- Teachers
+('t1', 'pass123', 't1@mail.com', 'teacher'),
+('t2', 'pass123', 't2@mail.com', 'teacher'),
+-- Students
+('s1', 'pass123', 's1@mail.com', 'student'),
+('s2', 'pass123', 's2@mail.com', 'student'),
+('s3', 'pass123', 's3@mail.com', 'student'),
+('s4', 'pass123', 's4@mail.com', 'student'),
+('s5', 'pass123', 's5@mail.com', 'student');
+
+-- ADMIN PROFILE
+INSERT INTO admin_tbl (LoginID, FullName, Designation, Phone)
+SELECT UserID, 'AdminFullname', 'Principal', '9800000000' FROM login_tbl WHERE Username = 'admin';
+
+-- BATCHES (with semester column)
+INSERT INTO batches_tbl (BatchName, DepartmentID, Semester)
+SELECT '2022F', d.DepartmentID, 1 FROM departments_tbl d
+UNION ALL SELECT '2022S', d.DepartmentID, 2 FROM departments_tbl d
+UNION ALL SELECT '2023F', d.DepartmentID, 3 FROM departments_tbl d
+UNION ALL SELECT '2023S', d.DepartmentID, 4 FROM departments_tbl d;
+
+-- SUBJECTS
+INSERT INTO subjects_tbl (SubjectName, DepartmentID, BatchID)
+SELECT subj.SubjectName, d.DepartmentID, b.BatchID
+FROM (
+  SELECT '2022F' AS BatchName, 'Data Structures' AS SubjectName UNION ALL
+  SELECT '2022S', 'Web Development' UNION ALL
+  SELECT '2023F', 'DBMS' UNION ALL
+  SELECT '2023S', 'Operating Systems' UNION ALL
+
+  SELECT '2022F', 'Accounting Basics' UNION ALL
+  SELECT '2022S', 'Marketing' UNION ALL
+  SELECT '2023F', 'Finance' UNION ALL
+  SELECT '2023S', 'HR Management'
+) subj
+JOIN departments_tbl d 
+  ON (d.DepartmentName = 'BCA' AND subj.SubjectName IN ('Data Structures','Web Development','DBMS','Operating Systems'))
+  OR (d.DepartmentName = 'BBA' AND subj.SubjectName IN ('Accounting Basics','Marketing','Finance','HR Management'))
+JOIN batches_tbl b ON b.BatchName = subj.BatchName AND b.DepartmentID = d.DepartmentID;
+
+-- TEACHER PROFILES
+INSERT INTO teachers_tbl (LoginID, FullName, Phone, DepartmentID)
+SELECT UserID, 'Ramesh', '9800000001', d.DepartmentID FROM login_tbl l
+JOIN departments_tbl d ON d.DepartmentName = 'BCA' WHERE l.Username = 't1'
+UNION ALL
+SELECT UserID, 'Rishi', '9800000002', d.DepartmentID FROM login_tbl l
+JOIN departments_tbl d ON d.DepartmentName = 'BBA' WHERE l.Username = 't2';
+
+-- TEACHER-SUBJECT MAPPING
+INSERT INTO teacher_subject_tbl (TeacherID, SubjectID)
+SELECT t.LoginID, s.SubjectID
+FROM teachers_tbl t
+JOIN login_tbl l ON t.LoginID = l.UserID
+JOIN subjects_tbl s ON (
+    (l.Username = 't1' AND s.SubjectName IN ('Data Structures','Web Development','DBMS')) OR
+    (l.Username = 't2' AND s.SubjectName IN ('Accounting Basics','Marketing','HR Management'))
+);
+
+-- STUDENT PROFILES
+INSERT INTO students_tbl (LoginID, FullName, DepartmentID, BatchID, RollNo, JoinYear)
+SELECT UserID, 'Ramon', d.DepartmentID, b.BatchID, '2022F_BCA_001', 2022
+FROM login_tbl l JOIN departments_tbl d ON d.DepartmentName = 'BCA'
+JOIN batches_tbl b ON b.BatchName = '2022F' AND b.DepartmentID = d.DepartmentID WHERE l.Username = 's1'
+UNION ALL
+SELECT UserID, 'Namrata', d.DepartmentID, b.BatchID, '2022S_BCA_002', 2022
+FROM login_tbl l JOIN departments_tbl d ON d.DepartmentName = 'BCA'
+JOIN batches_tbl b ON b.BatchName = '2022S' AND b.DepartmentID = d.DepartmentID WHERE l.Username = 's2'
+UNION ALL
+SELECT UserID, 'Binod', d.DepartmentID, b.BatchID, '2023F_BCA_003', 2023
+FROM login_tbl l JOIN departments_tbl d ON d.DepartmentName = 'BCA'
+JOIN batches_tbl b ON b.BatchName = '2023F' AND b.DepartmentID = d.DepartmentID WHERE l.Username = 's3'
+UNION ALL
+SELECT UserID, 'Subash', d.DepartmentID, b.BatchID, '2022F_BBA_001', 2022
+FROM login_tbl l JOIN departments_tbl d ON d.DepartmentName = 'BBA'
+JOIN batches_tbl b ON b.BatchName = '2022F' AND b.DepartmentID = d.DepartmentID WHERE l.Username = 's4'
+UNION ALL
+SELECT UserID, 'Rikita', d.DepartmentID, b.BatchID, '2022S_BBA_002', 2022
+FROM login_tbl l JOIN departments_tbl d ON d.DepartmentName = 'BBA'
+JOIN batches_tbl b ON b.BatchName = '2022S' AND b.DepartmentID = d.DepartmentID WHERE l.Username = 's5';

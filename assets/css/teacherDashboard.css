@@ -203,3 +203,41 @@ body.sidebar-open .dashboard-container {
 
   }
 }
+
+
+.dashboard-container {
+  background: var(--bg-light);
+  color: var(--text-light);
+  padding-top: 90px;
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .dashboard-container {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+
+/* SELECT2 Dark Mode Fix */
+body.dark-mode .select2-container--default .select2-selection--multiple {
+  background-color: var(--card-dark);
+  color: var(--text-dark);
+  border-color: #444;
+}
+
+body.dark-mode .select2-container--default .select2-selection--multiple .select2-selection__choice {
+  background-color: #2a2a2a;
+  color: var(--text-dark);
+  border: 1px solid #555;
+}
+
+body.dark-mode .select2-container--default .select2-results__option {
+  background-color: var(--card-dark);
+  color: var(--text-dark);
+}
+
+body.dark-mode .select2-container--default .select2-results__option--highlighted {
+  background-color: var(--accent-dark);
+  color: #000;
+}
+

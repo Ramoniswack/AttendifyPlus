@@ -28,13 +28,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $role = strtolower($role);
 
             if ($role === 'admin') {
-                header("Location: dashboard.php");
+                header("Location: dashboard_admin.php");
                 exit;
             } elseif ($role === 'teacher') {
-                header("Location: teacher_dashboard.php");
+                header("Location: dashboard_teacher.php");
                 exit;
             } elseif ($role === 'student') {
-                header("Location: student_dashboard.php");
+                header("Location: dashboard_student.php");
                 exit;
             } else {
                 $error = "Unknown user role.";

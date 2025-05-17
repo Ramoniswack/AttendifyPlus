@@ -33,7 +33,7 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') 
 </head>
 
 <body>
-  <?php include 'sidebar.php'; ?>
+  <?php include 'sidebar_teacher.php'; ?>
 
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
     <div class="container-fluid">
@@ -53,7 +53,7 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') 
     <!-- Heading and Attendance Shortcut -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
       <h2 class="m-0">Teacher Dashboard</h2>
-      <a href="take_attendance.php" class="btn btn-sm btn-success">Quick Attendance</a>
+      <a href="attendance.php" class="btn btn-sm btn-success">Quick Attendance</a>
     </div>
 
     <!-- Charts Section -->
