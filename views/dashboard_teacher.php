@@ -1,219 +1,291 @@
 <?php
 session_start();
-
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') {
-    header("Location: login.php");
-    exit();
+  header("Location: login.php");
+  exit();
 }
-
-$weeklyAttendance = [85, 82, 78, 88, 90];
-$assignmentSubmissions = [32, 45, 38, 50];
-$engagement = ['Reading' => 40, 'Assignments' => 35, 'Attendance' => 25];
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teacher Dashboard | Attendify+</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/teacherDashboard.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../assets/js/lucide.min.js"></script>
   <style>
     body {
-      padding-top: 70px;
+      font-family: 'Poppins', sans-serif;
+      background: #f8f9fa;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 220px;
-      background-color: var(--primary-dark);
-      padding-top: 70px;
-      z-index: 1000;
-      transition: transform 0.3s ease;
+
+    body.dark-mode {
+      background: #121212;
+      color: #f1f1f1;
     }
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
+
+    .card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     }
-    .sidebar ul li a {
-      display: block;
-      padding: 0.75rem 1.5rem;
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: background 0.3s, color 0.3s;
-    }
-    .sidebar ul li a:hover {
-      background-color: var(--highlight);
-      color: white;
-    }
-    .sidebar-open .sidebar {
-      transform: translateX(0);
-    }
-    .sidebar.collapsed {
-      transform: translateX(-100%);
-    }
-    .dashboard-container {
-      margin-left: 240px;
-      padding: 2rem;
-      transition: margin-left 0.3s ease;
-    }
-    .dashboard-container.expanded {
-      margin-left: 0;
-    }
+
     .equal-height-card {
       height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      border: none;
-      border-radius: 1rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
-    .navbar {
-      background-color: var(--primary-dark);
+
+    .card i {
+      width: 36px;
+      height: 36px;
+      margin-bottom: 10px;
+      display: inline-block;
     }
-    .navbar-brand {
-      color: var(--highlight-light);
+
+    .card h5 {
+      font-size: 1.1rem;
+      margin-top: 0.5rem;
+    }
+
+    .text-success {
+      color: #10b981 !important;
+    }
+
+    .text-danger {
+      color: #ef4444 !important;
+    }
+
+    .doughnut-container canvas {
+      max-width: 150px;
+      margin: 0 auto;
     }
   </style>
 </head>
+
 <body>
+  <?php include 'sidebar_teacher.php'; ?>
 
-<?php include 'sidebar_teacher.php'; ?>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container-fluid">
+      <button class="btn text-white me-2" id="sidebarToggle">☰</button>
+      <a class="navbar-brand" href="#">Attendify+ | Teacher</a>
+      <div class="d-flex align-items-center gap-2 ms-auto flex-wrap">
+        <span class="navbar-text text-white">Welcome, <?php echo htmlspecialchars($_SESSION['Username']); ?></span>
+        <button class="btn btn-outline-light btn-sm" onclick="toggleTheme()" title="Toggle Theme">Theme</button>
+        <a href="../logout.php" class="btn btn-outline-light btn-sm">Logout</a>
+      </div>
+    </div>
+  </nav>
 
-<nav class="navbar navbar-expand-lg fixed-top shadow">
-  <div class="container-fluid">
-    <button class="btn text-white me-2" id="sidebarToggle"><i class="bi bi-list"></i></button>
-    <a class="navbar-brand" href="#">Attendify+ | Teacher</a>
-    <div class="ms-auto d-flex align-items-center gap-2">
-      <span class="navbar-text text-white">Welcome, <?php echo htmlspecialchars($_SESSION['Username']); ?></span>
-      <button class="btn btn-outline-light btn-sm" onclick="toggleTheme()" title="Toggle Theme">Theme</button>
-      <a href="../logout.php" class="btn btn-outline-light btn-sm">Logout</a>
+  <div class="container dashboard-container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h2 class="m-0">Teacher Dashboard</h2>
+      <a href="attendance.php" class="btn btn-success btn-sm">Quick Attendance</a>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-3">
+        <div class="card text-center p-4">
+          <i data-lucide="users"></i>
+          <h6>Total Students</h6>
+          <h3>156</h3>
+          <small class="text-success">+12% this week</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center p-4">
+          <i data-lucide="calendar"></i>
+          <h6>Avg Attendance</h6>
+          <h3>84.6%</h3>
+          <small class="text-success">+2.1%</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center p-4">
+          <i data-lucide="file-text"></i>
+          <h6>Assignments Due</h6>
+          <h3>8</h3>
+          <small class="text-danger">-3 from last week</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center p-4">
+          <i data-lucide="book-open"></i>
+          <h6>Course Progress</h6>
+          <h3>67%</h3>
+          <small class="text-success">+5%</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <div class="card p-4 h-100">
+          <h5 class="mb-3">Weekly Attendance %</h5>
+          <canvas id="attendanceChart"></canvas>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card p-4 h-100">
+          <h5 class="mb-3">Assignment Submission Rate</h5>
+          <canvas id="assignmentChart"></canvas>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card p-4">
+          <h5 class="mb-4">Student Engagement Overview</h5>
+          <div class="row text-center">
+            <div class="col-md-4 mb-4 doughnut-container">
+              <h6>Reading</h6>
+              <canvas id="readingChart"></canvas>
+            </div>
+            <div class="col-md-4 mb-4 doughnut-container">
+              <h6>Assignment Completion</h6>
+              <canvas id="completionChart"></canvas>
+            </div>
+            <div class="col-md-4 mb-4 doughnut-container">
+              <h6>Class Attendance</h6>
+              <canvas id="classChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4 mt-5">
+      <div class="col">
+        <div class="card text-center p-4 equal-height-card">
+          <i data-lucide="graduation-cap"></i>
+          <h5>My Subjects & Students</h5>
+          <p class="mb-3">View all students in your faculty/semester/subject.</p>
+          <a href="my_subjects_students.php" class="btn btn-outline-primary btn-sm mt-auto">View</a>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card text-center p-4 equal-height-card">
+          <i data-lucide="upload"></i>
+          <h5>Upload Slides</h5>
+          <p class="mb-3">Upload your teaching materials for students.</p>
+          <a href="upload_slides.php" class="btn btn-outline-primary btn-sm mt-auto">Upload</a>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card text-center p-4 equal-height-card">
+          <i data-lucide="clipboard-list"></i>
+          <h5>Attendance Reports</h5>
+          <p class="mb-3">View attendance for your subject classes.</p>
+          <a href="attendance_report.php" class="btn btn-outline-primary btn-sm mt-auto">View</a>
+        </div>
+      </div>
     </div>
   </div>
-</nav>
 
-<div class="container-fluid dashboard-container" id="mainContent">
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h2 class="fw-bold">Teacher Dashboard</h2>
-    <a href="attendance.php" class="btn btn-success">Quick Attendance</a>
-  </div>
+  <script>
+    lucide.createIcons();
 
-  <div class="row g-4">
-    <div class="col-md-6">
-      <div class="card p-4 equal-height-card">
-        <h5 class="mb-3">Weekly Attendance</h5>
-        <canvas id="attendanceChart"></canvas>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card p-4 equal-height-card">
-        <h5 class="mb-3">Assignment Submissions</h5>
-        <canvas id="assignmentChart"></canvas>
-      </div>
-    </div>
-    <div class="col-12">
-      <div class="card p-4 equal-height-card mx-auto" style="max-width: 600px;">
-        <h5 class="mb-3">Engagement Overview</h5>
-        <canvas id="engagementChart" style="max-height: 300px;"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="row row-cols-1 row-cols-md-3 g-4 mt-5">
-    <div class="col">
-      <div class="card p-4 text-center equal-height-card">
-        <i class="bi bi-book fs-1 mb-2 text-primary"></i>
-        <h6 class="fw-semibold">Subjects & Students</h6>
-        <a href="my_subjects_students.php" class="btn btn-primary btn-sm mt-auto">View</a>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card p-4 text-center equal-height-card">
-        <i class="bi bi-upload fs-1 mb-2 text-primary"></i>
-        <h6 class="fw-semibold">Upload Slides</h6>
-        <a href="upload_slides.php" class="btn btn-primary btn-sm mt-auto">Upload</a>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card p-4 text-center equal-height-card">
-        <i class="bi bi-file-earmark-check fs-1 mb-2 text-primary"></i>
-        <h6 class="fw-semibold">Attendance Reports</h6>
-        <a href="attendance_report.php" class="btn btn-primary btn-sm mt-auto">View</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script src="../assets/js/login.js"></script>
-<script>
-  const toggleBtn = document.getElementById("sidebarToggle");
-  const sidebar = document.getElementById("sidebar");
-  const content = document.getElementById("mainContent");
-
-  toggleBtn.addEventListener("click", () => {
-    sidebar.classList.toggle("collapsed");
-    content.classList.toggle("expanded");
-  });
-
-  const attendanceData = <?php echo json_encode($weeklyAttendance); ?>;
-  new Chart(document.getElementById("attendanceChart"), {
-    type: "line",
-    data: {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-      datasets: [{
-        label: "Attendance %",
-        data: attendanceData,
-        borderColor: "#1cc88a",
-        backgroundColor: "rgba(28,200,138,0.2)",
-        tension: 0.4,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, max: 100 } }
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
     }
-  });
 
-  const submissionData = <?php echo json_encode($assignmentSubmissions); ?>;
-  new Chart(document.getElementById("assignmentChart"), {
-    type: "bar",
-    data: {
-      labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-      datasets: [{
-        label: "Submissions",
-        data: submissionData,
-        backgroundColor: "#f6c23e"
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true } }
-    }
-  });
+    window.onload = () => {
+      requestAnimationFrame(() => {
+        if (localStorage.getItem('theme') === 'dark') {
+          document.body.classList.add('dark-mode');
+        }
+      });
+    };
 
-  const engagementData = <?php echo json_encode(array_values($engagement)); ?>;
-  new Chart(document.getElementById("engagementChart"), {
-    type: "doughnut",
-    data: {
-      labels: <?php echo json_encode(array_keys($engagement)); ?>,
-      datasets: [{
-        data: engagementData,
-        backgroundColor: ["#00ffc8", "#1A73E8", "#FF6384"]
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: "bottom" } }
-    }
-  });
-</script>
+    document.getElementById("sidebarToggle").addEventListener("click", function () {
+      const sidebar = document.getElementById("sidebar");
+      if (sidebar) {
+        sidebar.classList.toggle("active");
+        document.body.classList.toggle("sidebar-open");
+      }
+    });
+
+    new Chart(document.getElementById("attendanceChart"), {
+      type: "line",
+      data: {
+        labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+        datasets: [{
+          label: "Attendance %",
+          data: [85, 82, 78, 88, 90],
+          borderColor: "#3b82f6",
+          backgroundColor: "rgba(59,130,246,0.2)",
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: true } },
+        scales: { y: { beginAtZero: true, max: 100 } }
+      }
+    });
+
+    new Chart(document.getElementById("assignmentChart"), {
+      type: "bar",
+      data: {
+        labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+        datasets: [{
+          label: "Submissions",
+          data: [32, 45, 38, 50],
+          backgroundColor: "#8b5cf6"
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: true } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    new Chart(document.getElementById("readingChart"), {
+      type: "doughnut",
+      data: {
+        labels: ["Read", "Unread"],
+        datasets: [{
+          data: [65, 35],
+          backgroundColor: ["#10b981", "#e5e7eb"]
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+    });
+
+    new Chart(document.getElementById("completionChart"), {
+      type: "doughnut",
+      data: {
+        labels: ["Completed", "Pending"],
+        datasets: [{
+          data: [72, 28],
+          backgroundColor: ["#3b82f6", "#e5e7eb"]
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+    });
+
+    new Chart(document.getElementById("classChart"), {
+      type: "doughnut",
+      data: {
+        labels: ["Present", "Absent"],
+        datasets: [{
+          data: [80, 20],
+          backgroundColor: ["#f59e0b", "#e5e7eb"]
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+    });
+  </script>
 </body>
+
 </html>
