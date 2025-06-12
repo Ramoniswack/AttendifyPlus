@@ -1,56 +1,54 @@
-
 :root {
-    --primary-dark: #362E54;
-    --primary-accent: #5A5183;
-    --text-muted: #868EBB;
-    --highlight: #7A7143;
-    --highlight-light: #AC9E74;
-  }
-  
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f5f5;
-  }
-  
-  #mainNavbar {
-    background-color: var(--primary-dark);
-  }
-  
-  .logo {
-    color: var(--highlight-light);
-    font-weight: bold;
-    font-size: 1.5rem;
-  }
-  
-  .navbar-nav .nav-link {
-    color: var(--text-muted);
-    font-weight: 500;
-    transition: color 0.3s ease;
-  }
-  
-  .navbar-nav .nav-link:hover {
-    color: var(--highlight-light);
-  }
-  
-  .signup {
-    background-color: var(--highlight);
-    color: white;
-    border: 2px solid var(--highlight);
-  }
-  
-  .signup:hover {
-    background-color: var(--highlight-light);
-    color: var(--primary-dark);
-  }
-  
-  .login {
-    background-color: transparent;
-    color: var(--highlight-light);
-    border: 2px solid var(--highlight-light);
-  }
-  
-  .login:hover {
-    background-color: var(--highlight-light);
-    color: var(--primary-dark);
-  }
-  
+  --primary-dark: #362e54;
+  --primary-accent: #5a5183;
+  --text-muted: #868ebb;
+  --highlight: #7a7143;
+  --highlight-light: #ac9e74;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f5f5;
+}
+
+#mainNavbar {
+  background-color: var(--primary-dark);
+}
+
+.logo {
+  color: var(--highlight-light);
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+  color: var(--text-muted);
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+  color: var(--highlight-light);
+}
+
+.signup {
+  background-color: var(--highlight);
+  color: white;
+  border: 2px solid var(--highlight);
+}
+
+.signup:hover {
+  background-color: var(--highlight-light);
+  color: var(--primary-dark);
+}
+
+.login {
+  background-color: transparent;
+  color: var(--highlight-light);
+  border: 2px solid var(--highlight-light);
+}
+
+.login:hover {
+  background-color: var(--highlight-light);
+  color: var(--primary-dark);
+}
