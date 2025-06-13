@@ -6,7 +6,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
 <div id="sidebar" class="sidebar">
   <div class="p-3">
-    <h5 class="text-white mb-3">Menu</h5>
+    <h5 class="sidebar-title mb-3">Menu</h5>
     <nav class="nav flex-column">
       <a class="nav-link <?= ($currentPage == 'dashboard_teacher.php') ? 'active' : '' ?>" href="dashboard_teacher.php">
         <i data-lucide="home" class="me-2"></i>Dashboard

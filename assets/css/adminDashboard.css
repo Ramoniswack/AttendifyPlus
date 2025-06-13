@@ -31,20 +31,20 @@ body.dark-mode {
   overflow-x: hidden;
 }
 
-/* NAVBAR FIXED TOP OFFSET - REDUCED PADDING */
+/* NAVBAR FIXED TOP OFFSET */
 .dashboard-container {
-  padding-top: 20px; /* Reduced from 90px */
+  padding-top: 20px;
 }
 
 @media (max-width: 767.98px) {
   .dashboard-container {
-    padding-top: 15px; /* Reduced from 75px */
+    padding-top: 15px;
   }
 }
 
 @media (max-width: 576px) {
   .dashboard-container {
-    padding-top: 20px; /* Reduced from 100px */
+    padding-top: 20px;
   }
 }
 
@@ -96,10 +96,10 @@ body.dark-mode .btn-primary {
 
 /* NAVBAR Z-INDEX FIX */
 .navbar {
-  z-index: 1060; /* Higher than sidebar */
+  z-index: 1060;
 }
 
-/* SIDEBAR STYLING - FIXED Z-INDEX AND BLUR ISSUES */
+/* SIDEBAR */
 .sidebar {
   position: fixed;
   top: 56px;
@@ -109,7 +109,7 @@ body.dark-mode .btn-primary {
   background-color: var(--card-light);
   padding-top: 1rem;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  z-index: 1050; /* Below navbar but above content */
+  z-index: 1050;
   transition: left 0.3s ease;
 }
 
@@ -122,7 +122,7 @@ body.dark-mode .sidebar {
   color: var(--text-dark);
 }
 
-/* SIDEBAR MENU TITLE */
+/* SIDEBAR TITLE */
 .sidebar h5 {
   font-size: 1.3rem;
   font-weight: bold;
@@ -134,7 +134,7 @@ body.dark-mode .sidebar h5 {
   color: var(--accent-dark);
 }
 
-/* SIDEBAR NAVIGATION LINKS */
+/* SIDEBAR NAV LINKS */
 .sidebar .nav-link {
   color: var(--text-light);
   font-size: 1rem;
@@ -170,7 +170,7 @@ body.dark-mode .sidebar .nav-link.active {
   color: black;
 }
 
-/* SIDEBAR HORIZONTAL RULE */
+/* HORIZONTAL RULE */
 .sidebar hr {
   border-color: var(--text-light);
   opacity: 0.3;
@@ -181,7 +181,7 @@ body.dark-mode .sidebar hr {
   opacity: 0.3;
 }
 
-/* LOGOUT LINK STYLING */
+/* LOGOUT LINK */
 .sidebar .nav-link.text-danger {
   color: #dc3545 !important;
 }
@@ -200,7 +200,7 @@ body.dark-mode .sidebar .nav-link.text-danger:hover {
   color: #ff6b6b !important;
 }
 
-/* LEGACY SELECTORS FOR COMPATIBILITY */
+/* LEGACY COMPAT */
 .sidebar-title {
   font-size: 1.3rem;
   font-weight: bold;
@@ -244,7 +244,7 @@ body.dark-mode .sidebar ul li a:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* SIDEBAR OVERLAY FOR MOBILE */
+/* OVERLAY */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -253,20 +253,19 @@ body.dark-mode .sidebar ul li a:hover {
   width: 100%;
   height: 100%;
   background: rgba(0,0,0,0.5);
-  z-index: 1040; /* Below sidebar but above main content */
+  z-index: 1040;
 }
 
 body.sidebar-open .sidebar-overlay {
   display: block;
 }
 
-/* SIDEBAR PUSH LOGIC - FIXED BLUR ISSUE */
+/* PUSH EFFECT */
 body.sidebar-open .dashboard-container {
   margin-left: 0;
   transition: margin-left 0.3s ease;
 }
 
-/* Only apply blur and disable pointer events on mobile */
 @media (max-width: 767.98px) {
   body.sidebar-open .dashboard-container {
     pointer-events: none;
@@ -274,16 +273,15 @@ body.sidebar-open .dashboard-container {
   }
 }
 
-/* On desktop, push content and keep it accessible */
 @media (min-width: 768px) {
   body.sidebar-open .dashboard-container {
     margin-left: 250px !important;
     pointer-events: auto;
-    filter: none; /* Remove blur on desktop */
-  }
+    filter: none;
+}
 }
 
-/* LOGIN PAGE REUSE */
+/* LOGIN TITLE */
 .login-title {
   color: var(--accent-light);
 }
@@ -292,7 +290,7 @@ body.dark-mode .login-title {
   color: var(--accent-dark);
 }
 
-/* SELECT2 Dark Mode Fix */
+/* SELECT2 FIX FOR DARK MODE */
 body.dark-mode .select2-container--default .select2-selection--multiple {
   background-color: var(--card-dark);
   color: var(--text-dark);
@@ -315,4 +313,32 @@ body.dark-mode .select2-container--default .select2-results__option--highlighted
   color: #000;
 }
 
+/* ========================== */
+/* 💠 ADMIN-SPECIFIC OVERRIDES */
+/* ========================== */
+
+body.admin .dashboard-container h2 {
+  color: #6610f2;
+}
+
+body.dark-mode.admin .dashboard-container h2 {
+  color: #c77dff;
+}
+
+body.admin .sidebar h5 {
+  color: #6610f2;
+}
+
+body.dark-mode.admin .sidebar h5 {
+  color: #c77dff;
+}
+
+body.admin .btn-primary {
+  background-color: #6610f2;
+}
+
+body.dark-mode.admin .btn-primary {
+  background-color: #c77dff;
+  color: black;
+}
 
