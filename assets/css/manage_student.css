@@ -363,3 +363,9 @@ body.dark-mode .modal-body select {
     font-weight: bold;
   }
 }
+
+nav.navbar {
+  height: 56px;
+  min-height: 56px;
+  line-height: 1;
+}
