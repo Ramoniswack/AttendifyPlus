@@ -12,15 +12,15 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <i data-lucide="layout-dashboard" class="me-2"></i>Dashboard
       </a>
 
-      <a class="nav-link <?= ($currentPage == 'manage_students.php') ? 'active' : '' ?>" href="add_student.php">
+      <a class="nav-link <?= ($currentPage == 'manage_students.php') ? 'active' : '' ?>" href="manage_student.php">
         <i data-lucide="users" class="me-2"></i>Manage Students
       </a>
 
-      <a class="nav-link <?= ($currentPage == 'manage_teachers.php') ? 'active' : '' ?>" href="add_teacher.php">
+      <a class="nav-link <?= ($currentPage == 'manage_teachers.php') ? 'active' : '' ?>" href="manage_teacher.php">
         <i data-lucide="user-check" class="me-2"></i>Manage Teachers
       </a>
 
-      <a class="nav-link <?= ($currentPage == 'manage_admins.php') ? 'active' : '' ?>" href="manage_admins.php">
+      <a class="nav-link <?= ($currentPage == 'manage_admins.php') ? 'active' : '' ?>" href="manage_admin.php">
         <i data-lucide="shield" class="me-2"></i>Manage Admins
       </a>
 
