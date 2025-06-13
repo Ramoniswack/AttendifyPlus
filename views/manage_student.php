@@ -23,8 +23,8 @@ while ($d = $res->fetch_assoc()) {
   <link rel="stylesheet" href="../assets/css/manage_student.css"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <script src="../assets/js/lucide.min.js"></script>
-  <script src="../assets/js/dashboard_admin.js" defer></script>
-  <script src="../assets/js/manage_students.js" defer></script>
+  <!-- <script src="../assets/js/dashboard_admin.js" defer></script> -->
+  <script src="../assets/js/manage_student.js" defer></script>
 </head>
 <body>
   <?php include 'sidebar_student.php'; ?>

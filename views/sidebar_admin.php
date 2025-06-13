@@ -6,21 +6,21 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
 <div id="sidebar" class="sidebar">
   <div class="p-3">
-    <h5 class="sidebar-title mb-3 ">Menu</h5>
+    <h5 class="sidebar-title mb-3">Menu</h5>
     <nav class="nav flex-column">
       <a class="nav-link <?= ($currentPage == 'dashboard_admin.php') ? 'active' : '' ?>" href="dashboard_admin.php">
         <i data-lucide="layout-dashboard" class="me-2"></i>Dashboard
       </a>
 
-      <a class="nav-link <?= ($currentPage == 'manage_students.php') ? 'active' : '' ?>" href="manage_student.php">
+      <a class="nav-link <?= ($currentPage == 'manage_student.php') ? 'active' : '' ?>" href="manage_student.php">
         <i data-lucide="users" class="me-2"></i>Manage Students
       </a>
 
-      <a class="nav-link <?= ($currentPage == 'manage_teachers.php') ? 'active' : '' ?>" href="manage_teacher.php">
+      <a class="nav-link <?= ($currentPage == 'manage_teacher.php') ? 'active' : '' ?>" href="manage_teacher.php">
         <i data-lucide="user-check" class="me-2"></i>Manage Teachers
       </a>
 
-      <a class="nav-link <?= ($currentPage == 'manage_admins.php') ? 'active' : '' ?>" href="manage_admin.php">
+      <a class="nav-link <?= ($currentPage == 'manage_admin.php') ? 'active' : '' ?>" href="manage_admin.php">
         <i data-lucide="shield" class="me-2"></i>Manage Admins
       </a>
 
