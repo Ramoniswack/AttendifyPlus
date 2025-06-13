@@ -6,32 +6,36 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
 <div id="sidebar" class="sidebar">
   <div class="p-3">
-    <h5 class="sidebar-title mb-3">Menu</h5>
+    <h5 class="sidebar-title mb-3 ">Menu</h5>
     <nav class="nav flex-column">
-      <a class="nav-link <?= ($currentPage == 'dashboard_teacher.php') ? 'active' : '' ?>" href="dashboard_teacher.php">
-        <i data-lucide="home" class="me-2"></i>Dashboard
+      <a class="nav-link <?= ($currentPage == 'dashboard_admin.php') ? 'active' : '' ?>" href="dashboard_admin.php">
+        <i data-lucide="layout-dashboard" class="me-2"></i>Dashboard
       </a>
-      <a class="nav-link <?= ($currentPage == 'my_subjects_students.php') ? 'active' : '' ?>" href="my_subjects_students.php">
-        <i data-lucide="graduation-cap" class="me-2"></i>Subjects & Students
+
+      <a class="nav-link <?= ($currentPage == 'manage_student.php') ? 'active' : '' ?>" href="manage_student.php">
+        <i data-lucide="users" class="me-2"></i>Manage Students
       </a>
-      <a class="nav-link <?= ($currentPage == 'attendance.php') ? 'active' : '' ?>" href="attendance.php">
-        <i data-lucide="calendar-check" class="me-2"></i>Take Attendance
+
+      <a class="nav-link <?= ($currentPage == 'manage_teacher.php') ? 'active' : '' ?>" href="manage_teacher.php">
+        <i data-lucide="user-check" class="me-2"></i>Manage Teachers
       </a>
-      <a class="nav-link <?= ($currentPage == 'attendance_report.php') ? 'active' : '' ?>" href="attendance_report.php">
-        <i data-lucide="clipboard-list" class="me-2"></i>Attendance Reports
+
+      <a class="nav-link <?= ($currentPage == 'manage_admins.php') ? 'active' : '' ?>" href="manage_admin.php">
+        <i data-lucide="shield" class="me-2"></i>Manage Admins
       </a>
-      <a class="nav-link <?= ($currentPage == 'upload_slides.php') ? 'active' : '' ?>" href="upload_slides.php">
-        <i data-lucide="upload" class="me-2"></i>Upload Slides
+
+      <a class="nav-link <?= ($currentPage == 'seminar_analytics.php') ? 'active' : '' ?>" href="seminar_analytics.php">
+        <i data-lucide="pie-chart" class="me-2"></i>Seminar Analytics
       </a>
-      <a class="nav-link <?= ($currentPage == 'view_assignments.php') ? 'active' : '' ?>" href="view_assignments.php">
-        <i data-lucide="file-text" class="me-2"></i>Assignments
+
+      <a class="nav-link <?= ($currentPage == 'full_analytics.php') ? 'active' : '' ?>" href="full_analytics.php">
+        <i data-lucide="bar-chart-3" class="me-2"></i>Overall Analytics
       </a>
-      <a class="nav-link <?= ($currentPage == 'analytics.php') ? 'active' : '' ?>" href="analytics.php">
-        <i data-lucide="bar-chart" class="me-2"></i>Analytics
+
+      <a class="nav-link <?= ($currentPage == 'profile_admin.php') ? 'active' : '' ?>" href="profile_admin.php">
+        <i data-lucide="user-cog" class="me-2"></i>Profile
       </a>
-      <a class="nav-link <?= ($currentPage == 'profile_teacher.php') ? 'active' : '' ?>" href="profile_teacher.php">
-        <i data-lucide="user" class="me-2"></i>Profile
-      </a>
+
       <hr class="text-white-50 my-3">
       <a class="nav-link text-danger" href="../logout.php">
         <i data-lucide="log-out" class="me-2"></i>Logout
