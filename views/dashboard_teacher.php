@@ -14,14 +14,14 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') 
     <title>Teacher Dashboard | Attendify+</title>
 
     <!-- External CSS -->
-    <link rel="stylesheet" href="../assets/css/teacherDashboard.css">
+    <link rel="stylesheet" href="../assets/css/dashboard_teacher.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
     <!-- External JS Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../assets/js/lucide.min.js"></script>
-    <script src="../assets/js/teacherDashboard.js" defer></script>
+    <script src="../assets/js/dashboard_teacher.js" defer></script>
 </head>
 
 

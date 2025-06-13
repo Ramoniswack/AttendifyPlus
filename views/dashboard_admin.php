@@ -14,14 +14,14 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
   <title>Admin Dashboard | Attendify+</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="../assets/css/teacherDashboard.css">
+  <link rel="stylesheet" href="../assets/css/dashboard_admin.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
   <!-- JS Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="../assets/js/lucide.min.js"></script>
-  <script src="../assets/js/adminDashboard.js" defer></script>
+  <script src="../assets/js/dashboard_admin.js" defer></script>
 </head>
 
 <body>
@@ -29,7 +29,7 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
   <?php include 'sidebar_admin.php'; ?>
 
   <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--accent-light);">
+  <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--accent-light);">
     <div class="container-fluid">
       <button class="btn text-white me-2" id="sidebarToggle">
         <span style="font-size: 24px;">☰</span>
@@ -54,7 +54,7 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
       <h2 class="m-0">Admin Dashboard</h2>
       <div class="d-flex gap-2">
-        <a href="manage_students.php" class="btn btn-success btn-sm">
+        <a href="add_student.php" class="btn btn-success btn-sm">
           <i data-lucide="user-plus" class="me-1"></i>Manage Student
         </a>
         <a href="full_analytics.php" class="btn btn-outline-info btn-sm">
