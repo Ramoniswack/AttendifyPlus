@@ -20,7 +20,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <i data-lucide="user-check" class="me-2"></i>Manage Teachers
       </a>
 
-      <a class="nav-link <?= ($currentPage == 'manage_admins.php') ? 'active' : '' ?>" href="manage_admin.php">
+      <a class="nav-link <?= ($currentPage == 'manage_admin.php') ? 'active' : '' ?>" href="manage_admin.php">
         <i data-lucide="shield" class="me-2"></i>Manage Admins
       </a>
 
