@@ -8,50 +8,51 @@ require_once "../helpers/helpers.php";
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $email = sanitize($_POST['email']);
-    $password = sanitize($_POST['password']);
+  $email = sanitize($_POST['email']);
+  $password = sanitize($_POST['password']);
 
-    $stmt = $conn->prepare("SELECT UserID, Username, Password, Role FROM login_tbl WHERE Email = ? AND Status = 'active'");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $stmt->store_result();
+  $stmt = $conn->prepare("SELECT UserID, Username, Password, Role FROM login_tbl WHERE Email = ? AND Status = 'active'");
+  $stmt->bind_param("s", $email);
+  $stmt->execute();
+  $stmt->store_result();
 
-    if ($stmt->num_rows === 1) {
-        $stmt->bind_result($userID, $username, $dbPassword, $role);
-        $stmt->fetch();
+  if ($stmt->num_rows === 1) {
+    $stmt->bind_result($userID, $username, $dbPassword, $role);
+    $stmt->fetch();
 
-        if ($password === $dbPassword) { // Plain password match
-            $_SESSION['UserID'] = $userID;
-            $_SESSION['Username'] = $username;
-            $_SESSION['Role'] = $role;
+    if ($password === $dbPassword) { // Plain password match
+      $_SESSION['UserID'] = $userID;
+      $_SESSION['Username'] = $username;
+      $_SESSION['Role'] = $role;
 
-            $role = strtolower($role);
+      $role = strtolower($role);
 
-            if ($role === 'admin') {
-                header("Location: dashboard_admin.php");
-                exit;
-            } elseif ($role === 'teacher') {
-                header("Location: dashboard_teacher.php");
-                exit;
-            } elseif ($role === 'student') {
-                header("Location: dashboard_student.php");
-                exit;
-            } else {
-                $error = "Unknown user role.";
-            }
-        } else {
-            $error = "Incorrect password.";
-        }
+      if ($role === 'admin') {
+        header("Location: dashboard_admin.php");
+        exit;
+      } elseif ($role === 'teacher') {
+        header("Location: dashboard_teacher.php");
+        exit;
+      } elseif ($role === 'student') {
+        header("Location: dashboard_student.php");
+        exit;
+      } else {
+        $error = "Unknown user role.";
+      }
     } else {
-        $error = "Invalid email or inactive account.";
+      $error = "Incorrect password.";
     }
+  } else {
+    $error = "Invalid email or inactive account.";
+  }
 
-    $stmt->close();
+  $stmt->close();
 }
 $conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -60,6 +61,7 @@ $conn->close();
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../assets/css/login.css" />
 </head>
+
 <body>
   <button class="btn btn-outline-secondary theme-toggle" onclick="toggleTheme()">Theme</button>
 
@@ -106,4 +108,5 @@ $conn->close();
   </script>
   <script src="../assets/js/login.js"></script>
 </body>
+
 </html>
