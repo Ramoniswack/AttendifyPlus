@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <title>Teacher Attendance | Attendify+</title>
@@ -56,8 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 
     <!-- Lucide Icons -->
     <script src="../assets/js/lucide.min.js"></script>
-    
+
 </head>
+
 <body>
     <?php include 'sidebar_teacher_dashboard.php'; ?>
 
@@ -186,8 +188,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
             <?php endif; ?>
         </form>
     </div>
- <script src="../assets/js/manage_student.js"></script>
-   
-    
+    <script src="../assets/js/manage_student.js"></script>
+
+
 </body>
+
 </html>
