@@ -27,7 +27,7 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') 
 
 <body>
     <!-- Include Sidebar -->
-    <?php include 'sidebar_teacher.php'; ?>
+    <?php include 'sidebar_teacher_dashboard.php'; ?>
 
     <!-- Top Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
