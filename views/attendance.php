@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
   <script src="../assets/js/manage_teacher.js" defer></script>
 </head>
 <body>
-    <?php include 'sidebar_admin_dashboard.php'; ?>
+    <?php include 'sidebar_teacher_dashboard.php'; ?>
     <?php include 'navbar_admin.php'; ?>
 
 <div class="container pt-5 mt-5">
