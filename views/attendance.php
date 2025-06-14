@@ -2,50 +2,101 @@
 session_start();
 require_once(__DIR__ . '/../config/db_config.php');
 
-if (!isset($_SESSION['UserID']) || $_SESSION['Role'] !== 'teacher') {
+// Check session
+if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') {
     header("Location: /attendifyplus/views/login.php");
     exit();
 }
 
-$teacherID = $_SESSION['UserID'];
+$loginID = $_SESSION['LoginID'];
 
-$deptQuery = $conn->prepare("SELECT d.DepartmentID, d.DepartmentName FROM teachers_tbl t JOIN departments_tbl d ON t.DepartmentID = d.DepartmentID WHERE t.LoginID = ?");
-$deptQuery->bind_param("i", $teacherID);
-$deptQuery->execute();
-$deptResult = $deptQuery->get_result();
+// Get teacher info
+$teacherStmt = $conn->prepare("SELECT TeacherID, FullName FROM teachers WHERE LoginID = ?");
+if (!$teacherStmt) {
+    die("Prepare failed: " . $conn->error);
+}
+$teacherStmt->bind_param("i", $loginID);
+$teacherStmt->execute();
+$teacherRes = $teacherStmt->get_result();
+$teacherRow = $teacherRes->fetch_assoc();
+
+if (!$teacherRow) {
+    echo "<script>alert('Your login is not linked with a valid teacher account. Please contact admin.'); window.location.href='../logout.php';</script>";
+    exit();
+}
+
+$teacherID = $teacherRow['TeacherID'];
+
+// Get department via subjects assigned to teacher
+$deptStmt = $conn->prepare("
+    SELECT DISTINCT d.DepartmentID, d.DepartmentName
+    FROM departments d
+    JOIN subjects s ON s.DepartmentID = d.DepartmentID
+    JOIN teacher_subject_map ts ON ts.SubjectID = s.SubjectID
+    WHERE ts.TeacherID = ?
+    LIMIT 1
+");
+if (!$deptStmt) {
+    die("Prepare failed: " . $conn->error);
+}
+$deptStmt->bind_param("i", $teacherID);
+$deptStmt->execute();
+$deptResult = $deptStmt->get_result();
 $teacherDept = $deptResult->fetch_assoc();
 
 if (!$teacherDept) {
-    die("Error: Teacher department not found.");
+    die("No department found for this teacher.");
 }
 
-$batches = $conn->prepare("SELECT DISTINCT b.BatchID, b.BatchName FROM batches_tbl b JOIN subjects_tbl s ON b.BatchID = s.BatchID JOIN teacher_subject_tbl ts ON ts.SubjectID = s.SubjectID WHERE ts.TeacherID = ? AND b.DepartmentID = ?");
-$batches->bind_param("ii", $teacherID, $teacherDept['DepartmentID']);
-$batches->execute();
-$batchResult = $batches->get_result();
+// Fetch distinct semesters where teacher is assigned
+$semQuery = $conn->prepare("SELECT DISTINCT sem.SemesterID, sem.SemesterNumber
+                            FROM semesters sem
+                            JOIN subjects s ON s.SemesterID = sem.SemesterID
+                            JOIN teacher_subject_map ts ON ts.SubjectID = s.SubjectID
+                            WHERE ts.TeacherID = ?");
+if (!$semQuery) {
+    die("Prepare failed: " . $conn->error);
+}
+$semQuery->bind_param("i", $teacherID);
+$semQuery->execute();
+$semResult = $semQuery->get_result();
 
-$selectedBatchID = $_POST['batch'] ?? null;
+$selectedSemesterID = $_POST['semester'] ?? null;
 $selectedSubjectID = $_POST['subject'] ?? null;
 
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     $date = $_POST['date'];
+
     if (!$selectedSubjectID) {
-        die("Error: Subject is required.");
+        die("Subject is required.");
     }
+
     foreach ($_POST['attendance'] as $studentID => $status) {
-        $stmt = $conn->prepare("INSERT INTO attendance_tbl (StudentID, TeacherID, SubjectID, Date, Status) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO attendance (StudentID, TeacherID, SubjectID, Date, Status)
+                                VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $date, $status);
         $stmt->execute();
     }
+
     echo "<script>alert('Attendance submitted successfully.'); window.location.href='attendance.php';</script>";
     exit();
 }
-?>
 
+?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mark Attendance | Attendify+</title>
+  <link rel="stylesheet" href="../assets/css/manage_teacher.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="../assets/js/lucide.min.js"></script>
+  <script src="../assets/js/manage_teacher.js" defer></script>
+=======
     <meta charset="UTF-8" />
     <title>Teacher Attendance | Attendify+</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -61,68 +112,110 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 </head>
 
 <body>
-    <?php include 'sidebar_teacher_dashboard.php'; ?>
+    <?php include 'sidebar_admin_dashboard.php'; ?>
+    <?php include 'navbar_admin.php'; ?>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-        <div class="container-fluid">
-            <button class="btn text-white me-2" id="sidebarToggle" title="Toggle Sidebar">
-                <i data-lucide="menu"></i>
-            </button>
-            <a class="navbar-brand" href="#">Attendify+ | Teacher</a>
-            <div class="d-flex align-items-center gap-2 ms-auto flex-wrap">
-                <span class="navbar-text text-white">Welcome, <?= htmlspecialchars($_SESSION['Username']) ?></span>
-                <button class="btn btn-outline-light btn-sm" onclick="toggleTheme()" title="Toggle Theme">
-                    <i data-lucide="moon"></i>Theme
-                </button>
-                <a href="../logout.php" class="btn btn-outline-light btn-sm" title="Logout">
-                    <i data-lucide="log-out"></i>Logout
-                </a>
-            </div>
-        </div>
-    </nav>
+<div class="container pt-5 mt-5">
+    <h2>Mark Attendance</h2>
+    <p><strong>Department:</strong> <?= htmlspecialchars($teacherDept['DepartmentName']) ?></p>
 
-    <!-- Main Content -->
-    <div class="container dashboard-container pt-5">
-        <h2><i data-lucide="clipboard-list"></i> Mark Attendance</h2>
-        <p><strong>Department:</strong> <?= htmlspecialchars($teacherDept['DepartmentName']) ?></p>
+    <form method="POST">
+        <input type="hidden" name="department" value="<?= $teacherDept['DepartmentID'] ?>">
 
-        <form method="POST">
-            <input type="hidden" name="department" value="<?= $teacherDept['DepartmentID'] ?>">
+        <label for="semesterSelect" class="form-label">Semester</label>
+        <select name="semester" id="semesterSelect" class="form-select mb-3" onchange="this.form.submit()" required>
+            <option value="">Select Semester</option>
+            <?php while ($sem = $semResult->fetch_assoc()): ?>
+                <option value="<?= $sem['SemesterID'] ?>" <?= $selectedSemesterID == $sem['SemesterID'] ? 'selected' : '' ?>>
+                    Semester <?= $sem['SemesterNumber'] ?>
+                </option>
+            <?php endwhile; ?>
+        </select>
 
-            <label for="batchSelect">Batch:</label>
-            <select id="batchSelect" name="batch" required class="form-select mb-3" onchange="this.form.submit()">
-                <option value="">Select Batch</option>
-                <?php while ($batch = $batchResult->fetch_assoc()): ?>
-                    <option value="<?= $batch['BatchID'] ?>" <?= $selectedBatchID == $batch['BatchID'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($batch['BatchName']) ?>
+        <?php if ($selectedSemesterID): ?>
+            <?php
+            $subjectQuery = $conn->prepare("SELECT s.SubjectID, s.SubjectName
+                                            FROM subjects s
+                                            JOIN teacher_subject_map ts ON s.SubjectID = ts.SubjectID
+                                            WHERE ts.TeacherID = ? AND s.SemesterID = ?");
+            if (!$subjectQuery) {
+                die("Prepare failed: " . $conn->error);
+            }
+            $subjectQuery->bind_param("ii", $teacherID, $selectedSemesterID);
+            $subjectQuery->execute();
+            $subjectResult = $subjectQuery->get_result();
+            ?>
+
+            <label for="subjectSelect" class="form-label">Subject</label>
+            <select name="subject" id="subjectSelect" class="form-select mb-3" onchange="this.form.submit()" required>
+                <option value="">Select Subject</option>
+                <?php while ($sub = $subjectResult->fetch_assoc()): ?>
+                    <option value="<?= $sub['SubjectID'] ?>" <?= $selectedSubjectID == $sub['SubjectID'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($sub['SubjectName']) ?>
                     </option>
                 <?php endwhile; ?>
             </select>
+        <?php endif; ?>
 
-            <?php if ($selectedBatchID):
-                $subjectQuery = $conn->prepare("SELECT s.SubjectID, s.SubjectName FROM teacher_subject_tbl ts JOIN subjects_tbl s ON ts.SubjectID = s.SubjectID WHERE ts.TeacherID = ? AND s.BatchID = ?");
-                $subjectQuery->bind_param("ii", $teacherID, $selectedBatchID);
-                $subjectQuery->execute();
-                $subjects = $subjectQuery->get_result();
+        <?php if ($selectedSemesterID && $selectedSubjectID): ?>
+            <label for="dateInput" class="form-label">Date:</label>
+            <input type="date" id="dateInput" name="date" value="<?= date('Y-m-d') ?>" required class="form-control mb-3" />
 
-                if ($subjects->num_rows === 1) {
-                    $subject = $subjects->fetch_assoc();
-                    echo "<input type='hidden' name='subject' value='" . htmlspecialchars($subject['SubjectID']) . "'>";
-                    echo "<p><strong>Subject:</strong> " . htmlspecialchars($subject['SubjectName']) . "</p>";
-                    $selectedSubjectID = $subject['SubjectID'];
-                } elseif ($subjects->num_rows > 1) {
-                    echo "<label for='subjectSelect'>Subject:</label>";
-                    echo "<select id='subjectSelect' name='subject' class='form-select mb-3' required onchange='this.form.submit()'>";
-                    echo "<option value=''>Select Subject</option>";
-                    while ($sub = $subjects->fetch_assoc()) {
-                        $selected = $selectedSubjectID == $sub['SubjectID'] ? 'selected' : '';
-                        echo "<option value='" . htmlspecialchars($sub['SubjectID']) . "' $selected>" . htmlspecialchars($sub['SubjectName']) . "</option>";
-                    }
-                    echo "</select>";
-                } else {
-                    echo "<p class='text-danger'>No subject assigned for this batch.</p>";
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Exam Roll</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php
+                $studentsQuery = $conn->prepare("SELECT StudentID, FullName, ExamRoll
+                                                 FROM students
+                                                 WHERE DepartmentID = ? AND SemesterID = ?");
+                if (!$studentsQuery) {
+                    die("Prepare failed: " . $conn->error);
                 }
+                $studentsQuery->bind_param("ii", $teacherDept['DepartmentID'], $selectedSemesterID);
+                $studentsQuery->execute();
+                $students = $studentsQuery->get_result();
+
+                while ($row = $students->fetch_assoc()):
+                    $sid = $row['StudentID'];
+                ?>
+                    <tr>
+                        <td><?= htmlspecialchars($row['FullName']) ?></td>
+                        <td><?= htmlspecialchars($row['ExamRoll']) ?></td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="attendance[<?= $sid ?>]" id="present_<?= $sid ?>" value="present" required>
+                                <label class="btn btn-outline-success btn-sm" for="present_<?= $sid ?>">Present</label>
+
+                                <input type="radio" class="btn-check" name="attendance[<?= $sid ?>]" id="absent_<?= $sid ?>" value="absent">
+                                <label class="btn btn-outline-danger btn-sm" for="absent_<?= $sid ?>">Absent</label>
+
+                                <input type="radio" class="btn-check" name="attendance[<?= $sid ?>]" id="late_<?= $sid ?>" value="late">
+                                <label class="btn btn-outline-warning btn-sm" for="late_<?= $sid ?>">Late</label>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+                </tbody>
+            </table>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-success">
+                    <i data-lucide="check-circle"></i> Submit Attendance
+                </button>
+            </div>
+        <?php endif; ?>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>lucide.createIcons();</script>
+=======
             endif; ?>
 
             <?php if ($selectedBatchID && $selectedSubjectID): ?>

@@ -186,4 +186,4 @@ while ($s = $sem_result->fetch_assoc()) {
 
 </body>
 
-</html>
+</html> 
