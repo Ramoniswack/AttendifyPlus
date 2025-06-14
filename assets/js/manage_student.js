@@ -2,14 +2,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof lucide !== "undefined") lucide.createIcons();
 
   // Theme
-  if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark-mode");
-  }
+    if (localStorage.getItem("theme") === "dark") {
+      document.body.classList.add("dark-mode");
+    }
 
-  window.toggleTheme = function () {
-    const isDark = document.body.classList.toggle("dark-mode");
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-  };
+    window.toggleTheme = function () {
+      const isDark = document.body.classList.toggle("dark-mode");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    };
 
   // Sidebar
   const sidebarToggle = document.getElementById("sidebarToggle");
@@ -42,7 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Student added successfully!");
         fetchStudents(); // reload student list
         addStudentForm.reset();
-        bootstrap.Modal.getInstance(document.getElementById("addStudentModal")).hide();
+        bootstrap.Modal.getInstance(
+          document.getElementById("addStudentModal")
+        ).hide();
       } else {
         alert("Failed to add student.");
       }
@@ -56,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const filterYear = document.getElementById("filterYear");
   const searchName = document.getElementById("searchName");
 
-  [filterDepartment, filterYear, searchName].forEach(input => {
+  [filterDepartment, filterYear, searchName].forEach((input) => {
     input?.addEventListener("input", fetchStudents);
   });
 
@@ -107,9 +109,9 @@ document.addEventListener("DOMContentLoaded", () => {
         attachActions();
       } else {
         thead.style.display = "none";
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No results found.</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="7" class="text-center">No results found.</td></tr>';
       }
-
     } catch (err) {
       console.error("Error loading students:", err);
     }
@@ -126,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const res = await fetch("student_crud.php", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `action=delete&id=${encodeURIComponent(studentId)}`
+            body: `action=delete&id=${encodeURIComponent(studentId)}`,
           });
 
           if (res.ok) {
