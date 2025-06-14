@@ -26,7 +26,7 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
 
 <body>
   <!-- Sidebar -->
-  <?php include 'sidebar_admin.php'; ?>
+  <?php include 'sidebar_admin_dashboard.php'; ?>
 
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--accent-light);">

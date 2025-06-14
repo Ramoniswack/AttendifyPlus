@@ -314,7 +314,7 @@ body.dark-mode .select2-container--default .select2-results__option--highlighted
 }
 
 /* ========================== */
-/* 💠 ADMIN-SPECIFIC OVERRIDES */
+/* ADMIN-SPECIFIC OVERRIDES */
 /* ========================== */
 
 body.admin .dashboard-container h2 {
@@ -376,4 +376,70 @@ body.dark-mode.admin .btn-primary {
   display: block;
   position: static;
   background-color: #f0f4f8;
+}
+
+/* DARK MODE TABLE FIX */
+body.dark-mode .table {
+  background-color: var(--card-dark) !important;
+  color: var(--text-dark) !important;
+}
+
+body.dark-mode .table thead {
+  background-color: #2b2b2b !important;
+  color: var(--text-dark) !important;
+}
+
+body.dark-mode .table td,
+body.dark-mode .table th {
+  background-color: var(--card-dark) !important;
+  color: var(--text-dark) !important;
+  border-color: #444 !important;
+}
+
+body.dark-mode .table-hover tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+.table {
+  border-radius: 10px;
+  overflow: hidden;
+}
+body.dark-mode #teacherSearch {
+  background-color: #1f1f1f;
+  color: #eee;
+  border-color: #333;
+}
+
+body.dark-mode #teacherSearch::placeholder {
+  color: #aaa;
+}
+body.dark-mode .modal-content {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+  border-color: #333;
+}
+
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+  border-color: #444;
+}
+
+body.dark-mode .modal-title {
+  color: #fff;
+}
+
+body.dark-mode .table-sm {
+  background-color: transparent;
+  color: #fff;
+}
+body .modal-content,
+body #teacherSearch {
+  transition: all 0.3s ease-in-out;
+}
+/* Make modal close (X) button red */
+.modal .btn-close {
+  filter: invert(29%) sepia(88%) saturate(6348%) hue-rotate(356deg) brightness(99%) contrast(105%);
+}
+
+.modal .btn-close:hover {
+  filter: invert(29%) sepia(88%) saturate(6348%) hue-rotate(356deg) brightness(80%) contrast(120%);
 }

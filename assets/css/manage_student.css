@@ -22,6 +22,7 @@ body {
   overflow-x: hidden;
 }
 
+
 body.dark-mode {
   background: var(--bg-dark);
   color: var(--text-dark);
@@ -368,4 +369,42 @@ nav.navbar {
   height: 56px;
   min-height: 56px;
   line-height: 1;
+}
+
+/* DARK MODE SUPPORT FOR SEARCH AND FILTER INPUTS */
+body.dark-mode #searchName,
+body.dark-mode #filterDepartment,
+body.dark-mode #filterSemester,
+body.dark-mode #filterYear {
+  background-color: #1f1f1f;
+  color: #eee;
+  border-color: #444;
+}
+
+body.dark-mode #searchName::placeholder,
+body.dark-mode #filterYear::placeholder {
+  color: #aaa;
+}
+
+body.dark-mode .input-group-text {
+  background-color: #1f1f1f;
+  border-color: #444;
+  color: #eee;
+}
+
+body.dark-mode label.form-label {
+  color: #ccc;
+}
+
+body.dark-mode .form-select option {
+  background-color: #1f1f1f;
+  color: #eee;
+}
+
+/* Optional: make spacing consistent and clean */
+.input-group .form-control {
+  border-left: 0;
+}
+.input-group-text {
+  border-right: 0;
 }
