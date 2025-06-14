@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -95,7 +96,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
   <script src="../assets/js/lucide.min.js"></script>
   <script src="../assets/js/manage_teacher.js" defer></script>
+=======
+    <meta charset="UTF-8" />
+    <title>Teacher Attendance | Attendify+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../assets/css/dashboard_teacher.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+
+    <!-- Lucide Icons -->
+    <script src="../assets/js/lucide.min.js"></script>
+
 </head>
+
 <body>
     <?php include 'sidebar_admin_dashboard.php'; ?>
     <?php include 'navbar_admin.php'; ?>
@@ -200,5 +215,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>lucide.createIcons();</script>
+=======
+            endif; ?>
+
+            <?php if ($selectedBatchID && $selectedSubjectID): ?>
+                <label for="dateInput">Date:</label>
+                <input type="date" id="dateInput" name="date" value="<?= date('Y-m-d') ?>" required class="form-control mb-4" />
+
+                <div class="attendance-wrapper">
+                    <div class="attendance-table">
+                        <table class="table table-bordered w-100">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Roll No</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $students = $conn->prepare("SELECT * FROM students_tbl WHERE DepartmentID = ? AND BatchID = ? AND Status = 'active'");
+                                $students->bind_param("ii", $teacherDept['DepartmentID'], $selectedBatchID);
+                                $students->execute();
+                                $res = $students->get_result();
+
+                                while ($row = $res->fetch_assoc()) {
+                                    $studentID = htmlspecialchars($row['LoginID']);
+                                    $fullName = htmlspecialchars($row['FullName']);
+                                    $rollNo = htmlspecialchars($row['RollNo']);
+                                    echo "<tr>
+                                        <td>$fullName</td>
+                                        <td>$rollNo</td>
+                                        <td>
+                                          <div class='btn-group' role='group'>
+                                            <input type='radio' class='btn-check' name='attendance[$studentID]' id='present_$studentID' value='present' required>
+                                            <label class='btn btn-outline-success btn-sm' for='present_$studentID'>Present</label>
+
+                                            <input type='radio' class='btn-check' name='attendance[$studentID]' id='absent_$studentID' value='absent'>
+                                            <label class='btn btn-outline-danger btn-sm' for='absent_$studentID'>Absent</label>
+
+                                            <input type='radio' class='btn-check' name='attendance[$studentID]' id='late_$studentID' value='late'>
+                                            <label class='btn btn-outline-warning btn-sm' for='late_$studentID'>Late</label>
+                                          </div>
+                                        </td>
+                                      </tr>";
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <div class="qr-static-box mb-3"><i data-lucide="qr-code"></i> QR CODE</div>
+                        <button class="btn btn-outline-primary" type="button">
+                            <i data-lucide="scan-line"></i> Generate QR
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <button class="btn btn-success" type="submit">
+                        <i data-lucide="check-circle"></i> Submit Attendance
+                    </button>
+                </div>
+            <?php endif; ?>
+        </form>
+    </div>
+    <script src="../assets/js/manage_student.js"></script>
+
+
 </body>
+
 </html>
