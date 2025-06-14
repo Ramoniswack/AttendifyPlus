@@ -1,0 +1,208 @@
+:root {
+  --bg-light: linear-gradient(to right, #f0f4f8, #e8f0fe);
+  --bg-dark: #121212;
+  --card-light: #ffffff;
+  --card-dark: #1f1f1f;
+  --text-light: #333;
+  --text-dark: #eee;
+  --accent-light: #1A73E8;
+  --accent-dark: #00ffc8;
+  --navbar-light: var(--accent-light);
+  --navbar-dark: var(--accent-dark);
+}
+
+/* GENERAL RESET */
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg-light);
+  color: var(--text-light);
+  margin: 0;
+  transition: all 0.3s ease;
+  overflow-x: hidden;
+
+
+}
+
+body.dark-mode {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+/* PAGE WRAPPER */
+.dashboard-container {
+  padding: 20px;
+}
+
+.dashboard-container h2 {
+  color: var(--accent-light);
+}
+body.dark-mode .dashboard-container h2 {
+  color: var(--accent-dark);
+}
+
+/* BUTTONS */
+.btn-primary {
+  background-color: var(--accent-light);
+  font-weight: bold;
+  border: none;
+}
+body.dark-mode .btn-primary {
+  background-color: var(--accent-dark);
+  color: black;
+}
+.btn-outline-info {
+  font-weight: 500;
+}
+.btn-sm i {
+  margin-right: 4px;
+}
+
+/* TABLE STYLING */
+.table {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.table th, .table td {
+  vertical-align: middle;
+  text-align: center;
+}
+body.dark-mode .table {
+  background-color: var(--card-dark) !important;
+  color: var(--text-dark) !important;
+}
+body.dark-mode .table thead {
+  background-color: #2b2b2b !important;
+  color: var(--text-dark) !important;
+}
+body.dark-mode .table td,
+body.dark-mode .table th {
+  background-color: var(--card-dark) !important;
+  color: var(--text-dark) !important;
+  border-color: #444 !important;
+}
+body.dark-mode .table-hover tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* MODAL */
+.modal {
+  z-index: 1055;
+}
+.modal-backdrop.show {
+  z-index: 1050;
+}
+.modal-content {
+  transition: all 0.3s ease;
+}
+body.dark-mode .modal-content {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+  border-color: #333;
+}
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+  border-color: #444;
+}
+body.dark-mode .modal-title {
+  color: #fff;
+}
+
+/* MODAL CLOSE BUTTON */
+.modal .btn-close {
+  filter: invert(29%) sepia(88%) saturate(6348%) hue-rotate(356deg) brightness(99%) contrast(105%);
+}
+.modal .btn-close:hover {
+  filter: invert(29%) sepia(88%) saturate(6348%) hue-rotate(356deg) brightness(80%) contrast(120%);
+}
+
+/* FORMS INSIDE MODAL */
+.form-label {
+  font-weight: 500;
+}
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background-color: #2a2a2a;
+  color: #f1f1f1;
+  border-color: #555;
+}
+body.dark-mode .form-control::placeholder {
+  color: #aaa;
+}
+
+/* CHECKBOX DARK MODE */
+body.dark-mode .form-check-input {
+  background-color: #444;
+  border-color: #666;
+}
+body.dark-mode .form-check-label {
+  color: #eee;
+}
+
+/* SMALL ICON BUTTONS */
+.btn-outline-primary,
+.btn-outline-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal.fade .modal-dialog {
+  margin-top: 5vh;
+}
+/* Ensures modals appear below fixed navbar */
+/* Ensure modal is pushed below navbar */
+.modal.fade.show {
+  display: block;
+  padding-top: 70px; /* Push modal down - adjust to match your navbar height */
+}
+
+/* Optional: add spacing inside modal to avoid content overflow */
+.modal-dialog {
+  margin: 1.75rem auto;
+}
+
+@media (max-width: 576px) {
+  .modal-dialog {
+    margin: 1rem auto;
+  }
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background-color: #1f1f1f;
+  color: #eee;
+  border-color: #444;
+}
+body.dark-mode .form-control::placeholder {
+  color: #aaa;
+}
+body.dark-mode .modal-content {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+}
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+  border-color: #444;
+}
+body.dark-mode .table {
+  background-color: #1f1f1f;
+  color: #eee;
+}
+body.dark-mode .table thead {
+  background-color: #2b2b2b;
+  color: #eee;
+}
+body.dark-mode .btn-close {
+  filter: invert(29%) sepia(88%) saturate(6348%) hue-rotate(356deg) brightness(99%) contrast(105%);
+}
+
+
+body.dark-mode #searchSubject {
+  background-color: #1f1f1f;
+  color: #eee;
+  border-color: #333;
+}
+body.dark-mode #searchSubject::placeholder {
+  color: #aaa;
+}
+
