@@ -366,4 +366,14 @@ body.dark-mode.admin .btn-primary {
   border-radius: 4px;
   padding: 6px 12px;
 }
+/* manage_teacher.css */
 
+.modal-below-navbar .modal-dialog {
+  margin-top: 80px;
+}
+
+.modal.show.position-static {
+  display: block;
+  position: static;
+  background-color: #f0f4f8;
+}
