@@ -22,11 +22,15 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="../assets/js/lucide.min.js"></script>
   <script src="../assets/js/manage_teacher.js" defer></script>
+
+ 
 </head>
 
 <body>
   <!-- Sidebar -->
   <?php include 'sidebar_teacher.php'; ?>
+  
+ 
 
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--accent-light);">
@@ -49,9 +53,89 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
     </div>
   </nav>
 
+  <!-- Add Teacher Modal -->
+  <div id="exampleModal" class="modal show d-none position-static modal-below-navbar" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <<div class="modal-dialog modal-lg">
+>
+      <div class="modal-content p-4">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Add Teacher</h1>
+          <button type="button" class="btn-close" onclick="document.getElementById('exampleModal').classList.add('d-none')" aria-label="Close"></button>
+        </div>
+          <form id="addTeacherForm" method="POST" action="add_teacher_process.php">
+  <div class="mb-3">
+    <label for="teacherName" class="form-label">Full Name</label>
+    <input type="text" class="form-control" id="teacherName" name="teacherName" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="teacherID" class="form-label">Teacher ID</label>
+    <input type="text" class="form-control" id="teacherID" name="teacherID" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="email" class="form-label">Email</label>
+    <input type="email" class="form-control" id="email" name="email" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="phone" class="form-label">Phone Number</label>
+    <input type="text" class="form-control" id="phone" name="phone">
+  </div>
+
+  <div class="mb-3">
+    <label for="department" class="form-label">Department</label>
+    <select class="form-select" id="department" name="department" required>
+      <option value="">Select Department</option>
+      <option value="Computer">Computer</option>
+      <option value="Management">Management</option>
+      <option value="Science">Science</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Gender</label><br>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="gender" id="genderMale" value="Male" required>
+      <label class="form-check-label" for="genderMale">Male</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="Female">
+      <label class="form-check-label" for="genderFemale">Female</label>
+    </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="gender" id="genderOther" value="Other">
+      <label class="form-check-label" for="genderOther">Other</label>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label for="address" class="form-label">Address</label>
+    <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+  </div>
+
+  <div class="mb-3">
+    <label for="password" class="form-label">Password</label>
+    <input type="password" class="form-control" id="password" name="password" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="confirmPassword" class="form-label">Confirm Password</label>
+    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" onclick="document.getElementById('exampleModal').classList.add('d-none')">Close</button>
+    <button type="submit" class="btn btn-primary">Save changes</button>
+  </div>
+</form>
+
+      </div>
+    </div>
+  </div>
+
   <div class="container mt-4">
     <div class="row g-3">
-
       <!-- View Teachers -->
       <div class="col-md-12">
         <div class="card text-center p-4 equal-height-card h-100">
@@ -59,26 +143,35 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
           <h5 class="mt-3">Manage Teachers</h5>
           <p class="mb-3">All teacher records in the system.</p>
 
-          <!-- Buttons and search input in a row -->
           <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
-
-            <!-- Search input and button -->
             <input type="text" id="searchInput" class="form-control form-control-sm w-auto" placeholder="Search by ID or Name">
             <button onclick="searchTable()" class="btn btn-outline-secondary btn-sm">Search</button>
-            <button onclick="addTable()" class="btn btn-outline-secondary btn-sm">Add</button>
+            <button type="button" class="btn btn-primary btn-add" onclick="document.getElementById('exampleModal').classList.remove('d-none')">
+              Add
+            </button>
             <button onclick="editTable()" class="btn btn-outline-secondary btn-sm">Edit</button>
             <button onclick="deleteTable()" class="btn btn-outline-secondary btn-sm">Delete</button>
           </div>
 
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+ 
+  
           <!-- Table -->
           <div class="table-responsive mt-2">
+   
             <table class="table table-bordered table-striped" id="teacherTable">
               <thead class="table-light">
                 <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Department</th>
-                  <th>Email</th>
+                  <th>LoginID</th>
+                  <th>FullName</th>
+                   <th>Phone</th>
+                  <th>DepartmentID</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -104,35 +197,7 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
     </div>
   </div>
 
-  <!-- Add/Edit Teacher Modal -->
-<div class="modal fade" id="teacherModal" tabindex="-1" aria-labelledby="teacherModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="teacherForm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="teacherModalLabel">Add/Edit Teacher</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" name="id" id="teacherId" />
-          <div class="mb-3">
-            <label>Name</label>
-            <input type="text" name="name" id="teacherName" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label>Department</label>
-            <input type="text" name="department" id="teacherDepartment" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label>Email</label>
-            <input type="email" name="email" id="teacherEmail" class="form-control" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Save</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
+ 
+</body>
+
+</html>
