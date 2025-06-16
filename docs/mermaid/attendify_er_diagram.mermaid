@@ -1,0 +1,104 @@
+erDiagram
+    login_tbl {
+        INT LoginID PK
+        VARCHAR Email UK
+        VARCHAR Password
+        ENUM Role
+        ENUM Status
+        DATETIME CreatedDate
+    }
+    
+    departments {
+        INT DepartmentID PK
+        VARCHAR DepartmentName UK
+        VARCHAR DepartmentCode UK
+    }
+    
+    semesters {
+        INT SemesterID PK
+        INT SemesterNumber
+    }
+    
+    admins {
+        INT AdminID PK
+        VARCHAR FullName
+        VARCHAR Contact
+        VARCHAR Address
+        VARCHAR PhotoURL
+        INT LoginID FK,UK
+    }
+    
+    teachers {
+        INT TeacherID PK
+        VARCHAR FullName
+        VARCHAR Contact
+        VARCHAR Address
+        VARCHAR PhotoURL
+        INT LoginID FK,UK
+    }
+    
+    students {
+        INT StudentID PK
+        VARCHAR FullName
+        VARCHAR Contact
+        VARCHAR Address
+        VARCHAR PhotoURL
+        INT DepartmentID FK
+        INT SemesterID FK
+        YEAR JoinYear
+        VARCHAR ProgramCode
+        INT LoginID FK,UK
+    }
+    
+    subjects {
+        INT SubjectID PK
+        VARCHAR SubjectCode
+        VARCHAR SubjectName
+        INT CreditHour
+        INT LectureHour
+        BOOLEAN IsElective
+        INT DepartmentID FK
+        INT SemesterID FK
+    }
+    
+    teacher_subject_map {
+        INT MapID PK
+        INT TeacherID FK
+        INT SubjectID FK
+    }
+    
+    teacher_department_map {
+        INT MapID PK
+        INT TeacherID FK
+        INT DepartmentID FK
+    }
+    
+    attendance_records {
+        INT AttendanceID PK
+        INT StudentID FK
+        INT SubjectID FK
+        INT TeacherID FK
+        DATETIME DateTime
+        ENUM Status
+    }
+    
+    %% Relationships
+    login_tbl ||--|| admins : "authenticates"
+    login_tbl ||--|| teachers : "authenticates"
+    login_tbl ||--|| students : "authenticates"
+    
+    departments ||--o{ students : "belongs to"
+    departments ||--o{ subjects : "offers"
+    departments ||--o{ teacher_department_map : "has"
+    
+    semesters ||--o{ students : "enrolled in"
+    semesters ||--o{ subjects : "taught in"
+    
+    teachers ||--o{ teacher_subject_map : "teaches"
+    teachers ||--o{ teacher_department_map : "assigned to"
+    teachers ||--o{ attendance_records : "records"
+    
+    subjects ||--o{ teacher_subject_map : "taught by"
+    subjects ||--o{ attendance_records : "attendance for"
+    
+    students ||--o{ attendance_records : "has"

@@ -1,0 +1,11 @@
+flowchart TD
+    A[Student Dashboard] --> B[View Subjects & Attendance]
+    B --> C[Select Semester]
+    C --> D[Display Subject-wise Attendance]
+    D --> E[Calculate Attendance %]
+    E --> F[Show Visual Stats / Warnings]
+    F --> G[Option to View History or Download Report]
+    A --> Q[Scan QR Code for Attendance]
+    Q --> R{"QR Scan Successful?"}
+    R -- Yes --> S["Mark Attendance Automatically"]
+    R -- No --> T["Show Scan Error / Retry"]
