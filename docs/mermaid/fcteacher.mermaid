@@ -1,0 +1,24 @@
+flowchart TD
+    Start(("Start")) --> A["Teacher Dashboard"]
+    A --> B["Select Department"]
+    B --> C["Select Assigned Subject"]
+    C --> D["Fetch Student List"]
+
+    D --> E{"Students Found?"}
+    E -- Yes --> Check["Check if Already Submitted Today"]
+    E -- No --> X["Show 'No Students Found' Error"]
+    X --> End(("End"))
+
+    Check --> Z{"Attendance Already Marked for Today?"}
+    Z -- Yes --> Z1["Disable Submit Button & Show Warning"]
+    Z1 --> End
+    Z -- No --> F["Mark Attendance"]
+
+    F --> G{"All Students Marked?"}
+    G -- Yes --> H["Submit Attendance Record"]
+    G -- No --> Y["Prompt: Mark All or Confirm Missing"]
+    Y --> H
+
+    H --> I["Save to attendance_records Table"]
+    I --> J["Show Confirmation Message"]
+    J --> End(("End"))
