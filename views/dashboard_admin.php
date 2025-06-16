@@ -52,7 +52,7 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
   <!-- Main Content -->
   <div class="container-fluid dashboard-container">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-      <h2 class="m-0">Admin Dashboard</h2>
+      <h2 class="m-0"><i data-lucide="layout-dashboard"></i> Admin Dashboard</h2>
       <div class="d-flex gap-2">
         <a href="manage_student.php" class="btn btn-success btn-sm">
           <i data-lucide="user-plus" class="me-1"></i>Manage Student
