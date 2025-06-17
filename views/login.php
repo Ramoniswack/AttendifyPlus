@@ -8,72 +8,81 @@ require_once "../helpers/helpers.php";
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-  $email = sanitize($_POST['email']);
-  $password = sanitize($_POST['password']);
+    $email = sanitize($_POST['email']);
+    $password = sanitize($_POST['password']);
 
-  $stmt = $conn->prepare("SELECT LoginID, Email, Password, Role FROM login_tbl WHERE Email = ? AND Status = 'active'");
-  $stmt->bind_param("s", $email);
-  $stmt->execute();
-  $stmt->store_result();
+    // Prepare statement to get user from login_tbl where active
+    $stmt = $conn->prepare("SELECT LoginID, Email, Password, Role FROM login_tbl WHERE Email = ? AND Status = 'active'");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $stmt->store_result();
 
-  if ($stmt->num_rows === 1) {
-    $stmt->bind_result($loginID, $emailDB, $dbPassword, $role);
-    $stmt->fetch();
+    if ($stmt->num_rows === 1) {
+        $stmt->bind_result($loginID, $emailDB, $dbPassword, $role);
+        $stmt->fetch();
 
-    if ($password === $dbPassword) { // Using plain-text password match for now
-      $_SESSION['LoginID'] = $loginID;
-      $_SESSION['Role'] = $role;
+        // For now plain-text password check (replace with password_verify for hashed passwords)
+        if ($password === $dbPassword) {
 
-      // Get user ID and FullName from role table
-      switch (strtolower($role)) {
-        case 'admin':
-          $query = "SELECT AdminID, FullName FROM admins WHERE LoginID = ?";
-          break;
-        case 'teacher':
-          $query = "SELECT TeacherID, FullName FROM teachers WHERE LoginID = ?";
-          break;
-        case 'student':
-          $query = "SELECT StudentID, FullName FROM students WHERE LoginID = ?";
-          break;
-        default:
-          $error = "Invalid user role in system.";
-          exit;
-      }
+            $_SESSION['LoginID'] = $loginID;
+            $_SESSION['Role'] = strtolower($role);
 
-      $profileStmt = $conn->prepare($query);
-      $profileStmt->bind_param("i", $loginID);
-      $profileStmt->execute();
-      $profileStmt->bind_result($userID, $fullName);
-      $profileStmt->fetch();
-      $profileStmt->close();
+            // Fetch user info from respective role table
+            switch (strtolower($role)) {
+                case 'admin':
+                    $query = "SELECT AdminID, FullName FROM admins WHERE LoginID = ?";
+                    break;
+                case 'teacher':
+                    $query = "SELECT TeacherID, FullName FROM teachers WHERE LoginID = ?";
+                    break;
+                case 'student':
+                    $query = "SELECT StudentID, FullName FROM students WHERE LoginID = ?";
+                    break;
+                default:
+                    $error = "Invalid user role.";
+                    break;
+            }
 
-      $_SESSION['UserID'] = $userID;
-      $_SESSION['Username'] = $fullName;
+            if (empty($error)) {
+                $profileStmt = $conn->prepare($query);
+                $profileStmt->bind_param("i", $loginID);
+                $profileStmt->execute();
+                $profileStmt->bind_result($userID, $fullName);
+                if ($profileStmt->fetch()) {
+                    $_SESSION['UserID'] = $userID;
+                    $_SESSION['Username'] = $fullName;
 
-      // Redirect based on role
-      switch (strtolower($role)) {
-        case 'admin':
-          header("Location: dashboard_admin.php");
-          break;
-        case 'teacher':
-          header("Location: dashboard_teacher.php");
-          break;
-        case 'student':
-          header("Location: dashboard_student.php");
-          break;
-      }
-      exit;
+                    // Redirect based on role
+                    switch (strtolower($role)) {
+                        case 'admin':
+                            header("Location: dashboard_admin.php");
+                            break;
+                        case 'teacher':
+                            header("Location: dashboard_teacher.php");
+                            break;
+                        case 'student':
+                            header("Location: dashboard_student.php");
+                            break;
+                    }
+                    $profileStmt->close();
+                    exit;
+                } else {
+                    $error = "User profile not found.";
+                }
+            }
+        } else {
+            $error = "Incorrect password.";
+        }
     } else {
-      $error = "Incorrect password.";
+        $error = "Invalid email or inactive account.";
     }
-  } else {
-    $error = "Invalid email or inactive account.";
-  }
 
-  $stmt->close();
+    $stmt->close();
 }
+
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

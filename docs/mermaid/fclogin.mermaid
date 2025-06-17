@@ -1,0 +1,13 @@
+flowchart TD
+    A[Start] --> B[Enter Email & Password]
+    B --> C[Submit Login Form]
+    C --> D{Check Credentials in login_tbl}
+    D -- Valid --> E{Role?}
+    E -- Admin --> F[Redirect to Admin Dashboard]
+    E -- Teacher --> G[Redirect to Teacher Dashboard]
+    E -- Student --> H[Redirect to Student Dashboard]
+    D -- Invalid --> I[Show Login Error]
+    I --> B
+    F --> J[End]
+    G --> J
+    H --> J

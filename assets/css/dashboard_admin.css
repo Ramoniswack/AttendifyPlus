@@ -9,6 +9,12 @@
   --accent-dark: #00ffc8;
   --navbar-light: var(--accent-light);
   --navbar-dark: var(--accent-dark);
+  --text-muted-light: #6c757d;
+  --text-muted-dark: #a0a0a0;
+  --border-light: #f8f9fa;
+  --border-dark: #333;
+  --shadow-light: rgba(0, 0, 0, 0.1);
+  --shadow-dark: rgba(0, 0, 0, 0.3);
 }
 
 /* GENERAL RESET */
@@ -342,3 +348,470 @@ body.dark-mode.admin .btn-primary {
   color: black;
 }
 
+/* ========================== */
+/* 🎯 ENHANCED DASHBOARD STYLES */
+/* ========================== */
+
+/* Dashboard Container */
+.dashboard-container {
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+/* Text Muted - Dark Mode Support */
+.text-muted {
+  color: var(--text-muted-light) !important;
+}
+
+body.dark-mode .text-muted {
+  color: var(--text-muted-dark) !important;
+}
+/* ===== STATISTICS CARDS (MATCHING TEACHER/STUDENT CSS EXACTLY) ===== */
+.stats-card,
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stats-card:hover,
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.stats-card.assignments-card,
+.stat-card.teachers {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.stats-card.assignments-card:hover,
+.stat-card.teachers:hover {
+  box-shadow: 0 8px 25px rgba(17, 153, 142, 0.3);
+}
+
+.stats-card.recent-card,
+.stat-card.admins {
+  background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
+}
+
+.stats-card.recent-card:hover,
+.stat-card.admins:hover {
+  box-shadow: 0 8px 25px rgba(252, 70, 107, 0.3);
+}
+
+.stat-card.activities {
+  background: linear-gradient(135deg, #ffa726 0%, #ffcc02 100%);
+}
+
+.stat-card.activities:hover {
+  box-shadow: 0 8px 25px rgba(255, 167, 38, 0.3);
+}
+
+body.dark-mode .stats-card,
+body.dark-mode .stat-card {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .stats-card:hover,
+body.dark-mode .stat-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+}
+
+body.dark-mode .stats-card.assignments-card,
+body.dark-mode .stat-card.teachers {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+}
+
+body.dark-mode .stats-card.recent-card,
+body.dark-mode .stat-card.admins {
+  background: linear-gradient(135deg, #7c2d12 0%, #b91c1c 100%);
+}
+
+body.dark-mode .stat-card.activities {
+  background: linear-gradient(135deg, #92400e 0%, #d97706 100%);
+}
+
+.stats-number,
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.stats-icon,
+.stat-icon {
+  font-size: 2.5rem;
+  opacity: 0.8;
+}
+
+.stats-icon i,
+.stat-icon i {
+  width: 40px;
+  height: 40px;
+}
+
+/* Remove old stat-card specific styling that conflicts */
+.stat-card::before {
+  display: none;
+}
+
+.stat-card {
+  position: relative;
+  overflow: visible;
+  box-shadow: none;
+}
+
+
+/* Chart Cards */
+.chart-card {
+  background: var(--card-light);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 25px var(--shadow-light);
+  border: none;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+body.dark-mode .chart-card {
+  background: var(--card-dark);
+  box-shadow: 0 8px 25px var(--shadow-dark);
+}
+
+.chart-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .chart-card:hover {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.chart-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+body.dark-mode .chart-title {
+  color: var(--text-dark);
+}
+
+/* Quick Action Cards */
+.quick-action-card {
+  background: var(--card-light);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 25px var(--shadow-light);
+  border: none;
+  transition: all 0.3s ease;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+body.dark-mode .quick-action-card {
+  background: var(--card-dark);
+  box-shadow: 0 8px 25px var(--shadow-dark);
+}
+
+.quick-action-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .quick-action-card:hover {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+.quick-action-card h5 {
+  color: var(--text-light);
+}
+
+body.dark-mode .quick-action-card h5 {
+  color: var(--text-dark);
+}
+
+.quick-action-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+}
+
+/* Recent Activity Cards */
+.recent-activity-card {
+  background: var(--card-light);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 25px var(--shadow-light);
+  border: none;
+  height: 100%;
+}
+
+body.dark-mode .recent-activity-card {
+  background: var(--card-dark);
+  box-shadow: 0 8px 25px var(--shadow-dark);
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+body.dark-mode .activity-item {
+  border-bottom: 1px solid var(--border-dark);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-item p {
+  color: var(--text-light);
+}
+
+body.dark-mode .activity-item p {
+  color: var(--text-dark);
+}
+
+.activity-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+
+.activity-avatar.student {
+  background: #007bff;
+}
+
+.activity-avatar.teacher {
+  background: #28a745;
+}
+
+.activity-avatar.admin {
+  background: #ffc107;
+  color: #000;
+}
+
+/* Page Header */
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+}
+
+body.dark-mode .page-title {
+  color: var(--text-dark);
+}
+
+.chart-container {
+  position: relative;
+  height: 280px;
+}
+
+/* Button Styles */
+.btn-gradient {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border: none;
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+  color: white;
+}
+
+.btn-outline-primary {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+  border-color: var(--accent-light);
+  color: var(--accent-light);
+}
+
+body.dark-mode .btn-outline-primary {
+  border-color: var(--accent-dark);
+  color: var(--accent-dark);
+}
+
+.btn-outline-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
+  background-color: var(--accent-light);
+  border-color: var(--accent-light);
+  color: white;
+}
+
+body.dark-mode .btn-outline-primary:hover {
+  box-shadow: 0 5px 15px rgba(0, 255, 200, 0.2);
+  background-color: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: black;
+}
+
+/* Badge Dark Mode Support */
+.badge {
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .bg-success {
+  background-color: #28a745 !important;
+}
+
+body.dark-mode .bg-secondary {
+  background-color: #6c757d !important;
+}
+
+/* Text Colors for Dark Mode */
+.text-success {
+  color: #28a745 !important;
+}
+
+body.dark-mode .text-success {
+  color: #40d962 !important;
+}
+
+.text-info {
+  color: #17a2b8 !important;
+}
+
+body.dark-mode .text-info {
+  color: #20c997 !important;
+}
+
+.text-primary {
+  color: var(--accent-light) !important;
+}
+
+body.dark-mode .text-primary {
+  color: var(--accent-dark) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .stat-number {
+    font-size: 2.2rem;
+  }
+
+  .chart-container {
+    height: 250px;
+  }
+}
+
+@media (max-width: 992px) {
+  .dashboard-container {
+    padding: 1.5rem;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+  }
+
+  .page-title {
+    font-size: 1.8rem;
+  }
+
+  .chart-container {
+    height: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+
+  .stat-card {
+    padding: 1.5rem;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+  }
+
+  .page-title {
+    font-size: 1.6rem;
+  }
+
+  .chart-container {
+    height: 200px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .page-header .d-flex {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .page-header .btn {
+    flex: 1;
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 576px) {
+  .stat-card {
+    padding: 1.25rem;
+  }
+
+  .stat-number {
+    font-size: 1.6rem;
+  }
+
+  .chart-card,
+  .recent-activity-card,
+  .quick-action-card {
+    padding: 1.25rem;
+  }
+
+  .activity-item {
+    padding: 0.5rem 0;
+  }
+
+  .activity-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
+  }
+}

@@ -1,0 +1,45 @@
+flowchart TB
+    Start((Start))
+    End((End))
+    
+    Start --> A[Admin Dashboard]
+    
+    A --> B[Manage Students]
+    B --> B1[Add / Update / Delete Students]
+    B1 --> End
+
+    A --> C[Manage Teachers]
+    C --> C1[Add / Update / Delete Teachers]
+    C1 --> End
+
+    A --> D[Manage Admins]
+    D --> D1[Add / Update / Delete Admins]
+    D1 --> End
+
+    A --> E[Define Subjects]
+    E --> E1[Add Subject Code, Name, Credit Hour]
+    E1 --> End
+
+    A --> F[Assign Subjects to Teachers]
+    F --> F1[Map Teacher → Subject → Semester → Department]
+    F1 --> End
+
+    A --> G[Create Departments & Semesters]
+    G --> G1[Create Department / Semester List]
+    G1 --> End
+
+    A --> H[View Attendance Stats]
+    H --> H1[View by Subject or Student]
+    H1 --> End
+
+    A --> I[Seminar Analytics]
+    I --> End
+
+    A --> J[Overall Analytics]
+    J --> End
+
+    A --> K[Edit Profile]
+    K --> End
+
+    A --> L[Logout]
+    L --> End
