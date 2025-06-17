@@ -366,94 +366,106 @@ body.dark-mode.admin .btn-primary {
 body.dark-mode .text-muted {
   color: var(--text-muted-dark) !important;
 }
-
-/* Stat Cards */
+/* ===== STATISTICS CARDS (MATCHING TEACHER/STUDENT CSS EXACTLY) ===== */
+.stats-card,
 .stat-card {
-  background: var(--card-light);
-  border-radius: 15px;
-  padding: 2rem;
-  box-shadow: 0 8px 25px var(--shadow-light);
-  border: none;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  height: 100%;
-}
-
-body.dark-mode .stat-card {
-  background: var(--card-dark);
-  box-shadow: 0 8px 25px var(--shadow-dark);
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.stats-card:hover,
 .stat-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
+.stats-card.assignments-card,
+.stat-card.teachers {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.stats-card.assignments-card:hover,
+.stat-card.teachers:hover {
+  box-shadow: 0 8px 25px rgba(17, 153, 142, 0.3);
+}
+
+.stats-card.recent-card,
+.stat-card.admins {
+  background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
+}
+
+.stats-card.recent-card:hover,
+.stat-card.admins:hover {
+  box-shadow: 0 8px 25px rgba(252, 70, 107, 0.3);
+}
+
+.stat-card.activities {
+  background: linear-gradient(135deg, #ffa726 0%, #ffcc02 100%);
+}
+
+.stat-card.activities:hover {
+  box-shadow: 0 8px 25px rgba(255, 167, 38, 0.3);
+}
+
+body.dark-mode .stats-card,
+body.dark-mode .stat-card {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .stats-card:hover,
 body.dark-mode .stat-card:hover {
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
 }
 
-.stat-card.students::before {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+body.dark-mode .stats-card.assignments-card,
+body.dark-mode .stat-card.teachers {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
 }
 
-.stat-card.teachers::before {
-  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+body.dark-mode .stats-card.recent-card,
+body.dark-mode .stat-card.admins {
+  background: linear-gradient(135deg, #7c2d12 0%, #b91c1c 100%);
 }
 
-.stat-card.admins::before {
-  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+body.dark-mode .stat-card.activities {
+  background: linear-gradient(135deg, #92400e 0%, #d97706 100%);
 }
 
-.stat-card.activities::before {
-  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-}
-
+.stats-number,
 .stat-number {
-  font-size: 2.8rem;
-  font-weight: 700;
-  color: var(--text-light);
-  margin: 0;
-  line-height: 1;
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-body.dark-mode .stat-number {
-  color: var(--text-dark);
-}
-
-.stat-label {
-  color: var(--text-muted-light);
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
-}
-
-body.dark-mode .stat-label {
-  color: var(--text-muted-dark);
-}
-
-.stat-change {
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
+.stats-icon,
 .stat-icon {
-  opacity: 0.2;
-  position: absolute;
-  right: 1rem;
-  top: 1rem;
+  font-size: 2.5rem;
+  opacity: 0.8;
 }
+
+.stats-icon i,
+.stat-icon i {
+  width: 40px;
+  height: 40px;
+}
+
+/* Remove old stat-card specific styling that conflicts */
+.stat-card::before {
+  display: none;
+}
+
+.stat-card {
+  position: relative;
+  overflow: visible;
+  box-shadow: none;
+}
+
 
 /* Chart Cards */
 .chart-card {
