@@ -291,24 +291,46 @@ foreach ($statsQueries as $key => $query) {
             </div>
         <?php endif; ?>
 
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
+      
+        <!-- Statistics Cards - Updated to Match Teacher Theme -->
+        <div class="row g-3 mb-4">
             <div class="col-md-4">
                 <div class="stats-card text-center">
-                    <div class="stats-number"><?= $stats['total'] ?></div>
-                    <div>Total Students</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stats-number"><?= $stats['total'] ?></div>
+                            <div>Total Students</div>
+                        </div>
+                        <div class="stats-icon">
+                            <i data-lucide="users"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="stats-card text-center" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                    <div class="stats-number"><?= $stats['active'] ?></div>
-                    <div>Active Students</div>
+                <div class="stats-card assignments-card text-center">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stats-number"><?= $stats['active'] ?></div>
+                            <div>Active Students</div>
+                        </div>
+                        <div class="stats-icon">
+                            <i data-lucide="user-check"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="stats-card text-center" style="background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);">
-                    <div class="stats-number"><?= $stats['inactive'] ?></div>
-                    <div>Inactive Students</div>
+                <div class="stats-card recent-card text-center">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stats-number"><?= $stats['inactive'] ?></div>
+                            <div>Inactive Students</div>
+                        </div>
+                        <div class="stats-icon">
+                            <i data-lucide="user-x"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
