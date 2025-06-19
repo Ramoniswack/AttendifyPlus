@@ -120,10 +120,10 @@ $monthlyDataJSON = json_encode($monthlyData);
 
 <body>
   <!-- Sidebar -->
-  <?php include 'sidebar_admin_dashboard.php'; ?>
+  <?php include '../views/sidebar_admin_dashboard.php'; ?>
 
   <!-- Navbar -->
-  <?php include 'navbar_admin.php'; ?>
+  <?php include '../views/navbar_admin.php'; ?>
 
   <!-- Main Content -->
   <div class="container-fluid dashboard-container">
@@ -172,6 +172,7 @@ $monthlyDataJSON = json_encode($monthlyData);
           </div>
         </div>
       </div>
+
 
       <div class="col-lg-3 col-md-6">
         <div class="stat-card teachers text-center">
