@@ -9,144 +9,193 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add("dark-mode");
   }
 
-  // Sidebar toggle functionality
-  const toggleBtn = document.getElementById("sidebarToggle");
-  const sidebar = document.getElementById("sidebar");
-  const overlay = document.querySelector(".sidebar-overlay");
+  // Force sidebar to be hidden on load
+  ensureSidebarHidden();
 
-  if (toggleBtn && sidebar) {
-    toggleBtn.addEventListener("click", () => {
-      sidebar.classList.toggle("active");
-      document.body.classList.toggle("sidebar-open");
-      overlay?.classList.toggle("show");
-    });
-  }
+  // Initialize sidebar toggle
+  initializeSidebarToggle();
 
-  if (overlay) {
-    overlay.addEventListener("click", () => {
-      sidebar?.classList.remove("active");
-      document.body.classList.remove("sidebar-open");
-      overlay.classList.remove("show");
-    });
-  }
-
-  // Toggle theme and save
+  // Theme toggle function
   window.toggleTheme = function () {
     const isDark = document.body.classList.toggle("dark-mode");
     localStorage.setItem("theme", isDark ? "dark" : "light");
+    updateThemeElements();
     updateChartsForTheme();
   };
 
-  // Chart.js - Global defaults
-  Chart.defaults.responsive = true;
-  Chart.defaults.maintainAspectRatio = false;
-  Chart.defaults.plugins.legend.display = false;
+  // Update theme elements
+  updateThemeElements();
+});
 
-  const attendanceCtx = document.getElementById("attendanceChart");
-  if (attendanceCtx) {
-    window.attendanceChart = new Chart(attendanceCtx, {
-      type: "line",
-      data: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-        datasets: [{
-          label: "Attendance %",
-          data: [85, 82, 78, 88, 90],
-          borderColor: "#3b82f6",
-          backgroundColor: "rgba(59,130,246,0.2)",
-          tension: 0.4,
-          fill: true
-        }]
-      },
-      options: {
-        plugins: {
-          legend: { display: true },
-          tooltip: {
-            backgroundColor: "#000",
-            titleColor: "#fff",
-            bodyColor: "#fff"
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 100,
-            ticks: { callback: val => val + "%" },
-            grid: {}
-          },
-          x: { grid: {} }
-        }
-      }
-    });
+// ===== SIDEBAR MANAGEMENT ===== //
+
+function ensureSidebarHidden() {
+  console.log('Ensuring sidebar is hidden on load...');
+  
+  const sidebar = document.querySelector('.sidebar');
+  const body = document.body;
+  const overlay = document.querySelector('.sidebar-overlay');
+  
+  if (sidebar) {
+    sidebar.classList.remove('active');
+    sidebar.style.left = '-280px';
+    sidebar.style.visibility = 'hidden';
+    sidebar.style.opacity = '0';
+  }
+  
+  if (body) {
+    body.classList.remove('sidebar-open');
+  }
+  
+  if (overlay) {
+    overlay.classList.remove('active');
+    overlay.style.opacity = '0';
+    overlay.style.visibility = 'hidden';
+  }
+  
+  console.log('Sidebar forced to hidden state');
+}
+
+function closeSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const body = document.body;
+  const overlay = document.querySelector('.sidebar-overlay');
+
+  if (sidebar) {
+    sidebar.classList.remove('active');
+    body.classList.remove('sidebar-open');
+    
+    sidebar.style.left = '-280px';
+    sidebar.style.visibility = 'hidden';
+    sidebar.style.opacity = '0';
+    
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.style.opacity = '0';
+      overlay.style.visibility = 'hidden';
+    }
+    
+    console.log('Sidebar closed');
+  }
+}
+
+function openSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const body = document.body;
+  const overlay = document.querySelector('.sidebar-overlay');
+
+  if (sidebar) {
+    // Close any open dropdowns first
+    closeAllDropdowns();
+    
+    sidebar.classList.add('active');
+    body.classList.add('sidebar-open');
+    
+    sidebar.style.left = '0';
+    sidebar.style.visibility = 'visible';
+    sidebar.style.opacity = '1';
+    
+    if (overlay) {
+      overlay.classList.add('active');
+      overlay.style.opacity = '1';
+      overlay.style.visibility = 'visible';
+    }
+    
+    console.log('Sidebar opened');
+  }
+}
+
+function createSidebarOverlay() {
+  let overlay = document.querySelector('.sidebar-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    overlay.id = 'sidebarOverlay';
+    document.body.appendChild(overlay);
+    console.log('Sidebar overlay created');
+  }
+  return overlay;
+}
+
+function initializeSidebarToggle() {
+  console.log('Initializing sidebar toggle...');
+  
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebar = document.querySelector('.sidebar');
+  
+  if (!sidebarToggle || !sidebar) {
+    console.log('Sidebar elements not found');
+    return;
   }
 
-  const assignmentCtx = document.getElementById("assignmentChart");
-  if (assignmentCtx) {
-    window.assignmentChart = new Chart(assignmentCtx, {
-      type: "bar",
-      data: {
-        labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-        datasets: [{
-          label: "Submissions",
-          data: [32, 45, 38, 50],
-          backgroundColor: "#8b5cf6"
-        }]
-      },
-      options: {
-        plugins: {
-          legend: { display: true },
-          tooltip: {
-            backgroundColor: "#000",
-            titleColor: "#fff",
-            bodyColor: "#fff"
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: {}
-          },
-          x: { grid: {} }
-        }
-      }
-    });
-  }
+  const overlay = createSidebarOverlay();
 
-  const doughnutData = [
-    { id: "readingChart", labels: ["Read", "Unread"], data: [65, 35], color: "#10b981" },
-    { id: "completionChart", labels: ["Completed", "Pending"], data: [72, 28], color: "#3b82f6" },
-    { id: "classChart", labels: ["Present", "Absent"], data: [80, 20], color: "#f59e0b" }
-  ];
+  // Remove existing listeners by cloning
+  const newToggle = sidebarToggle.cloneNode(true);
+  sidebarToggle.parentNode.replaceChild(newToggle, sidebarToggle);
 
-  doughnutData.forEach(({ id, labels, data, color }) => {
-    const el = document.getElementById(id);
-    if (el) {
-      new Chart(el, {
-        type: "doughnut",
-        data: {
-          labels,
-          datasets: [{
-            data,
-            backgroundColor: [color, "#e5e7eb"],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          cutout: "70%",
-          plugins: {
-            legend: { position: "bottom" },
-            tooltip: {
-              backgroundColor: "#000",
-              titleColor: "#fff",
-              bodyColor: "#fff"
-            }
-          }
-        }
-      });
+  newToggle.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('Sidebar toggle clicked');
+    
+    const isActive = sidebar.classList.contains('active');
+    if (isActive) {
+      closeSidebar();
+    } else {
+      openSidebar();
     }
   });
 
-  updateChartsForTheme(); // Apply current theme to charts
-});
+  // Close sidebar when clicking overlay
+  if (overlay) {
+    overlay.addEventListener('click', function(e) {
+      console.log('Overlay clicked, closing sidebar');
+      closeSidebar();
+    });
+  }
+
+  // Close sidebar on escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+      closeSidebar();
+    }
+  });
+  
+  console.log('Sidebar toggle initialized');
+}
+
+// ===== DROPDOWN MANAGEMENT ===== //
+
+function closeAllDropdowns() {
+  const openDropdowns = document.querySelectorAll('.dropdown.show');
+  openDropdowns.forEach(dropdown => {
+    const button = dropdown.querySelector('[data-bs-toggle="dropdown"]');
+    if (button) {
+      const bsDropdown = bootstrap.Dropdown.getInstance(button);
+      if (bsDropdown) {
+        bsDropdown.hide();
+      }
+    }
+  });
+}
+
+// ===== THEME MANAGEMENT ===== //
+
+function updateThemeElements() {
+  const lightIcons = document.querySelectorAll('.light-icon');
+  const darkIcons = document.querySelectorAll('.dark-icon');
+  const isDarkMode = document.body.classList.contains('dark-mode');
+
+  lightIcons.forEach(icon => {
+    icon.style.display = isDarkMode ? 'none' : 'inline';
+  });
+
+  darkIcons.forEach(icon => {
+    icon.style.display = isDarkMode ? 'inline' : 'none';
+  });
+}
 
 function updateChartsForTheme() {
   const isDark = document.body.classList.contains("dark-mode");
@@ -155,6 +204,7 @@ function updateChartsForTheme() {
 
   Chart.defaults.color = textColor;
 
+  // Update existing charts if they exist
   if (window.attendanceChart) {
     window.attendanceChart.options.scales.y.grid.color = gridColor;
     window.attendanceChart.options.scales.x.grid.color = gridColor;
@@ -167,3 +217,15 @@ function updateChartsForTheme() {
     window.assignmentChart.update();
   }
 }
+
+// Handle page resize
+window.addEventListener('resize', function() {
+  closeSidebar();
+  updateThemeElements();
+});
+
+// Handle page load
+window.addEventListener('load', function() {
+  ensureSidebarHidden();
+  updateThemeElements();
+});
