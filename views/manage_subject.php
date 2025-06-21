@@ -1,5 +1,4 @@
 <?php
-
 session_start();
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
     header("Location: login.php");
@@ -187,54 +186,53 @@ foreach ($statsQueries as $key => $query) {
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manage Subjects | Attendify+</title>
     <link rel="stylesheet" href="../assets/css/manage_subject.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <script src="../assets/js/lucide.min.js"></script>
     <script src="../assets/js/manage_teacher.js" defer></script>
-    <style>
-        /* Additional responsive styles */
-    </style>
 </head>
 
 <body>
+    <!-- Include sidebar and navbar -->
     <?php include 'sidebar_admin_dashboard.php'; ?>
     <?php include 'navbar_admin.php'; ?>
 
-    <div class="container-fluid dashboard-container pt-4" id="manageSubjectsContainer">
-        <!-- Header and Add Button -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i data-lucide="book-open"></i> Manage Subjects</h2>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
-                <i data-lucide="plus"></i> Add Subject
-            </button>
+    <!-- Main content -->
+    <div class="container-fluid dashboard-container">
+        <!-- Page Header - Updated to Match manage_admin.php -->
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h2 class="page-title">
+                    <i data-lucide="book-open"></i>
+                    Subject Management
+                </h2>
+                <p class="text-muted mb-0">Manage academic subjects and course curriculum</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+                    <i data-lucide="plus"></i> Add Subject
+                </button>
+                <a href="manage_teacher.php" class="btn btn-outline-primary">
+                    <i data-lucide="users"></i> Teacher Management
+                </a>
+            </div>
         </div>
 
-        <!-- Success/Error Messages -->
-        <?php if ($successMsg): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i data-lucide="check-circle"></i> <?= htmlspecialchars($successMsg) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-        <?php if ($errorMsg): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i data-lucide="alert-circle"></i> <?= htmlspecialchars($errorMsg) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-
-       
-        <!-- Statistics Cards - Updated to Match Teacher/Student Theme -->
-        <div class="row g-3 mb-4">
+        <!-- Statistics Cards - Updated to Match dashboard_admin structure -->
+        <div class="row g-4 mb-4">
             <div class="col-md-3">
-                <div class="stats-card text-center">
+                <div class="stat-card text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stats-number"><?= $stats['total'] ?></div>
-                            <div>Total Subjects</div>
+                            <div class="stat-number"><?= $stats['total'] ?></div>
+                            <div class="stat-label">Total Subjects</div>
+                            <div class="stat-change">
+                                <i data-lucide="book-open"></i>
+                                <span>Available subjects</span>
+                            </div>
                         </div>
                         <div class="stats-icon">
                             <i data-lucide="book-open"></i>
@@ -243,11 +241,15 @@ foreach ($statsQueries as $key => $query) {
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stats-card core-card text-center">
+                <div class="stat-card teachers text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stats-number"><?= $stats['core'] ?></div>
-                            <div>Core Subjects</div>
+                            <div class="stat-number"><?= $stats['core'] ?></div>
+                            <div class="stat-label">Core Subjects</div>
+                            <div class="stat-change">
+                                <i data-lucide="book"></i>
+                                <span>Mandatory courses</span>
+                            </div>
                         </div>
                         <div class="stats-icon">
                             <i data-lucide="book"></i>
@@ -256,11 +258,15 @@ foreach ($statsQueries as $key => $query) {
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stats-card elective-card text-center">
+                <div class="stat-card admins text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stats-number"><?= $stats['elective'] ?></div>
-                            <div>Elective Subjects</div>
+                            <div class="stat-number"><?= $stats['elective'] ?></div>
+                            <div class="stat-label">Elective Subjects</div>
+                            <div class="stat-change">
+                                <i data-lucide="bookmark"></i>
+                                <span>Optional courses</span>
+                            </div>
                         </div>
                         <div class="stats-icon">
                             <i data-lucide="bookmark"></i>
@@ -269,11 +275,15 @@ foreach ($statsQueries as $key => $query) {
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stats-card assigned-card text-center">
+                <div class="stat-card activities text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stats-number"><?= $stats['assigned'] ?></div>
-                            <div>Assigned Subjects</div>
+                            <div class="stat-number"><?= $stats['assigned'] ?></div>
+                            <div class="stat-label">Assigned Subjects</div>
+                            <div class="stat-change">
+                                <i data-lucide="user-check"></i>
+                                <span>Teacher assigned</span>
+                            </div>
                         </div>
                         <div class="stats-icon">
                             <i data-lucide="user-check"></i>
@@ -283,16 +293,43 @@ foreach ($statsQueries as $key => $query) {
             </div>
         </div>
 
-        <!-- Search and Filters -->
+        <!-- Success/Error Messages -->
+        <?php if ($successMsg): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i data-lucide="check-circle" class="me-2"></i>
+                <?= htmlspecialchars($successMsg) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($errorMsg): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i data-lucide="alert-circle" class="me-2"></i>
+                <?= htmlspecialchars($errorMsg) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <!-- Search and Filter Section - Updated to Match manage_admin -->
         <div class="card mb-4">
             <div class="card-body">
+                <h6 class="card-title">
+                    <i data-lucide="filter"></i>
+                    Search & Filter Subjects
+                </h6>
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label"><i data-lucide="search"></i> Search Subject</label>
-                        <input id="searchSubject" type="text" class="form-control" placeholder="Enter subject name or code..." />
+                        <label class="form-label">
+                            <i data-lucide="search"></i>
+                            Search Subjects
+                        </label>
+                        <input id="searchSubject" type="text" class="form-control" placeholder="Search by name or code..." />
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label"><i data-lucide="building"></i> Department</label>
+                        <label class="form-label">
+                            <i data-lucide="building"></i>
+                            Department
+                        </label>
                         <select id="filterDepartment" class="form-select">
                             <option value="">All Departments</option>
                             <?php foreach ($departments as $d): ?>
@@ -301,7 +338,10 @@ foreach ($statsQueries as $key => $query) {
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label"><i data-lucide="layers"></i> Semester</label>
+                        <label class="form-label">
+                            <i data-lucide="layers"></i>
+                            Semester
+                        </label>
                         <select id="filterSemester" class="form-select">
                             <option value="">All Semesters</option>
                             <?php foreach ($semesters as $s): ?>
@@ -310,7 +350,10 @@ foreach ($statsQueries as $key => $query) {
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label"><i data-lucide="tag"></i> Type</label>
+                        <label class="form-label">
+                            <i data-lucide="tag"></i>
+                            Type
+                        </label>
                         <select id="filterType" class="form-select">
                             <option value="">All Types</option>
                             <option value="0">Core Subjects</option>
@@ -318,13 +361,22 @@ foreach ($statsQueries as $key => $query) {
                         </select>
                     </div>
                 </div>
+                <div class="mt-3">
+                    <small id="resultsCount" class="text-muted"></small>
+                </div>
             </div>
         </div>
 
-        <!-- Subjects Table -->
+        <!-- Subjects Table - Updated to Match manage_admin structure -->
         <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i data-lucide="book-open"></i>
+                    Subject Directory
+                </h6>
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="subjectsTable">
+                <table id="subjectsTable" class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Subject Code</th>
@@ -335,26 +387,34 @@ foreach ($statsQueries as $key => $query) {
                             <th>Lecture Hours</th>
                             <th>Type</th>
                             <th>Teachers</th>
-                            <th>Actions</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="subjectsTableBody">
                         <?php foreach ($subjects as $subject): ?>
-                            <tr data-department-id="<?= $subject['DepartmentID'] ?>" data-semester-id="<?= $subject['SemesterID'] ?>">
+                            <tr class="subject-row"
+                                data-subject-code="<?= strtolower(htmlspecialchars($subject['SubjectCode'])) ?>"
+                                data-subject-name="<?= strtolower(htmlspecialchars($subject['SubjectName'])) ?>"
+                                data-department="<?= htmlspecialchars($subject['DepartmentID']) ?>"
+                                data-semester="<?= htmlspecialchars($subject['SemesterID']) ?>"
+                                data-type="<?= $subject['IsElective'] ?>"
+                                data-department-name="<?= strtolower(htmlspecialchars($subject['DepartmentName'])) ?>">
                                 <td>
                                     <span class="subject-code"><?= htmlspecialchars($subject['SubjectCode']) ?></span>
                                 </td>
                                 <td>
-                                    <strong><?= htmlspecialchars($subject['SubjectName']) ?></strong>
-                                    <br><small class="text-muted">ID: <?= $subject['SubjectID'] ?></small>
+                                    <div>
+                                        <div class="fw-semibold"><?= htmlspecialchars($subject['SubjectName']) ?></div>
+                                        <small class="text-muted">ID: <?= $subject['SubjectID'] ?></small>
+                                    </div>
                                 </td>
                                 <td><?= htmlspecialchars($subject['DepartmentName']) ?></td>
                                 <td>Semester <?= htmlspecialchars($subject['SemesterNumber']) ?></td>
                                 <td>
-                                    <span class="credit-hour-badge"><?= $subject['CreditHour'] ?> Credits</span>
+                                    <span class="badge bg-primary"><?= $subject['CreditHour'] ?> Credits</span>
                                 </td>
                                 <td>
-                                    <span class="lecture-hour-badge"><?= $subject['LectureHour'] ?> Hours</span>
+                                    <span class="badge bg-secondary"><?= $subject['LectureHour'] ?> Hours</span>
                                 </td>
                                 <td>
                                     <span class="badge <?= $subject['IsElective'] ? 'bg-info' : 'bg-success' ?> subject-badge">
@@ -362,18 +422,26 @@ foreach ($statsQueries as $key => $query) {
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary"><?= $subject['TeacherCount'] ?> Teacher(s)</span>
+                                    <span class="badge bg-dark"><?= $subject['TeacherCount'] ?> Teacher(s)</span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewModal<?= $subject['SubjectID'] ?>" title="View Details">
+                                        <button class="btn btn-sm btn-outline-info"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#viewModal<?= $subject['SubjectID'] ?>"
+                                            title="View Details">
                                             <i data-lucide="eye"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal<?= $subject['SubjectID'] ?>" title="Edit Subject">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editModal<?= $subject['SubjectID'] ?>"
+                                            title="Edit Subject">
                                             <i data-lucide="edit"></i>
                                         </button>
                                         <?php if ($subject['TeacherCount'] == 0): ?>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteSubject(<?= $subject['SubjectID'] ?>, '<?= htmlspecialchars($subject['SubjectName']) ?>')" title="Delete Subject">
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                onclick="deleteSubject(<?= $subject['SubjectID'] ?>, '<?= htmlspecialchars($subject['SubjectName']) ?>')"
+                                                title="Delete Subject">
                                                 <i data-lucide="trash-2"></i>
                                             </button>
                                         <?php endif; ?>
@@ -385,332 +453,326 @@ foreach ($statsQueries as $key => $query) {
                 </table>
             </div>
         </div>
-    </div>
 
-    <!-- Add Subject Modal -->
-    <div class="modal fade" id="addSubjectModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <form method="POST" class="modal-content">
-                <input type="hidden" name="action" value="add_subject">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i data-lucide="plus"></i> Add New Subject
-                    </h5>
-                    <button type="button" class="btn-close btn-close-red" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <!-- Basic Information -->
-                        <div class="col-12">
-                            <h6 class="text-primary border-bottom pb-2"><i data-lucide="book-open"></i> Subject Information</h6>
+        <!-- View Subject Details Modals -->
+        <?php foreach ($subjects as $subject): ?>
+            <div class="modal fade" id="viewModal<?= $subject['SubjectID'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i data-lucide="book-open"></i>
+                                Subject Details - <?= htmlspecialchars($subject['SubjectName']) ?>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Subject Code <span class="required-field">*</span></label>
-                            <input name="SubjectCode" class="form-control" required placeholder="e.g., CS101" style="text-transform: uppercase;">
-                            <small class="form-text text-muted">Unique identifier for the subject</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Subject Name <span class="required-field">*</span></label>
-                            <input name="SubjectName" class="form-control" required placeholder="e.g., Introduction to Programming">
-                        </div>
-
-                        <!-- Academic Details -->
-                        <div class="col-12 mt-4">
-                            <h6 class="text-primary border-bottom pb-2"><i data-lucide="graduation-cap"></i> Academic Details</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Department <span class="required-field">*</span></label>
-                            <select name="DepartmentID" class="form-select" required>
-                                <option value="">Select Department</option>
-                                <?php foreach ($departments as $d): ?>
-                                    <option value="<?= $d['DepartmentID'] ?>"><?= htmlspecialchars($d['DepartmentName']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Semester <span class="required-field">*</span></label>
-                            <select name="SemesterID" class="form-select" required>
-                                <option value="">Select Semester</option>
-                                <?php foreach ($semesters as $s): ?>
-                                    <option value="<?= $s['SemesterID'] ?>">Semester <?= $s['SemesterNumber'] ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Credit Hours <span class="required-field">*</span></label>
-                            <input name="CreditHour" type="number" class="form-control" required min="1" max="10" value="3" placeholder="3">
-                            <small class="form-text text-muted">Usually between 1-6 credits</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Lecture Hours</label>
-                            <input name="LectureHour" type="number" class="form-control" min="1" max="200" value="48" placeholder="48">
-                            <small class="form-text text-muted">Total lecture hours per semester</small>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="IsElective" id="isElective">
-                                <label class="form-check-label" for="isElective">
-                                    This is an elective subject
-                                </label>
-                                <small class="form-text text-muted d-block">Check if this subject is optional for students</small>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <th width="40%">Subject ID:</th>
+                                            <td><?= $subject['SubjectID'] ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Subject Code:</th>
+                                            <td><code><?= htmlspecialchars($subject['SubjectCode']) ?></code></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Subject Name:</th>
+                                            <td><?= htmlspecialchars($subject['SubjectName']) ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Department:</th>
+                                            <td><?= htmlspecialchars($subject['DepartmentName']) ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Semester:</th>
+                                            <td>Semester <?= htmlspecialchars($subject['SemesterNumber']) ?></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <th width="40%">Credit Hours:</th>
+                                            <td><span class="badge bg-primary"><?= $subject['CreditHour'] ?> Credits</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Lecture Hours:</th>
+                                            <td><span class="badge bg-secondary"><?= $subject['LectureHour'] ?> Hours</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Subject Type:</th>
+                                            <td>
+                                                <span class="badge <?= $subject['IsElective'] ? 'bg-info' : 'bg-success' ?> subject-badge">
+                                                    <?= $subject['IsElective'] ? 'Elective' : 'Core' ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Assigned Teachers:</th>
+                                            <td><span class="badge bg-dark"><?= $subject['TeacherCount'] ?> Teacher(s)</span></td>
+                                        </tr>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i data-lucide="x"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i data-lucide="save"></i> Add Subject
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- View Subject Details Modals -->
-    <?php foreach ($subjects as $subject): ?>
-        <div class="modal fade" id="viewModal<?= $subject['SubjectID'] ?>" tabindex="-1">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i data-lucide="book-open"></i> Subject Details - <?= htmlspecialchars($subject['SubjectName']) ?>
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <th width="40%">Subject ID:</th>
-                                        <td><?= $subject['SubjectID'] ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Subject Code:</th>
-                                        <td><span class="subject-code"><?= htmlspecialchars($subject['SubjectCode']) ?></span></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Subject Name:</th>
-                                        <td><?= htmlspecialchars($subject['SubjectName']) ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Department:</th>
-                                        <td><?= htmlspecialchars($subject['DepartmentName']) ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Semester:</th>
-                                        <td>Semester <?= htmlspecialchars($subject['SemesterNumber']) ?></td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <div class="col-md-6">
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <th width="40%">Credit Hours:</th>
-                                        <td><span class="credit-hour-badge"><?= $subject['CreditHour'] ?> Credits</span></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Lecture Hours:</th>
-                                        <td><span class="lecture-hour-badge"><?= $subject['LectureHour'] ?> Hours</span></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Subject Type:</th>
-                                        <td>
-                                            <span class="badge <?= $subject['IsElective'] ? 'bg-info' : 'bg-success' ?> subject-badge">
-                                                <?= $subject['IsElective'] ? 'Elective' : 'Core' ?>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Assigned Teachers:</th>
-                                        <td><span class="badge bg-secondary"><?= $subject['TeacherCount'] ?> Teacher(s)</span></td>
-                                    </tr>
-                                </table>
-                            </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i data-lucide="x" class="me-1"></i>
+                                Close
+                            </button>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
-        </div>
-    <?php endforeach; ?>
+        <?php endforeach; ?>
 
-    <!-- Edit Subject Modals -->
-    <?php foreach ($subjects as $subject): ?>
-        <div class="modal fade" id="editModal<?= $subject['SubjectID'] ?>" tabindex="-1">
+        <!-- Edit Subject Modals -->
+        <?php foreach ($subjects as $subject): ?>
+            <div class="modal fade" id="editModal<?= $subject['SubjectID'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <form method="POST" class="modal-content">
+                        <input type="hidden" name="action" value="update_subject">
+                        <input type="hidden" name="SubjectID" value="<?= $subject['SubjectID'] ?>">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i data-lucide="edit"></i>
+                                Edit Subject - <?= htmlspecialchars($subject['SubjectName']) ?>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <!-- Basic Information -->
+                                <div class="col-12">
+                                    <h6 class="text-primary border-bottom pb-2"><i data-lucide="book-open"></i> Subject Information</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Subject Code <span class="required-field">*</span></label>
+                                    <input name="SubjectCode" class="form-control" required
+                                        value="<?= htmlspecialchars($subject['SubjectCode']) ?>"
+                                        style="text-transform: uppercase;">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Subject Name <span class="required-field">*</span></label>
+                                    <input name="SubjectName" class="form-control" required
+                                        value="<?= htmlspecialchars($subject['SubjectName']) ?>">
+                                </div>
+
+                                <!-- Academic Details -->
+                                <div class="col-12 mt-4">
+                                    <h6 class="text-primary border-bottom pb-2"><i data-lucide="graduation-cap"></i> Academic Details</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Department <span class="required-field">*</span></label>
+                                    <select name="DepartmentID" class="form-select" required>
+                                        <?php foreach ($departments as $d): ?>
+                                            <option value="<?= $d['DepartmentID'] ?>" <?= $d['DepartmentID'] == $subject['DepartmentID'] ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($d['DepartmentName']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Semester <span class="required-field">*</span></label>
+                                    <select name="SemesterID" class="form-select" required>
+                                        <?php foreach ($semesters as $s): ?>
+                                            <option value="<?= $s['SemesterID'] ?>" <?= $s['SemesterID'] == $subject['SemesterID'] ? 'selected' : '' ?>>
+                                                Semester <?= $s['SemesterNumber'] ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Credit Hours <span class="required-field">*</span></label>
+                                    <input name="CreditHour" type="number" class="form-control" required
+                                        min="1" max="10" value="<?= $subject['CreditHour'] ?>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Lecture Hours</label>
+                                    <input name="LectureHour" type="number" class="form-control"
+                                        min="1" max="200" value="<?= $subject['LectureHour'] ?>">
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="IsElective"
+                                            id="isElective<?= $subject['SubjectID'] ?>" <?= $subject['IsElective'] ? 'checked' : '' ?>>
+                                        <label class="form-check-label" for="isElective<?= $subject['SubjectID'] ?>">
+                                            This is an elective subject
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i data-lucide="x"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i data-lucide="save"></i> Update Subject
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        <?php endforeach; ?>
+
+        <!-- Add Subject Modal -->
+        <div class="modal fade" id="addSubjectModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <form method="POST" class="modal-content">
-                    <input type="hidden" name="action" value="update_subject">
-                    <input type="hidden" name="SubjectID" value="<?= $subject['SubjectID'] ?>">
+                    <input type="hidden" name="action" value="add_subject">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i data-lucide="edit"></i> Edit Subject - <?= htmlspecialchars($subject['SubjectName']) ?>
+                            <i data-lucide="plus"></i>
+                            Add New Subject
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close btn-close-red" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
+                            <!-- Basic Information -->
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2"><i data-lucide="book-open"></i> Subject Information</h6>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label">Subject Code <span class="required-field">*</span></label>
-                                <input name="SubjectCode" class="form-control" required value="<?= htmlspecialchars($subject['SubjectCode']) ?>" style="text-transform: uppercase;">
+                                <input name="SubjectCode" class="form-control" required placeholder="e.g., CS101" style="text-transform: uppercase;">
+                                <small class="form-text text-muted">Unique identifier for the subject</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Subject Name <span class="required-field">*</span></label>
-                                <input name="SubjectName" class="form-control" required value="<?= htmlspecialchars($subject['SubjectName']) ?>">
+                                <input name="SubjectName" class="form-control" required placeholder="e.g., Introduction to Programming">
+                            </div>
+
+                            <!-- Academic Details -->
+                            <div class="col-12 mt-4">
+                                <h6 class="text-primary border-bottom pb-2"><i data-lucide="graduation-cap"></i> Academic Details</h6>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Department <span class="required-field">*</span></label>
                                 <select name="DepartmentID" class="form-select" required>
+                                    <option value="">Select Department</option>
                                     <?php foreach ($departments as $d): ?>
-                                        <option value="<?= $d['DepartmentID'] ?>" <?= $d['DepartmentID'] == $subject['DepartmentID'] ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($d['DepartmentName']) ?>
-                                        </option>
+                                        <option value="<?= $d['DepartmentID'] ?>"><?= htmlspecialchars($d['DepartmentName']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Semester <span class="required-field">*</span></label>
                                 <select name="SemesterID" class="form-select" required>
+                                    <option value="">Select Semester</option>
                                     <?php foreach ($semesters as $s): ?>
-                                        <option value="<?= $s['SemesterID'] ?>" <?= $s['SemesterID'] == $subject['SemesterID'] ? 'selected' : '' ?>>
-                                            Semester <?= $s['SemesterNumber'] ?>
-                                        </option>
+                                        <option value="<?= $s['SemesterID'] ?>">Semester <?= $s['SemesterNumber'] ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Credit Hours <span class="required-field">*</span></label>
-                                <input name="CreditHour" type="number" class="form-control" required min="1" max="10" value="<?= $subject['CreditHour'] ?>">
+                                <input name="CreditHour" type="number" class="form-control" required min="1" max="10" value="3" placeholder="3">
+                                <small class="form-text text-muted">Usually between 1-6 credits</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Lecture Hours</label>
-                                <input name="LectureHour" type="number" class="form-control" min="1" max="200" value="<?= $subject['LectureHour'] ?>">
+                                <input name="LectureHour" type="number" class="form-control" min="1" max="200" value="48" placeholder="48">
+                                <small class="form-text text-muted">Total lecture hours per semester</small>
                             </div>
                             <div class="col-12">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="IsElective" id="isElective<?= $subject['SubjectID'] ?>" <?= $subject['IsElective'] ? 'checked' : '' ?>>
-                                    <label class="form-check-label" for="isElective<?= $subject['SubjectID'] ?>">
+                                    <input class="form-check-input" type="checkbox" name="IsElective" id="isElective">
+                                    <label class="form-check-label" for="isElective">
                                         This is an elective subject
                                     </label>
+                                    <small class="form-text text-muted d-block">Check if this subject is optional for students</small>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i data-lucide="x"></i> Cancel
                         </button>
                         <button type="submit" class="btn btn-primary">
-                            <i data-lucide="save"></i> Update Subject
+                            <i data-lucide="save"></i> Add Subject
                         </button>
                     </div>
                 </form>
             </div>
         </div>
+    </div>
 
-    <?php endforeach; ?>
-
-
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Make the search and filtering work
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('searchSubject');
-            const departmentFilter = document.getElementById('filterDepartment');
-            const semesterFilter = document.getElementById('filterSemester');
-            const typeFilter = document.getElementById('filterType');
-            const table = document.getElementById('subjectsTable');
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
+        // Initialize Lucide icons
+        lucide.createIcons();
 
-            function filterTable() {
-                const searchTerm = searchInput.value.toLowerCase().trim();
-                const selectedDepartment = departmentFilter.value;
-                const selectedSemester = semesterFilter.value;
-                const selectedType = typeFilter.value;
+        // Search and filter functionality
+        const searchInput = document.getElementById('searchSubject');
+        const departmentFilter = document.getElementById('filterDepartment');
+        const semesterFilter = document.getElementById('filterSemester');
+        const typeFilter = document.getElementById('filterType');
+        const resultsCount = document.getElementById('resultsCount');
+        const subjectRows = document.querySelectorAll('.subject-row');
 
-                let visibleCount = 0;
+        function updateResultsCount() {
+            const visibleRows = document.querySelectorAll('.subject-row:not([style*="display: none"])').length;
+            const totalRows = subjectRows.length;
+            resultsCount.textContent = `Showing ${visibleRows} of ${totalRows} subjects`;
+        }
 
-                rows.forEach(row => {
-                    const subjectCode = row.cells[0].textContent.toLowerCase();
-                    const subjectName = row.cells[1].textContent.toLowerCase();
-                    const departmentName = row.cells[2].textContent.toLowerCase();
-                    const departmentId = row.getAttribute('data-department-id');
-                    const semesterId = row.getAttribute('data-semester-id');
-                    const type = row.cells[6].textContent.toLowerCase();
-                    const isElective = type.includes('elective') ? '1' : '0';
+        function filterSubjects() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const departmentFilterValue = departmentFilter.value;
+            const semesterFilterValue = semesterFilter.value;
+            const typeFilterValue = typeFilter.value;
 
-                    let visible = true;
+            subjectRows.forEach(row => {
+                const subjectCode = row.dataset.subjectCode || '';
+                const subjectName = row.dataset.subjectName || '';
+                const departmentName = row.dataset.departmentName || '';
+                const department = row.dataset.department || '';
+                const semester = row.dataset.semester || '';
+                const type = row.dataset.type || '';
 
-                    // Search filter - search in subject code, name, and department
-                    if (searchTerm) {
-                        const matchesSearch = subjectCode.includes(searchTerm) ||
-                            subjectName.includes(searchTerm) ||
-                            departmentName.includes(searchTerm);
-                        if (!matchesSearch) {
-                            visible = false;
-                        }
-                    }
+                let showRow = true;
 
-                    // Department filter
-                    if (selectedDepartment && departmentId !== selectedDepartment) {
-                        visible = false;
-                    }
-
-                    // Semester filter
-                    if (selectedSemester && semesterId !== selectedSemester) {
-                        visible = false;
-                    }
-
-                    // Type filter
-                    if (selectedType && isElective !== selectedType) {
-                        visible = false;
-                    }
-
-                    row.style.display = visible ? '' : 'none';
-                    if (visible) visibleCount++;
-                });
-
-                updateVisibleCount(visibleCount);
-            }
-
-            function updateVisibleCount(count) {
-                let countElement = document.getElementById('visibleCount');
-                if (!countElement) {
-                    countElement = document.createElement('div');
-                    countElement.id = 'visibleCount';
-                    countElement.className = 'text-muted small mt-2';
-                    countElement.style.padding = '8px 0';
-                    table.parentNode.appendChild(countElement);
+                // Search filter
+                if (searchTerm) {
+                    const searchMatch = subjectCode.includes(searchTerm) ||
+                        subjectName.includes(searchTerm) ||
+                        departmentName.includes(searchTerm);
+                    if (!searchMatch) showRow = false;
                 }
-                countElement.innerHTML = `<i data-lucide="info"></i> Showing <strong>${count}</strong> of <strong>${rows.length}</strong> subjects`;
-                lucide.createIcons();
-            }
 
-            // Event listeners
-            searchInput.addEventListener('input', filterTable);
-            departmentFilter.addEventListener('change', filterTable);
-            semesterFilter.addEventListener('change', filterTable);
-            typeFilter.addEventListener('change', filterTable);
+                // Department filter
+                if (departmentFilterValue && department !== departmentFilterValue) {
+                    showRow = false;
+                }
 
-            // Initialize
-            updateVisibleCount(rows.length);
+                // Semester filter
+                if (semesterFilterValue && semester !== semesterFilterValue) {
+                    showRow = false;
+                }
 
-            // Clear filters function
-            window.clearFilters = function() {
-                searchInput.value = '';
-                departmentFilter.value = '';
-                semesterFilter.value = '';
-                typeFilter.value = '';
-                filterTable();
-            };
-        });
+                // Type filter
+                if (typeFilterValue && type !== typeFilterValue) {
+                    showRow = false;
+                }
+
+                row.style.display = showRow ? '' : 'none';
+            });
+
+            updateResultsCount();
+        }
+
+        // Event listeners for filters
+        searchInput.addEventListener('input', filterSubjects);
+        departmentFilter.addEventListener('change', filterSubjects);
+        semesterFilter.addEventListener('change', filterSubjects);
+        typeFilter.addEventListener('change', filterSubjects);
 
         // Delete subject function
         function deleteSubject(subjectId, subjectName) {
@@ -726,7 +788,17 @@ foreach ($statsQueries as $key => $query) {
             }
         }
 
-        lucide.createIcons();
+        // Initialize results count
+        updateResultsCount();
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
     </script>
 </body>
 

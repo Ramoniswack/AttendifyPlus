@@ -113,6 +113,27 @@ CREATE TABLE teacher_department_map (
 );
 
 
+-- 1. Add Method column to attendance_records (THIS IS REQUIRED)
+ALTER TABLE `attendance_records` 
+ADD COLUMN `Method` ENUM('manual', 'qr') DEFAULT 'manual' AFTER `Status`;
+
+-- 2. Create QR sessions table (THIS IS REQUIRED)
+CREATE TABLE `qr_attendance_sessions` (
+  `SessionID` int(11) NOT NULL AUTO_INCREMENT,
+  `TeacherID` int(11) NOT NULL,
+  `SubjectID` int(11) NOT NULL,
+  `Date` date NOT NULL,
+  `QRToken` varchar(255) NOT NULL,
+  `ExpiresAt` datetime NOT NULL,
+  `IsActive` tinyint(1) DEFAULT 1,
+  `CreatedAt` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`SessionID`),
+  KEY `TeacherID` (`TeacherID`),
+  KEY `SubjectID` (`SubjectID`),
+  CONSTRAINT `qr_attendance_sessions_ibfk_1` FOREIGN KEY (`TeacherID`) REFERENCES `teachers` (`TeacherID`),
+  CONSTRAINT `qr_attendance_sessions_ibfk_2` FOREIGN KEY (`SubjectID`) REFERENCES `subjects` (`SubjectID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 
 

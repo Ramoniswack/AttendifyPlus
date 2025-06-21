@@ -540,7 +540,7 @@ body.dark-mode .sidebar .nav-link.text-danger:hover {
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
-  backdrop-filter: blur(2px);
+  /* backdrop-filter: blur(2px); */
   pointer-events: none;
 }
 
@@ -666,4 +666,35 @@ body.sidebar-open .sidebar.active {
   .quick-action-card {
     padding: 1.25rem;
   }
+}
+/* HEADINGS - EXACT ATTENDANCE PATTERN */
+.page-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--accent-light);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+body.dark-mode .page-title {
+  color: var(--accent-dark);
+}
+
+/* Dashboard Container Headings */
+.dashboard-container h2 {
+  color: var(--accent-light);
+}
+
+body.dark-mode .dashboard-container h2 {
+  color: var(--accent-dark);
+}
+
+.dashboard-container h5 {
+  color: var(--accent-light);
+}
+
+body.dark-mode .dashboard-container h5 {
+  color: var(--accent-dark);
 }

@@ -126,26 +126,21 @@ $monthlyDataJSON = json_encode($monthlyData);
   <?php include '../views/navbar_admin.php'; ?>
 
   <!-- Main Content -->
-  <div class="container-fluid dashboard-container">
-    <!-- Page Header -->
+  <div class="container-fluid dashboard-container"> <!-- Page Header -->
     <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
       <div>
-        <h2><i data-lucide="layout-dashboard"></i> Dashboard Overview</h2>
-
-        <!-- <h2 class="page-title">Dashboard Overview</h2> -->
-        <p class="text-muted mb-0">Monitor and manage your educational platform</p>
+        <h2 class="page-title">
+          <i data-lucide="layout-dashboard"></i>
+          Admin Dashboard
+        </h2>
+        <p class="text-muted mb-0">Manage users and monitor system performance</p>
       </div>
       <div class="d-flex gap-2 flex-wrap">
-
-        <a href="manage_student.php" class="btn btn-primary btn-sm">
-          <i data-lucide="user-plus"></i> Manage Students
+        <a href="manage_student.php" class="btn btn-primary">
+          <i data-lucide="users"></i> Student Management
         </a>
-        <!-- <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                    <i data-lucide="user-plus"></i> Manage Students
-
-        </button> -->
-        <a href="full_analytics.php" class="btn btn-outline-primary">
-          <i data-lucide="bar-chart" class="me-1"></i>Analytics
+        <a href="manage_teacher.php" class="btn btn-outline-primary">
+          <i data-lucide="user-check"></i> Teacher Management
         </a>
       </div>
     </div>

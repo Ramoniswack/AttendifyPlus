@@ -180,33 +180,39 @@ foreach ($statsQueries as $key => $query) {
 <body>
     <!-- Include sidebar and navbar -->
     <?php include 'sidebar_admin_dashboard.php'; ?>
-    <?php include 'navbar_admin.php'; ?>
-
-    <!-- Main content -->
-    <div class="container-fluid dashboard-container pt-4">
-        <!-- Header Section -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <?php include 'navbar_admin.php'; ?> <!-- Main content -->
+    <div class="container-fluid dashboard-container">
+        <!-- Page Header -->
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
             <div>
-                <h2 class="mb-1">
-                    <i data-lucide="shield" class="me-2"></i>
-                    Manage Admins
+                <h2 class="page-title">
+                    <i data-lucide="shield"></i>
+                    Admin Management
                 </h2>
-                <p class="text-muted mb-0">Add, view, and manage admin accounts</p>
+                <p class="text-muted mb-0">Manage administrator accounts and system access</p>
             </div>
-            <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#addAdminModal">
-                <i data-lucide="user-plus" class="me-2"></i>
-                Add New Admin
-            </button>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAdminModal">
+                    <i data-lucide="user-plus"></i> Add Administrator
+                </button>
+                <a href="manage_teacher.php" class="btn btn-outline-primary">
+                    <i data-lucide="user-check"></i> Teacher Management
+                </a>
+            </div>
         </div>
 
         <!-- Statistics Cards -->
-        <div class="row g-3 mb-4">
+        <div class="row g-4 mb-4">
             <div class="col-md-4">
-                <div class="stats-card text-center">
+                <div class="stat-card text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stats-number"><?= $stats['total_admins'] ?></div>
-                            <div>Total Admins</div>
+                            <div class="stat-number"><?= $stats['total_admins'] ?></div>
+                            <div class="stat-label">Total Administrators</div>
+                            <div class="stat-change">
+                                <i data-lucide="shield"></i>
+                                <span>System managers</span>
+                            </div>
                         </div>
                         <div class="stats-icon">
                             <i data-lucide="shield"></i>
@@ -215,11 +221,15 @@ foreach ($statsQueries as $key => $query) {
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="stats-card assignments-card text-center">
+                <div class="stat-card teachers text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stats-number"><?= $stats['active_admins'] ?></div>
-                            <div>Active Admins</div>
+                            <div class="stat-number"><?= $stats['active_admins'] ?></div>
+                            <div class="stat-label">Active Administrators</div>
+                            <div class="stat-change">
+                                <i data-lucide="user-check"></i>
+                                <span>Currently active</span>
+                            </div>
                         </div>
                         <div class="stats-icon">
                             <i data-lucide="user-check"></i>
@@ -228,11 +238,15 @@ foreach ($statsQueries as $key => $query) {
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="stats-card recent-card text-center">
+                <div class="stat-card admins text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stats-number"><?= $stats['inactive_admins'] ?></div>
-                            <div>Inactive Admins</div>
+                            <div class="stat-number"><?= $stats['inactive_admins'] ?></div>
+                            <div class="stat-label">Inactive Administrators</div>
+                            <div class="stat-change">
+                                <i data-lucide="user-x"></i>
+                                <span>Suspended accounts</span>
+                            </div>
                         </div>
                         <div class="stats-icon">
                             <i data-lucide="user-x"></i>
@@ -257,23 +271,25 @@ foreach ($statsQueries as $key => $query) {
                 <?= htmlspecialchars($errorMsg) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        <?php endif; ?>
-
-        <!-- Search and Filter Section -->
+        <?php endif; ?> <!-- Search and Filter Section -->
         <div class="card mb-4">
             <div class="card-body">
+                <h6 class="card-title">
+                    <i data-lucide="filter"></i>
+                    Search & Filter Administrators
+                </h6>
                 <div class="row g-3">
                     <div class="col-md-5">
                         <label class="form-label">
-                            <i data-lucide="search" class="me-1"></i>
-                            Search Admins
+                            <i data-lucide="search"></i>
+                            Search Administrators
                         </label>
                         <input id="adminSearch" type="text" class="form-control" placeholder="Search by name, email, or contact..." />
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">
-                            <i data-lucide="layers" class="me-1"></i>
-                            Status
+                            <i data-lucide="layers"></i>
+                            Account Status
                         </label>
                         <select id="filterStatus" class="form-select">
                             <option value="">All Status</option>
@@ -284,7 +300,7 @@ foreach ($statsQueries as $key => $query) {
                     <div class="col-md-2">
                         <label class="form-label">&nbsp;</label>
                         <button id="clearFilters" class="btn btn-outline-secondary d-block w-100">
-                            <i data-lucide="x" class="me-1"></i>
+                            <i data-lucide="x"></i>
                             Clear Filters
                         </button>
                     </div>
@@ -293,20 +309,24 @@ foreach ($statsQueries as $key => $query) {
                     <small id="resultsCount" class="text-muted"></small>
                 </div>
             </div>
-        </div>
-
-        <!-- Admins Table -->
+        </div> <!-- Administrators Table -->
         <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i data-lucide="users"></i>
+                    Administrator Directory
+                </h6>
+            </div>
             <div class="table-responsive">
                 <table id="adminsTable" class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Photo</th>
-                            <th>Admin</th>
-                            <th>Contact Info</th>
+                            <th>Profile</th>
+                            <th>Administrator</th>
+                            <th>Contact Information</th>
                             <th>Address</th>
-                            <th>Joined</th>
-                            <th>Status</th>
+                            <th>Date Joined</th>
+                            <th>Account Status</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -405,8 +425,8 @@ foreach ($statsQueries as $key => $query) {
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">
-                                <i data-lucide="shield" class="me-2"></i>
-                                Admin Details - <?= htmlspecialchars($admin['FullName']) ?>
+                                <i data-lucide="shield"></i>
+                                Administrator Profile - <?= htmlspecialchars($admin['FullName']) ?>
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
@@ -479,8 +499,8 @@ foreach ($statsQueries as $key => $query) {
                     <input type="hidden" name="action" value="add_admin">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i data-lucide="user-plus" class="me-2"></i>
-                            Add New Admin
+                            <i data-lucide="user-plus"></i>
+                            Add New Administrator
                         </h5>
                         <button type="button" class="btn-close btn-close-red" data-bs-dismiss="modal"></button>
                     </div>
@@ -540,10 +560,9 @@ foreach ($statsQueries as $key => $query) {
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i data-lucide="x" class="me-1"></i>
                             Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i data-lucide="save" class="me-1"></i>
-                            Add Admin
+                        </button> <button type="submit" class="btn btn-primary">
+                            <i data-lucide="save"></i>
+                            Create Administrator
                         </button>
                     </div>
                 </form>

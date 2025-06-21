@@ -45,17 +45,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $fileType = $_FILES['PhotoFile']['type'];
 
             if (in_array($fileType, $allowedTypes)) {
-                $ext = pathinfo($_FILES['PhotoFile']['name'], PATHINFO_EXTENSION);
-                $filename = uniqid('student_', true) . '.' . $ext;
-                $targetPath = $uploadDir . $filename;
+                if ($_FILES['PhotoFile']['size'] <= 5 * 1024 * 1024) { // 5MB limit
+                    $ext = pathinfo($_FILES['PhotoFile']['name'], PATHINFO_EXTENSION);
+                    $filename = uniqid('student_', true) . '.' . $ext;
+                    $targetPath = $uploadDir . $filename;
 
-                if (move_uploaded_file($_FILES['PhotoFile']['tmp_name'], $targetPath)) {
-                    $PhotoURL = $targetPath;
+                    if (move_uploaded_file($_FILES['PhotoFile']['tmp_name'], $targetPath)) {
+                        $PhotoURL = $targetPath;
+                    } else {
+                        $errorMsg = "Failed to upload photo.";
+                    }
                 } else {
-                    $errorMsg = "Failed to upload photo.";
+                    $errorMsg = "Image size must be less than 5MB.";
                 }
             } else {
-                $errorMsg = "Invalid file type. Please upload JPG, PNG, or GIF files only.";
+                $errorMsg = "Only JPEG, PNG, and GIF images are allowed.";
             }
         }
 
@@ -92,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                     $loginID = $conn->insert_id;
 
-                    // Insert into students table (simplified - only essential fields)
+                    // Insert into students table
                     $stmt2 = $conn->prepare("INSERT INTO students (FullName, Contact, Address, PhotoURL, DepartmentID, SemesterID, JoinYear, ProgramCode, LoginID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     $stmt2->bind_param("ssssiissi", $FullName, $Contact, $Address, $PhotoURL, $DepartmentID, $SemesterID, $JoinYear, $ProgramCode, $loginID);
 
@@ -112,6 +116,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $conn->rollback();
                     $errorMsg = $e->getMessage();
                 }
+
+                if (isset($stmt1)) $stmt1->close();
+                if (isset($stmt2)) $stmt2->close();
             }
             $emailCheck->close();
         }
@@ -163,7 +170,7 @@ $sql = "SELECT s.StudentID, s.FullName, s.Contact, s.Address, s.PhotoURL,
         JOIN departments d ON s.DepartmentID = d.DepartmentID
         JOIN semesters sem ON s.SemesterID = sem.SemesterID
         JOIN login_tbl l ON s.LoginID = l.LoginID
-        ORDER BY s.FullName";
+        ORDER BY l.Status ASC, s.FullName";
 
 $result = $conn->query($sql);
 if ($result) {
@@ -188,7 +195,7 @@ while ($s = $semResult->fetch_assoc()) {
     $semesters[] = $s;
 }
 
-// Get statistics
+// Get statistics - updated to match manage_admin structure
 $stats = [];
 $statsQueries = [
     'total' => "SELECT COUNT(*) as count FROM students s JOIN login_tbl l ON s.LoginID = l.LoginID",
@@ -207,112 +214,70 @@ foreach ($statsQueries as $key => $query) {
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manage Students | Attendify+</title>
     <link rel="stylesheet" href="../assets/css/manage_student.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <script src="../assets/js/lucide.min.js"></script>
     <script src="../assets/js/manage_student.js" defer></script>
-    <style>
-        .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .stats-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-        }
-
-        .student-photo {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-
-        .status-badge {
-            font-size: 0.875rem;
-        }
-
-        .table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-
-        .btn-close-red {
-            filter: invert(41%) sepia(93%) saturate(7470%) hue-rotate(346deg) brightness(96%) contrast(120%);
-        }
-
-        .modal-header {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .form-label {
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .required-field {
-            color: #dc3545;
-        }
-    </style>
 </head>
 
 <body>
+    <!-- Include sidebar and navbar -->
     <?php include 'sidebar_admin_dashboard.php'; ?>
     <?php include 'navbar_admin.php'; ?>
 
-    <div class="container-fluid dashboard-container pt-4" id="manageStudentsContainer">
-        <!-- Header and Add Button -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i data-lucide="users"></i> Manage Students</h2>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                <i data-lucide="user-plus"></i> Add Student
-            </button>
+    <!-- Main content -->
+    <div class="container-fluid dashboard-container">
+        <!-- Page Header - Updated to Match manage_admin.php -->
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h2 class="page-title">
+                    <i data-lucide="graduation-cap"></i>
+                    Student Management
+                </h2>
+                <p class="text-muted mb-0">Manage student accounts and academic records</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                    <i data-lucide="user-plus"></i> Add Student
+                </button>
+                <a href="manage_teacher.php" class="btn btn-outline-primary">
+                    <i data-lucide="users"></i> Teacher Management
+                </a>
+            </div>
         </div>
 
-        <!-- Success/Error Messages -->
-        <?php if ($successMsg): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i data-lucide="check-circle"></i> <?= htmlspecialchars($successMsg) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-        <?php if ($errorMsg): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i data-lucide="alert-circle"></i> <?= htmlspecialchars($errorMsg) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-
-      
-        <!-- Statistics Cards - Updated to Match Teacher Theme -->
-        <div class="row g-3 mb-4">
+        <!-- Statistics Cards - Updated to Match manage_admin structure -->
+        <div class="row g-4 mb-4">
             <div class="col-md-4">
-                <div class="stats-card text-center">
+                <div class="stat-card text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stats-number"><?= $stats['total'] ?></div>
-                            <div>Total Students</div>
+                            <div class="stat-number"><?= $stats['total'] ?></div>
+                            <div class="stat-label">Total Students</div>
+                            <div class="stat-change">
+                                <i data-lucide="graduation-cap"></i>
+                                <span>Enrolled students</span>
+                            </div>
                         </div>
                         <div class="stats-icon">
-                            <i data-lucide="users"></i>
+                            <i data-lucide="graduation-cap"></i>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="stats-card assignments-card text-center">
+                <div class="stat-card teachers text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stats-number"><?= $stats['active'] ?></div>
-                            <div>Active Students</div>
+                            <div class="stat-number"><?= $stats['active'] ?></div>
+                            <div class="stat-label">Active Students</div>
+                            <div class="stat-change">
+                                <i data-lucide="user-check"></i>
+                                <span>Currently studying</span>
+                            </div>
                         </div>
                         <div class="stats-icon">
                             <i data-lucide="user-check"></i>
@@ -321,11 +286,15 @@ foreach ($statsQueries as $key => $query) {
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="stats-card recent-card text-center">
+                <div class="stat-card admins text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stats-number"><?= $stats['inactive'] ?></div>
-                            <div>Inactive Students</div>
+                            <div class="stat-number"><?= $stats['inactive'] ?></div>
+                            <div class="stat-label">Inactive Students</div>
+                            <div class="stat-change">
+                                <i data-lucide="user-x"></i>
+                                <span>Suspended accounts</span>
+                            </div>
                         </div>
                         <div class="stats-icon">
                             <i data-lucide="user-x"></i>
@@ -335,16 +304,43 @@ foreach ($statsQueries as $key => $query) {
             </div>
         </div>
 
-        <!-- Search and Filters -->
+        <!-- Success/Error Messages -->
+        <?php if ($successMsg): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i data-lucide="check-circle" class="me-2"></i>
+                <?= htmlspecialchars($successMsg) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($errorMsg): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i data-lucide="alert-circle" class="me-2"></i>
+                <?= htmlspecialchars($errorMsg) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <!-- Search and Filter Section - Updated to Match manage_admin -->
         <div class="card mb-4">
             <div class="card-body">
+                <h6 class="card-title">
+                    <i data-lucide="filter"></i>
+                    Search & Filter Students
+                </h6>
                 <div class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label"><i data-lucide="search"></i> Search Name</label>
-                        <input id="searchName" type="text" class="form-control" placeholder="Enter student name..." />
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i data-lucide="search"></i>
+                            Search Students
+                        </label>
+                        <input id="studentSearch" type="text" class="form-control" placeholder="Search by name, email, or contact..." />
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label"><i data-lucide="building"></i> Department</label>
+                        <label class="form-label">
+                            <i data-lucide="building"></i>
+                            Department
+                        </label>
                         <select id="filterDepartment" class="form-select">
                             <option value="">All Departments</option>
                             <?php foreach ($departments as $d): ?>
@@ -353,72 +349,113 @@ foreach ($statsQueries as $key => $query) {
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label"><i data-lucide="calendar"></i> Join Year</label>
+                        <label class="form-label">
+                            <i data-lucide="calendar"></i>
+                            Join Year
+                        </label>
                         <input id="filterYear" type="number" class="form-control" placeholder="e.g. 2022" min="2000" max="<?= date('Y') ?>">
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label"><i data-lucide="layers"></i> Semester</label>
-                        <select id="filterSemester" class="form-select">
-                            <option value="">All Semesters</option>
-                            <?php foreach ($semesters as $s): ?>
-                                <option value="<?= $s['SemesterID'] ?>">Semester <?= $s['SemesterNumber'] ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button id="clearFilters" class="btn btn-outline-secondary d-block w-100">
+                            <i data-lucide="x"></i>
+                            Clear Filters
+                        </button>
                     </div>
+                </div>
+                <div class="mt-3">
+                    <small id="resultsCount" class="text-muted"></small>
                 </div>
             </div>
         </div>
 
-        <!-- Students Table -->
+        <!-- Students Table - Updated to Match manage_admin structure -->
         <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i data-lucide="graduation-cap"></i>
+                    Student Directory
+                </h6>
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="studentsTable">
+                <table id="studentsTable" class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Photo</th>
-                            <th>Full Name</th>
-                            <th>Email</th>
-                            <th>Contact</th>
-                            <th>Department</th>
-                            <th>Semester</th>
+                            <th>Profile</th>
+                            <th>Student</th>
+                            <th>Contact Information</th>
+                            <th>Academic Info</th>
                             <th>Join Year</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>Account Status</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="studentsTableBody">
                         <?php foreach ($students as $student): ?>
-                            <tr>
+                            <tr class="student-row"
+                                data-name="<?= strtolower(htmlspecialchars($student['FullName'])) ?>"
+                                data-email="<?= strtolower(htmlspecialchars($student['Email'])) ?>"
+                                data-contact="<?= htmlspecialchars($student['Contact']) ?>"
+                                data-department="<?= htmlspecialchars($student['DepartmentID']) ?>"
+                                data-year="<?= htmlspecialchars($student['JoinYear']) ?>"
+                                data-status="<?= htmlspecialchars($student['Status']) ?>">
                                 <td>
                                     <?php if (!empty($student['PhotoURL']) && file_exists($student['PhotoURL'])): ?>
-                                        <img src="<?= htmlspecialchars($student['PhotoURL']) ?>" alt="Photo" class="student-photo">
+                                        <img src="<?= htmlspecialchars($student['PhotoURL']) ?>"
+                                            alt="<?= htmlspecialchars($student['FullName']) ?>"
+                                            class="student-photo">
                                     <?php else: ?>
-                                        <div class="student-photo bg-secondary d-flex align-items-center justify-content-center text-white">
+                                        <div class="student-placeholder">
                                             <i data-lucide="user"></i>
                                         </div>
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <strong><?= htmlspecialchars($student['FullName']) ?></strong>
-                                    <br><small class="text-muted">ID: <?= $student['StudentID'] ?></small>
+                                    <div>
+                                        <div class="fw-semibold"><?= htmlspecialchars($student['FullName']) ?></div>
+                                        <small class="text-muted">ID: <?= $student['StudentID'] ?></small>
+                                    </div>
                                 </td>
-                                <td><?= htmlspecialchars($student['Email']) ?></td>
-                                <td><?= htmlspecialchars($student['Contact'] ?: 'Not provided') ?></td>
-                                <td><?= htmlspecialchars($student['DepartmentName']) ?></td>
-                                <td>Semester <?= htmlspecialchars($student['SemesterNumber']) ?></td>
-                                <td><?= htmlspecialchars($student['JoinYear']) ?></td>
+                                <td>
+                                    <div>
+                                        <div class="mb-1">
+                                            <i data-lucide="mail" class="me-1 text-muted" style="width: 14px; height: 14px;"></i>
+                                            <small><?= htmlspecialchars($student['Email']) ?></small>
+                                        </div>
+                                        <?php if (!empty($student['Contact'])): ?>
+                                            <div>
+                                                <i data-lucide="phone" class="me-1 text-muted" style="width: 14px; height: 14px;"></i>
+                                                <small><?= htmlspecialchars($student['Contact']) ?></small>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="fw-semibold"><?= htmlspecialchars($student['DepartmentName']) ?></div>
+                                        <small class="text-muted">Semester <?= htmlspecialchars($student['SemesterNumber']) ?></small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small class="text-muted"><?= htmlspecialchars($student['JoinYear']) ?></small>
+                                </td>
                                 <td>
                                     <span class="badge <?= $student['Status'] === 'active' ? 'bg-success' : 'bg-danger' ?> status-badge">
                                         <?= ucfirst($student['Status']) ?>
                                     </span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewModal<?= $student['StudentID'] ?>" title="View Details">
+                                        <button class="btn btn-sm btn-outline-info"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#viewStudentModal<?= $student['StudentID'] ?>"
+                                            title="View Details">
                                             <i data-lucide="eye"></i>
                                         </button>
                                         <div class="btn-group" role="group">
-                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" title="Change Status">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                data-bs-toggle="dropdown"
+                                                title="Change Status">
                                                 <i data-lucide="settings"></i>
                                             </button>
                                             <ul class="dropdown-menu">
@@ -443,190 +480,314 @@ foreach ($statsQueries as $key => $query) {
                 </table>
             </div>
         </div>
-    </div>
 
-    <!-- View Student Details Modals -->
-    <?php foreach ($students as $student): ?>
-        <div class="modal fade" id="viewModal<?= $student['StudentID'] ?>" tabindex="-1">
+        <!-- View Student Modals -->
+        <?php foreach ($students as $student): ?>
+            <div class="modal fade" id="viewStudentModal<?= $student['StudentID'] ?>" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i data-lucide="user"></i>
+                                Student Profile - <?= htmlspecialchars($student['FullName']) ?>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-4 text-center">
+                                    <?php if (!empty($student['PhotoURL']) && file_exists($student['PhotoURL'])): ?>
+                                        <img src="<?= htmlspecialchars($student['PhotoURL']) ?>"
+                                            alt="<?= htmlspecialchars($student['FullName']) ?>"
+                                            class="student-photo-large mb-3">
+                                    <?php else: ?>
+                                        <div class="student-placeholder-large mb-3">
+                                            <i data-lucide="user"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <h5><?= htmlspecialchars($student['FullName']) ?></h5>
+                                    <span class="badge <?= $student['Status'] === 'active' ? 'bg-success' : 'bg-danger' ?> mb-2">
+                                        <?= ucfirst($student['Status']) ?>
+                                    </span>
+                                </div>
+                                <div class="col-md-8">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <th width="40%">Student ID:</th>
+                                            <td><?= $student['StudentID'] ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email:</th>
+                                            <td><?= htmlspecialchars($student['Email']) ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Contact:</th>
+                                            <td><?= htmlspecialchars($student['Contact'] ?: 'Not provided') ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Address:</th>
+                                            <td><?= htmlspecialchars($student['Address'] ?: 'Not provided') ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Department:</th>
+                                            <td><?= htmlspecialchars($student['DepartmentName']) ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Semester:</th>
+                                            <td>Semester <?= htmlspecialchars($student['SemesterNumber']) ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Join Year:</th>
+                                            <td><?= htmlspecialchars($student['JoinYear']) ?></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Program Code:</th>
+                                            <td><code><?= htmlspecialchars($student['ProgramCode']) ?></code></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Registration Date:</th>
+                                            <td><?= date('F j, Y', strtotime($student['CreatedDate'])) ?></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i data-lucide="x" class="me-1"></i>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+
+        <!-- Add Student Modal -->
+        <div class="modal fade" id="addStudentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
+                <form class="modal-content" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="add_student">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i data-lucide="user"></i> Student Details - <?= htmlspecialchars($student['FullName']) ?>
+                            <i data-lucide="user-plus"></i>
+                            Add New Student
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close btn-close-red" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-4 text-center">
-                                <?php if (!empty($student['PhotoURL']) && file_exists($student['PhotoURL'])): ?>
-                                    <img src="<?= htmlspecialchars($student['PhotoURL']) ?>" alt="Photo" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                                <?php else: ?>
-                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white mb-3 mx-auto" style="width: 150px; height: 150px; font-size: 3rem;">
-                                        <i data-lucide="user"></i>
-                                    </div>
-                                <?php endif; ?>
-                                <h5><?= htmlspecialchars($student['FullName']) ?></h5>
-                                <span class="badge <?= $student['Status'] === 'active' ? 'bg-success' : 'bg-danger' ?> mb-2">
-                                    <?= ucfirst($student['Status']) ?>
-                                </span>
+                        <div class="row g-3">
+                            <!-- Personal Information -->
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2"><i data-lucide="user"></i> Personal Information</h6>
                             </div>
-                            <div class="col-md-8">
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <th width="40%">Student ID:</th>
-                                        <td><?= $student['StudentID'] ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Email:</th>
-                                        <td><?= htmlspecialchars($student['Email']) ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Contact:</th>
-                                        <td><?= htmlspecialchars($student['Contact'] ?: 'Not provided') ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Address:</th>
-                                        <td><?= htmlspecialchars($student['Address'] ?: 'Not provided') ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Department:</th>
-                                        <td><?= htmlspecialchars($student['DepartmentName']) ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Semester:</th>
-                                        <td>Semester <?= htmlspecialchars($student['SemesterNumber']) ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Join Year:</th>
-                                        <td><?= htmlspecialchars($student['JoinYear']) ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Program Code:</th>
-                                        <td><code><?= htmlspecialchars($student['ProgramCode']) ?></code></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Registration Date:</th>
-                                        <td><?= date('M d, Y', strtotime($student['CreatedDate'])) ?></td>
-                                    </tr>
-                                </table>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Full Name <span class="required-field">*</span>
+                                </label>
+                                <input name="FullName" type="text" class="form-control" required placeholder="Enter full name" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Email Address <span class="required-field">*</span>
+                                </label>
+                                <input name="Email" type="email" class="form-control" required placeholder="student@example.com" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Contact Number</label>
+                                <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Address</label>
+                                <input name="Address" type="text" class="form-control" placeholder="City, District" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">
+                                    Profile Photo
+                                    <small class="text-muted">(Optional, max 5MB)</small>
+                                </label>
+                                <input name="PhotoFile" type="file" class="form-control" accept="image/*" />
+                                <small class="form-text text-muted">JPG, PNG, GIF (Max 5MB)</small>
+                            </div>
+
+                            <!-- Academic Information -->
+                            <div class="col-12 mt-4">
+                                <h6 class="text-primary border-bottom pb-2"><i data-lucide="graduation-cap"></i> Academic Information</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Department <span class="required-field">*</span>
+                                </label>
+                                <select name="DepartmentID" class="form-select" required>
+                                    <option value="">Select Department</option>
+                                    <?php foreach ($departments as $d): ?>
+                                        <option value="<?= $d['DepartmentID'] ?>"><?= htmlspecialchars($d['DepartmentName']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Semester <span class="required-field">*</span>
+                                </label>
+                                <select name="SemesterID" class="form-select" required>
+                                    <option value="">Select Semester</option>
+                                    <?php foreach ($semesters as $s): ?>
+                                        <option value="<?= $s['SemesterID'] ?>">Semester <?= $s['SemesterNumber'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Join Year <span class="required-field">*</span>
+                                </label>
+                                <input name="JoinYear" type="number" class="form-control" required
+                                    min="2000" max="<?= date('Y') ?>" value="<?= date('Y') ?>" placeholder="<?= date('Y') ?>">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Status</label>
+                                <select name="Status" class="form-select">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+
+                            <!-- Account Information -->
+                            <div class="col-12 mt-4">
+                                <h6 class="text-primary border-bottom pb-2"><i data-lucide="lock"></i> Account Information</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Password <span class="required-field">*</span>
+                                </label>
+                                <input name="Password" type="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Confirm Password <span class="required-field">*</span>
+                                </label>
+                                <input name="ConfirmPassword" type="password" class="form-control" required placeholder="Re-enter password" />
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i data-lucide="x" class="me-1"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="save"></i>
+                            Create Student
+                        </button>
                     </div>
-                </div>
+                </form>
             </div>
-        </div>
-    <?php endforeach; ?>
-
-    <!-- Add Student Modal -->
-    <div class="modal fade" id="addStudentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <form method="POST" enctype="multipart/form-data" class="modal-content">
-                <input type="hidden" name="action" value="add_student">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i data-lucide="user-plus"></i> Add New Student
-                    </h5>
-                    <button type="button" class="btn-close btn-close-red" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <!-- Personal Information -->
-                        <div class="col-12">
-                            <h6 class="text-primary border-bottom pb-2"><i data-lucide="user"></i> Personal Information</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Full Name <span class="required-field">*</span></label>
-                            <input name="FullName" class="form-control" required placeholder="Enter full name">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email Address <span class="required-field">*</span></label>
-                            <input name="Email" type="email" class="form-control" required placeholder="student@example.com">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Contact Number</label>
-                            <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Address</label>
-                            <input name="Address" class="form-control" placeholder="City, District">
-                        </div>
-
-                        <!-- Academic Information -->
-                        <div class="col-12 mt-4">
-                            <h6 class="text-primary border-bottom pb-2"><i data-lucide="graduation-cap"></i> Academic Information</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Department <span class="required-field">*</span></label>
-                            <select name="DepartmentID" class="form-select" required>
-                                <option value="">Select Department</option>
-                                <?php foreach ($departments as $d): ?>
-                                    <option value="<?= $d['DepartmentID'] ?>"><?= htmlspecialchars($d['DepartmentName']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Semester <span class="required-field">*</span></label>
-                            <select name="SemesterID" class="form-select" required>
-                                <option value="">Select Semester</option>
-                                <?php foreach ($semesters as $s): ?>
-                                    <option value="<?= $s['SemesterID'] ?>">Semester <?= $s['SemesterNumber'] ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Join Year <span class="required-field">*</span></label>
-                            <input name="JoinYear" type="number" class="form-control" required
-                                min="2000" max="<?= date('Y') ?>" value="<?= date('Y') ?>" placeholder="<?= date('Y') ?>">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Profile Photo</label>
-                            <input name="PhotoFile" type="file" class="form-control" accept="image/*">
-                            <small class="form-text text-muted">Optional - JPG, PNG, GIF (Max 5MB)</small>
-                        </div>
-
-                        <!-- Account Information -->
-                        <div class="col-12 mt-4">
-                            <h6 class="text-primary border-bottom pb-2"><i data-lucide="lock"></i> Account Information</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Password <span class="required-field">*</span></label>
-                            <input name="Password" type="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Confirm Password <span class="required-field">*</span></label>
-                            <input name="ConfirmPassword" type="password" class="form-control" required minlength="6" placeholder="Re-enter password">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Status</label>
-                            <select name="Status" class="form-select">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i data-lucide="x"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i data-lucide="save"></i> Add Student
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
-    <div class="sidebar-overlay"></div>
-    <script>
-        lucide.createIcons();
-    </script>
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
 
+        // Search and filter functionality
+        const searchInput = document.getElementById('studentSearch');
+        const departmentFilter = document.getElementById('filterDepartment');
+        const yearFilter = document.getElementById('filterYear');
+        const clearFiltersBtn = document.getElementById('clearFilters');
+        const resultsCount = document.getElementById('resultsCount');
+        const studentRows = document.querySelectorAll('.student-row');
+
+        function updateResultsCount() {
+            const visibleRows = document.querySelectorAll('.student-row:not([style*="display: none"])').length;
+            const totalRows = studentRows.length;
+            resultsCount.textContent = `Showing ${visibleRows} of ${totalRows} students`;
+        }
+
+        function filterStudents() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const departmentFilterValue = departmentFilter.value;
+            const yearFilterValue = yearFilter.value;
+
+            studentRows.forEach(row => {
+                const name = row.dataset.name || '';
+                const email = row.dataset.email || '';
+                const contact = row.dataset.contact || '';
+                const department = row.dataset.department || '';
+                const year = row.dataset.year || '';
+
+                let showRow = true;
+
+                // Search filter
+                if (searchTerm) {
+                    const searchMatch = name.includes(searchTerm) ||
+                        email.includes(searchTerm) ||
+                        contact.includes(searchTerm);
+                    if (!searchMatch) showRow = false;
+                }
+
+                // Department filter
+                if (departmentFilterValue && department !== departmentFilterValue) {
+                    showRow = false;
+                }
+
+                // Year filter
+                if (yearFilterValue && year !== yearFilterValue) {
+                    showRow = false;
+                }
+
+                row.style.display = showRow ? '' : 'none';
+            });
+
+            updateResultsCount();
+        }
+
+        // Event listeners for filters
+        searchInput.addEventListener('input', filterStudents);
+        departmentFilter.addEventListener('change', filterStudents);
+        yearFilter.addEventListener('change', filterStudents);
+
+        // Clear filters
+        clearFiltersBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            departmentFilter.value = '';
+            yearFilter.value = '';
+            filterStudents();
+        });
+
+        // Reset add student modal on close
+        const addStudentModal = document.getElementById('addStudentModal');
+        addStudentModal.addEventListener('hidden.bs.modal', () => {
+            addStudentModal.querySelector('form').reset();
+        });
+
+        // Password confirmation validation
+        const passwordInput = document.querySelector('input[name="Password"]');
+        const confirmPasswordInput = document.querySelector('input[name="ConfirmPassword"]');
+
+        function validatePasswordMatch() {
+            if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+                confirmPasswordInput.setCustomValidity('Passwords do not match');
+            } else {
+                confirmPasswordInput.setCustomValidity('');
+            }
+        }
+
+        passwordInput.addEventListener('input', validatePasswordMatch);
+        confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+
+        // Initialize results count
+        updateResultsCount();
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
 </body>
 
 </html>

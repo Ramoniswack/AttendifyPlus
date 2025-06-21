@@ -5,22 +5,25 @@ include 'sidebar_admin_dashboard.php';
 
 <nav class="navbar navbar-expand-lg navbar-dark admin-navbar">
     <div class="container-fluid">
-        <!-- Universal Sidebar Toggle (Works on both desktop and mobile) -->
-        <button class="btn navbar-toggle-btn me-3" id="sidebarToggle" title="Toggle Sidebar">
-            <i data-lucide="menu" class="navbar-icon"></i>
-        </button>
+        <!-- Left Section: Sidebar Toggle + Brand -->
+        <div class="d-flex align-items-center">
+            <!-- Universal Sidebar Toggle -->
+            <button class="btn navbar-toggle-btn me-3" id="sidebarToggle" title="Toggle Sidebar">
+                <i data-lucide="menu" class="navbar-icon"></i>
+            </button>
 
-        <!-- Brand -->
-        <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard_admin.php">
-            <div class="brand-text">
-                <span class="brand-main">Attendify+</span>
-                <span class="brand-sub">Admin Panel</span>
-            </div>
-        </a>
+            <!-- Brand - Always on Left -->
+            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard_admin.php">
+                <div class="brand-text">
+                    <span class="brand-main">Attendify+</span>
+                    <span class="brand-sub">Admin Panel</span>
+                </div>
+            </a>
+        </div>
 
-        <!-- Desktop Navbar Content -->
+        <!-- Right Section: Desktop Controls -->
         <div class="d-none d-lg-flex navbar-nav ms-auto align-items-center gap-2">
-            <!-- User Welcome Message (Desktop only) -->
+            <!-- User Welcome Message -->
             <div class="navbar-text welcome-text">
                 <span class="welcome-label">Welcome,</span>
                 <span class="welcome-name"><?= htmlspecialchars($_SESSION['Username']) ?></span>
@@ -50,24 +53,11 @@ include 'sidebar_admin_dashboard.php';
                     <li>
                         <a class="dropdown-item" href="#">
                             <div class="notification-item">
-                                <div class="notification-icon bg-info">
-                                    <i data-lucide="user-plus"></i>
+                                <div class="notification-icon bg-warning">
+                                    <i data-lucide="alert-triangle"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <span class="notification-title">New Teacher Added</span>
-                                    <span class="notification-time">2 minutes ago</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <div class="notification-item">
-                                <div class="notification-icon bg-success">
-                                    <i data-lucide="check-circle"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <span class="notification-title">Subject Updated</span>
+                                    <span class="notification-title">System Alert</span>
                                     <span class="notification-time">5 minutes ago</span>
                                 </div>
                             </div>
@@ -76,11 +66,24 @@ include 'sidebar_admin_dashboard.php';
                     <li>
                         <a class="dropdown-item" href="#">
                             <div class="notification-item">
-                                <div class="notification-icon bg-warning">
-                                    <i data-lucide="alert-circle"></i>
+                                <div class="notification-icon bg-info">
+                                    <i data-lucide="user-plus"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <span class="notification-title">System Backup</span>
+                                    <span class="notification-title">New Teacher Registered</span>
+                                    <span class="notification-time">15 minutes ago</span>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <div class="notification-item">
+                                <div class="notification-icon bg-success">
+                                    <i data-lucide="database"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <span class="notification-title">Database Backup Complete</span>
                                     <span class="notification-time">1 hour ago</span>
                                 </div>
                             </div>
@@ -97,7 +100,7 @@ include 'sidebar_admin_dashboard.php';
             <div class="dropdown profile-dropdown-wrapper">
                 <button class="btn navbar-btn profile-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile Menu">
                     <div class="profile-avatar">
-                        <i data-lucide="user"></i>
+                        <i data-lucide="shield"></i>
                     </div>
                     <span class="btn-text d-none d-xxl-inline"><?= htmlspecialchars($_SESSION['Username']) ?></span>
                     <i data-lucide="chevron-down" class="dropdown-arrow d-none d-xxl-inline"></i>
@@ -123,13 +126,18 @@ include 'sidebar_admin_dashboard.php';
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="settings_admin.php">
-                            <i data-lucide="settings"></i> Settings
+                        <a class="dropdown-item" href="system_settings.php">
+                            <i data-lucide="settings"></i> System Settings
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="activity_logs.php">
-                            <i data-lucide="activity"></i> Activity Logs
+                        <a class="dropdown-item" href="admin_logs.php">
+                            <i data-lucide="file-text"></i> Admin Logs
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="backup_restore.php">
+                            <i data-lucide="database"></i> Backup & Restore
                         </a>
                     </li>
                     <li>
@@ -144,8 +152,8 @@ include 'sidebar_admin_dashboard.php';
             </div>
         </div>
 
-        <!-- Mobile Action Buttons (Theme, Notifications, Profile only) -->
-        <div class="d-flex d-lg-none align-items-center gap-1">
+        <!-- Right Section: Mobile Controls -->
+        <div class="d-flex d-lg-none align-items-center gap-1 ms-auto">
             <!-- Theme Toggle -->
             <button class="btn navbar-btn-mobile theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
                 <i data-lucide="sun" class="theme-icon light-icon"></i>
@@ -168,12 +176,12 @@ include 'sidebar_admin_dashboard.php';
                     <li>
                         <a class="dropdown-item" href="#">
                             <div class="notification-item">
-                                <div class="notification-icon bg-info">
-                                    <i data-lucide="user-plus"></i>
+                                <div class="notification-icon bg-warning">
+                                    <i data-lucide="alert-triangle"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <span class="notification-title">New Teacher Added</span>
-                                    <span class="notification-time">2 mins ago</span>
+                                    <span class="notification-title">System Alert</span>
+                                    <span class="notification-time">5 mins ago</span>
                                 </div>
                             </div>
                         </a>
@@ -181,12 +189,12 @@ include 'sidebar_admin_dashboard.php';
                     <li>
                         <a class="dropdown-item" href="#">
                             <div class="notification-item">
-                                <div class="notification-icon bg-success">
-                                    <i data-lucide="check-circle"></i>
+                                <div class="notification-icon bg-info">
+                                    <i data-lucide="user-plus"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <span class="notification-title">Subject Updated</span>
-                                    <span class="notification-time">5 mins ago</span>
+                                    <span class="notification-title">New Teacher</span>
+                                    <span class="notification-time">15 mins ago</span>
                                 </div>
                             </div>
                         </a>
@@ -198,7 +206,7 @@ include 'sidebar_admin_dashboard.php';
             <div class="dropdown">
                 <button class="btn navbar-btn-mobile profile-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile">
                     <div class="profile-avatar-small">
-                        <i data-lucide="user"></i>
+                        <i data-lucide="shield"></i>
                     </div>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end profile-dropdown mobile-dropdown">
@@ -222,13 +230,18 @@ include 'sidebar_admin_dashboard.php';
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="settings_admin.php">
+                        <a class="dropdown-item" href="system_settings.php">
                             <i data-lucide="settings"></i> Settings
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="activity_logs.php">
-                            <i data-lucide="activity"></i> Activity Logs
+                        <a class="dropdown-item" href="admin_logs.php">
+                            <i data-lucide="file-text"></i> Logs
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="backup_restore.php">
+                            <i data-lucide="database"></i> Backup
                         </a>
                     </li>
                     <li>

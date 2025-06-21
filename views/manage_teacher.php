@@ -197,12 +197,12 @@ while ($row = $subRes->fetch_assoc()) {
   $subjects[] = $row;
 }
 
-// Get statistics - back to original
+// Get statistics - updated to match manage_admin structure
 $stats = [];
 $statsQueries = [
-  'total_teachers' => "SELECT COUNT(*) as count FROM teachers t JOIN login_tbl l ON t.LoginID = l.LoginID WHERE l.Status = 'active'",
-  'active_mappings' => "SELECT COUNT(*) as count FROM teacher_subject_map",
-  'recent_teachers' => "SELECT COUNT(*) as count FROM teachers t JOIN login_tbl l ON t.LoginID = l.LoginID WHERE l.Status = 'active' AND DATE(l.CreatedDate) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"
+  'total_teachers' => "SELECT COUNT(*) as count FROM teachers t JOIN login_tbl l ON t.LoginID = l.LoginID",
+  'active_teachers' => "SELECT COUNT(*) as count FROM teachers t JOIN login_tbl l ON t.LoginID = l.LoginID WHERE l.Status = 'active'",
+  'inactive_teachers' => "SELECT COUNT(*) as count FROM teachers t JOIN login_tbl l ON t.LoginID = l.LoginID WHERE l.Status = 'inactive'"
 ];
 
 foreach ($statsQueries as $key => $query) {
@@ -223,10 +223,6 @@ foreach ($statsQueries as $key => $query) {
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="../assets/js/lucide.min.js"></script>
   <script src="../assets/js/manage_teacher.js" defer></script>
-  <style>
-  
-
-  </style>
 </head>
 
 <body>
@@ -235,30 +231,38 @@ foreach ($statsQueries as $key => $query) {
   <?php include 'navbar_admin.php'; ?>
 
   <!-- Main content -->
-  <div class="container-fluid dashboard-container pt-4">
-    <!-- Header Section -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="container-fluid dashboard-container">
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
       <div>
-        <h2 class="mb-1">
-          <i data-lucide="users" class="me-2"></i>
-          Manage Teachers
+        <h2 class="page-title">
+          <i data-lucide="users"></i>
+          Teacher Management
         </h2>
-        <p class="text-muted mb-0">Add, view, and manage teacher accounts</p>
+        <p class="text-muted mb-0">Manage teacher accounts and subject assignments</p>
       </div>
-      <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
-        <i data-lucide="user-plus" class="me-2"></i>
-        Add New Teacher
-      </button>
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
+          <i data-lucide="user-plus"></i> Add Teacher
+        </button>
+        <a href="manage_admin.php" class="btn btn-outline-primary">
+          <i data-lucide="shield"></i> Admin Management
+        </a>
+      </div>
     </div>
 
-    <!-- Statistics Cards - Back to Original -->
-    <div class="row g-3 mb-4">
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
       <div class="col-md-4">
-        <div class="stats-card text-center">
+        <div class="stat-card text-center">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <div class="stats-number"><?= $stats['total_teachers'] ?></div>
-              <div>Total Teachers</div>
+              <div class="stat-number"><?= $stats['total_teachers'] ?></div>
+              <div class="stat-label">Total Teachers</div>
+              <div class="stat-change">
+                <i data-lucide="users"></i>
+                <span>Faculty members</span>
+              </div>
             </div>
             <div class="stats-icon">
               <i data-lucide="users"></i>
@@ -267,27 +271,35 @@ foreach ($statsQueries as $key => $query) {
         </div>
       </div>
       <div class="col-md-4">
-        <div class="stats-card assignments-card text-center">
+        <div class="stat-card teachers text-center">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <div class="stats-number"><?= $stats['active_mappings'] ?></div>
-              <div>Subject Assignments</div>
+              <div class="stat-number"><?= $stats['active_teachers'] ?></div>
+              <div class="stat-label">Active Teachers</div>
+              <div class="stat-change">
+                <i data-lucide="user-check"></i>
+                <span>Currently teaching</span>
+              </div>
             </div>
             <div class="stats-icon">
-              <i data-lucide="book-open"></i>
+              <i data-lucide="user-check"></i>
             </div>
           </div>
         </div>
       </div>
       <div class="col-md-4">
-        <div class="stats-card recent-card text-center">
+        <div class="stat-card admins text-center">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <div class="stats-number"><?= $stats['recent_teachers'] ?></div>
-              <div>New This Month</div>
+              <div class="stat-number"><?= $stats['inactive_teachers'] ?></div>
+              <div class="stat-label">Inactive Teachers</div>
+              <div class="stat-change">
+                <i data-lucide="user-x"></i>
+                <span>Suspended accounts</span>
+              </div>
             </div>
             <div class="stats-icon">
-              <i data-lucide="user-plus"></i>
+              <i data-lucide="user-x"></i>
             </div>
           </div>
         </div>
@@ -311,21 +323,25 @@ foreach ($statsQueries as $key => $query) {
       </div>
     <?php endif; ?>
 
-    <!-- Search and Filter Section - Fixed Department Search -->
+    <!-- Search and Filter Section -->
     <div class="card mb-4">
       <div class="card-body">
+        <h6 class="card-title">
+          <i data-lucide="filter"></i>
+          Search & Filter Teachers
+        </h6>
         <div class="row g-3">
           <div class="col-md-4">
             <label class="form-label">
-              <i data-lucide="search" class="me-1"></i>
+              <i data-lucide="search"></i>
               Search Teachers
             </label>
             <input id="teacherSearch" type="text" class="form-control" placeholder="Search by name, email, or contact..." />
           </div>
           <div class="col-md-3">
             <label class="form-label">
-              <i data-lucide="layers" class="me-1"></i>
-              Status
+              <i data-lucide="layers"></i>
+              Account Status
             </label>
             <select id="filterStatus" class="form-select">
               <option value="">All Status</option>
@@ -335,7 +351,7 @@ foreach ($statsQueries as $key => $query) {
           </div>
           <div class="col-md-3">
             <label class="form-label">
-              <i data-lucide="calendar" class="me-1"></i>
+              <i data-lucide="book-open"></i>
               Subject Count
             </label>
             <select id="filterSubjectCount" class="form-select">
@@ -348,7 +364,7 @@ foreach ($statsQueries as $key => $query) {
           <div class="col-md-2">
             <label class="form-label">&nbsp;</label>
             <button id="clearFilters" class="btn btn-outline-secondary d-block w-100">
-              <i data-lucide="x" class="me-1"></i>
+              <i data-lucide="x"></i>
               Clear Filters
             </button>
           </div>
@@ -361,16 +377,22 @@ foreach ($statsQueries as $key => $query) {
 
     <!-- Teachers Table -->
     <div class="card shadow-sm">
+      <div class="card-header">
+        <h6 class="card-title mb-0">
+          <i data-lucide="users"></i>
+          Teacher Directory
+        </h6>
+      </div>
       <div class="table-responsive">
         <table id="teachersTable" class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th>Photo</th>
+              <th>Profile</th>
               <th>Teacher</th>
-              <th>Contact Info</th>
+              <th>Contact Information</th>
               <th>Subjects</th>
-              <th>Joined</th>
-              <th>Status</th>
+              <th>Date Joined</th>
+              <th>Account Status</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
@@ -473,8 +495,8 @@ foreach ($statsQueries as $key => $query) {
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">
-                <i data-lucide="user" class="me-2"></i>
-                Teacher Details - <?= htmlspecialchars($teacher['FullName']) ?>
+                <i data-lucide="user"></i>
+                Teacher Profile - <?= htmlspecialchars($teacher['FullName']) ?>
               </h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -568,7 +590,7 @@ foreach ($statsQueries as $key => $query) {
           <input type="hidden" name="action" value="add_teacher">
           <div class="modal-header">
             <h5 class="modal-title">
-              <i data-lucide="user-plus" class="me-2"></i>
+              <i data-lucide="user-plus"></i>
               Add New Teacher
             </h5>
             <button type="button" class="btn-close btn-close-red" data-bs-dismiss="modal"></button>
@@ -670,8 +692,8 @@ foreach ($statsQueries as $key => $query) {
               Cancel
             </button>
             <button type="submit" class="btn btn-primary">
-              <i data-lucide="save" class="me-1"></i>
-              Add Teacher
+              <i data-lucide="save"></i>
+              Create Teacher
             </button>
           </div>
         </form>
@@ -718,7 +740,7 @@ foreach ($statsQueries as $key => $query) {
     departmentSelect.addEventListener("change", filterSubjects);
     semesterSelect.addEventListener("change", filterSubjects);
 
-    // Search and filter functionality (without department filter)
+    // Search and filter functionality
     const searchInput = document.getElementById('teacherSearch');
     const statusFilter = document.getElementById('filterStatus');
     const subjectCountFilter = document.getElementById('filterSubjectCount');

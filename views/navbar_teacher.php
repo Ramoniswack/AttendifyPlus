@@ -5,20 +5,23 @@ include 'sidebar_teacher_dashboard.php';
 
 <nav class="navbar navbar-expand-lg navbar-dark admin-navbar">
     <div class="container-fluid">
-        <!-- Universal Sidebar Toggle -->
-        <button class="btn navbar-toggle-btn me-3" id="sidebarToggle" title="Toggle Sidebar">
-            <i data-lucide="menu" class="navbar-icon"></i>
-        </button>
+        <!-- Left Section: Sidebar Toggle + Brand -->
+        <div class="d-flex align-items-center">
+            <!-- Universal Sidebar Toggle -->
+            <button class="btn navbar-toggle-btn me-3" id="sidebarToggle" title="Toggle Sidebar">
+                <i data-lucide="menu" class="navbar-icon"></i>
+            </button>
 
-        <!-- Brand -->
-        <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard_teacher.php">
-            <div class="brand-text">
-                <span class="brand-main">Attendify+</span>
-                <span class="brand-sub">Teacher Panel</span>
-            </div>
-        </a>
+            <!-- Brand - Always on Left -->
+            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard_teacher.php">
+                <div class="brand-text">
+                    <span class="brand-main">Attendify+</span>
+                    <span class="brand-sub">Teacher Panel</span>
+                </div>
+            </a>
+        </div>
 
-        <!-- Desktop Navbar Content -->
+        <!-- Right Section: Desktop Controls -->
         <div class="d-none d-lg-flex navbar-nav ms-auto align-items-center gap-2">
             <!-- User Welcome Message -->
             <div class="navbar-text welcome-text">
@@ -131,8 +134,8 @@ include 'sidebar_teacher_dashboard.php';
             </div>
         </div>
 
-        <!-- Mobile Action Buttons -->
-        <div class="d-flex d-lg-none align-items-center gap-1">
+        <!-- Right Section: Mobile Controls -->
+        <div class="d-flex d-lg-none align-items-center gap-1 ms-auto">
             <!-- Theme Toggle -->
             <button class="btn navbar-btn-mobile theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
                 <i data-lucide="sun" class="theme-icon light-icon"></i>
