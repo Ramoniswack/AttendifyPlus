@@ -121,25 +121,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     $conn->begin_transaction();
     try {
         if ($attendanceExists) {
-            // Delete existing records for this date/subject/teacher first
-            $deleteStmt = $conn->prepare("DELETE FROM attendance_records WHERE SubjectID = ? AND DATE(DateTime) = ? AND TeacherID = ?");
-            $deleteStmt->bind_param("isi", $selectedSubjectID, $date, $teacherID);
-            $deleteStmt->execute();
-            $deleteStmt->close();
-        }
-
-        // Insert all new attendance records
-        foreach ($_POST['attendance'] as $studentID => $status) {
-            $insertStmt = $conn->prepare("INSERT INTO attendance_records (StudentID, TeacherID, SubjectID, DateTime, Status, Method) VALUES (?, ?, ?, ?, ?, 'manual')");
-            $dateTime = $date . ' ' . date('H:i:s');
-            $insertStmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $dateTime, $status);
-
-            if (!$insertStmt->execute()) {
-                throw new Exception("Failed to insert attendance for student ID: " . $studentID);
+            // Update existing attendance records
+            foreach ($_POST['attendance'] as $studentID => $status) {
+                $updateStmt = $conn->prepare("
+                    UPDATE attendance_records 
+                    SET Status = ?, DateTime = ?, Method = 'manual'
+                    WHERE StudentID = ? AND TeacherID = ? AND SubjectID = ? AND DATE(DateTime) = ?
+                ");
+                $dateTime = $date . ' ' . date('H:i:s');
+                $updateStmt->bind_param("siiiis", $status, $dateTime, $studentID, $teacherID, $selectedSubjectID, $date);
+                $updateStmt->execute();
+            }
+        } else {
+            // Insert new attendance records
+            foreach ($_POST['attendance'] as $studentID => $status) {
+                $insertStmt = $conn->prepare("INSERT INTO attendance_records (StudentID, TeacherID, SubjectID, DateTime, Status, Method) VALUES (?, ?, ?, ?, ?, 'manual')");
+                $dateTime = $date . ' ' . date('H:i:s');
+                $insertStmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $dateTime, $status);
+                $insertStmt->execute();
             }
             $insertStmt->close();
         }
-
 
         $conn->commit();
 
@@ -155,15 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
         exit();
     } catch (Exception $e) {
         $conn->rollback();
-        error_log("Attendance save error: " . $e->getMessage());
-
-        $params = http_build_query([
-            'error' => 'Failed to save attendance. Please try again. Error: ' . $e->getMessage(),
-            'semester' => $selectedSemesterID,
-            'subject' => $selectedSubjectID,
-            'date' => $date
-        ]);
-        header("Location: attendance.php?" . $params);
+        header("Location: attendance.php?error=Failed to save attendance. Please try again.");
         exit();
     }
 }
@@ -926,17 +920,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
             // Remove active state from all buttons in this row
             labels.forEach(label => {
                 label.classList.remove('btn-success', 'btn-danger', 'btn-warning');
-                const forAttr = label.getAttribute('for');
-                if (forAttr && forAttr.includes('present')) {
-                    label.classList.add('btn-outline-success');
-                    label.classList.remove('btn-outline-danger', 'btn-outline-warning');
-                } else if (forAttr && forAttr.includes('absent')) {
-                    label.classList.add('btn-outline-danger');
-                    label.classList.remove('btn-outline-success', 'btn-outline-warning');
-                } else if (forAttr && forAttr.includes('late')) {
-                    label.classList.add('btn-outline-warning');
-                    label.classList.remove('btn-outline-success', 'btn-outline-danger');
-                }
+                label.classList.add('btn-outline-success', 'btn-outline-danger', 'btn-outline-warning');
             });
 
             // Add active state to selected button

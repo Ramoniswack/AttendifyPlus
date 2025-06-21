@@ -414,6 +414,12 @@ body.dark-mode .student-row:hover {
   border-color: var(--accent-dark);
   border-left-color: var(--accent-dark);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+.btn-check:checked + .btn-outline-danger {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
 }
 
 /* STUDENT AVATAR */
@@ -531,6 +537,10 @@ body.dark-mode .stats-card.bg-warning {
   border-radius: 15px;
   padding: 1.5rem;
   transition: all 0.3s ease;
+body.dark-mode .btn-check:checked + .btn-outline-danger {
+  background-color: #fd7e14 !important;
+  border-color: #fd7e14 !important;
+  color: white !important;
 }
 
 body.dark-mode .stats-summary {
@@ -677,6 +687,10 @@ body.dark-mode .sidebar {
 
 body.dark-mode .sidebar h5 {
   color: var(--accent-dark);
+body.dark-mode .btn-check:checked + .btn-outline-warning {
+  background-color: #ffc107 !important;
+  border-color: #ffc107 !important;
+  color: black !important;
 }
 
 /* Hover states for unchecked buttons */
