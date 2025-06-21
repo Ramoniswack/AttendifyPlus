@@ -59,7 +59,7 @@ $semQuery = $conn->prepare("
     WHERE ts.TeacherID = ?
     ORDER BY sem.SemesterNumber
 ");
-=======
+
 // Fetch distinct semesters where teacher is assigned
 $semQuery = $conn->prepare("SELECT DISTINCT sem.SemesterID, sem.SemesterNumber
                             FROM semesters sem
@@ -80,7 +80,7 @@ $selectedSubjectID = $_POST['subject'] ?? null;
 $date = $_POST['date'] ?? date('Y-m-d');
 $successMsg = isset($_GET['success']) ? "Attendance saved successfully." : "";
 $errorMsg = $_GET['error'] ?? "";
-=======
+
 
 
 // Handle form submission (both new and update)
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
         header("Location: attendance.php?error=Failed to save attendance. Please try again.");
         exit();
     }
-=======
+
     $date = $_POST['date'];
 
     if (!$selectedSubjectID) {
@@ -145,12 +145,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 
     echo "<script>alert('Attendance submitted successfully.'); window.location.href='attendance.php';</script>";
     exit();
-
 }
 
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
     <meta charset="UTF-8" />
@@ -166,16 +166,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     <script src="../assets/js/lucide.min.js"></script>
     <script src="../assets/js/attendance.js" defer></script>
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mark Attendance | Attendify+</title>
-  <link rel="stylesheet" href="../assets/css/manage_teacher.css" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
-  <script src="../assets/js/lucide.min.js"></script>
-  <script src="../assets/js/manage_teacher.js" defer></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mark Attendance | Attendify+</title>
+    <link rel="stylesheet" href="../assets/css/manage_teacher.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="../assets/js/lucide.min.js"></script>
+    <script src="../assets/js/manage_teacher.js" defer></script>
 
 </head>
+
 <body>
 
     <!-- Sidebar Overlay -->
@@ -569,17 +570,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebarOverlay');
             const sidebarToggle = document.getElementById('sidebarToggle');
-            
+
             if (!sidebar || !sidebarOverlay || !sidebarToggle) {
                 console.error('Sidebar elements not found');
                 return;
             }
-            
+
             // Toggle sidebar when button is clicked
             sidebarToggle.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 if (sidebar.classList.contains('active')) {
                     sidebar.classList.remove('active');
                     sidebarOverlay.classList.remove('active');
@@ -590,14 +591,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
                     document.body.classList.add('sidebar-open');
                 }
             });
-            
+
             // Close sidebar when overlay is clicked
             sidebarOverlay.addEventListener('click', function() {
                 sidebar.classList.remove('active');
                 sidebarOverlay.classList.remove('active');
                 document.body.classList.remove('sidebar-open');
             });
-            
+
             // Close sidebar on escape key
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' && sidebar.classList.contains('active')) {
@@ -606,7 +607,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
                     document.body.classList.remove('sidebar-open');
                 }
             });
-            
+
             // Handle responsive behavior
             function handleResize() {
                 if (window.innerWidth >= 1200) {
@@ -617,7 +618,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
                     }
                 }
             }
-            
+
             window.addEventListener('resize', handleResize);
             handleResize();
         });
@@ -649,10 +650,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     </script>
 </body>
 </body>
+
 </html>
 =======
-    <?php include 'sidebar_admin_dashboard.php'; ?>
-    <?php include 'navbar_admin.php'; ?>
+<?php include 'sidebar_admin_dashboard.php'; ?>
+<?php include 'navbar_admin.php'; ?>
 
 <div class="container pt-5 mt-5">
     <h2>Mark Attendance</h2>
@@ -702,44 +704,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 
             <table class="table table-bordered">
                 <thead>
-                <tr>
-                    <th>Student Name</th>
-                    <th>Exam Roll</th>
-                    <th>Status</th>
-                </tr>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Exam Roll</th>
+                        <th>Status</th>
+                    </tr>
                 </thead>
                 <tbody>
-                <?php
-                $studentsQuery = $conn->prepare("SELECT StudentID, FullName, ExamRoll
+                    <?php
+                    $studentsQuery = $conn->prepare("SELECT StudentID, FullName, ExamRoll
                                                  FROM students
                                                  WHERE DepartmentID = ? AND SemesterID = ?");
-                if (!$studentsQuery) {
-                    die("Prepare failed: " . $conn->error);
-                }
-                $studentsQuery->bind_param("ii", $teacherDept['DepartmentID'], $selectedSemesterID);
-                $studentsQuery->execute();
-                $students = $studentsQuery->get_result();
+                    if (!$studentsQuery) {
+                        die("Prepare failed: " . $conn->error);
+                    }
+                    $studentsQuery->bind_param("ii", $teacherDept['DepartmentID'], $selectedSemesterID);
+                    $studentsQuery->execute();
+                    $students = $studentsQuery->get_result();
 
-                while ($row = $students->fetch_assoc()):
-                    $sid = $row['StudentID'];
-                ?>
-                    <tr>
-                        <td><?= htmlspecialchars($row['FullName']) ?></td>
-                        <td><?= htmlspecialchars($row['ExamRoll']) ?></td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <input type="radio" class="btn-check" name="attendance[<?= $sid ?>]" id="present_<?= $sid ?>" value="present" required>
-                                <label class="btn btn-outline-success btn-sm" for="present_<?= $sid ?>">Present</label>
+                    while ($row = $students->fetch_assoc()):
+                        $sid = $row['StudentID'];
+                    ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['FullName']) ?></td>
+                            <td><?= htmlspecialchars($row['ExamRoll']) ?></td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <input type="radio" class="btn-check" name="attendance[<?= $sid ?>]" id="present_<?= $sid ?>" value="present" required>
+                                    <label class="btn btn-outline-success btn-sm" for="present_<?= $sid ?>">Present</label>
 
-                                <input type="radio" class="btn-check" name="attendance[<?= $sid ?>]" id="absent_<?= $sid ?>" value="absent">
-                                <label class="btn btn-outline-danger btn-sm" for="absent_<?= $sid ?>">Absent</label>
+                                    <input type="radio" class="btn-check" name="attendance[<?= $sid ?>]" id="absent_<?= $sid ?>" value="absent">
+                                    <label class="btn btn-outline-danger btn-sm" for="absent_<?= $sid ?>">Absent</label>
 
-                                <input type="radio" class="btn-check" name="attendance[<?= $sid ?>]" id="late_<?= $sid ?>" value="late">
-                                <label class="btn btn-outline-warning btn-sm" for="late_<?= $sid ?>">Late</label>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endwhile; ?>
+                                    <input type="radio" class="btn-check" name="attendance[<?= $sid ?>]" id="late_<?= $sid ?>" value="late">
+                                    <label class="btn btn-outline-warning btn-sm" for="late_<?= $sid ?>">Late</label>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
                 </tbody>
             </table>
 
@@ -753,7 +755,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>lucide.createIcons();</script>
+<script>
+    lucide.createIcons();
+</script>
 </body>
-</html>
 
+</html>
