@@ -16,6 +16,12 @@
   --border-dark: #333;
   --shadow-light: rgba(0, 0, 0, 0.1);
   --shadow-dark: rgba(0, 0, 0, 0.3);
+  --table-head-light: #f5f7fa;
+  --table-head-dark: #2a2a2a;
+  --table-border-light: #e9ecef;
+  --table-border-dark: #333;
+  --table-hover-light: rgba(26, 115, 232, 0.05);
+  --table-hover-dark: rgba(0, 255, 200, 0.05);
 }
 
 /* GENERAL RESET */
@@ -197,7 +203,7 @@ body.dark-mode .btn-outline-primary:hover {
   font-weight: 600;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease-in-out;
 }
 
 .btn-outline-success:hover, .btn-outline-danger:hover, .btn-outline-warning:hover {
@@ -218,6 +224,10 @@ body.dark-mode .btn-outline-primary:hover {
 }
 
 /* ATTENDANCE BUTTON STATES - Active/Checked States */
+.btn-check {
+  display: none;
+}
+
 .btn-check:checked + .btn-outline-success {
   background-color: #28a745 !important;
   border-color: #28a745 !important;
@@ -262,38 +272,38 @@ body.dark-mode .btn-check:checked + .btn-outline-warning {
 }
 
 /* Hover states for unchecked buttons */
-.btn-outline-success:hover:not(.btn-check:checked + *) {
+.btn-outline-success:hover:not(:checked) {
   background-color: rgba(40, 167, 69, 0.1) !important;
   border-color: #28a745 !important;
   color: #28a745 !important;
 }
 
-.btn-outline-danger:hover:not(.btn-check:checked + *) {
+.btn-outline-danger:hover:not(:checked) {
   background-color: rgba(220, 53, 69, 0.1) !important;
   border-color: #dc3545 !important;
   color: #dc3545 !important;
 }
 
-.btn-outline-warning:hover:not(.btn-check:checked + *) {
+.btn-outline-warning:hover:not(:checked) {
   background-color: rgba(255, 193, 7, 0.1) !important;
   border-color: #ffc107 !important;
   color: #856404 !important;
 }
 
 /* Dark mode hover states */
-body.dark-mode .btn-outline-success:hover:not(.btn-check:checked + *) {
+body.dark-mode .btn-outline-success:hover:not(:checked) {
   background-color: rgba(32, 201, 151, 0.1) !important;
   border-color: #20c997 !important;
   color: #20c997 !important;
 }
 
-body.dark-mode .btn-outline-danger:hover:not(.btn-check:checked + *) {
+body.dark-mode .btn-outline-danger:hover:not(:checked) {
   background-color: rgba(253, 126, 20, 0.1) !important;
   border-color: #fd7e14 !important;
   color: #fd7e14 !important;
 }
 
-body.dark-mode .btn-outline-warning:hover:not(.btn-check:checked + *) {
+body.dark-mode .btn-outline-warning:hover:not(:checked) {
   background-color: rgba(255, 193, 7, 0.1) !important;
   border-color: #ffc107 !important;
   color: #ffc107 !important;
@@ -306,11 +316,21 @@ body.dark-mode .btn-outline-warning:hover:not(.btn-check:checked + *) {
   box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25);
 }
 
-/* Ensure proper transition for all button states */
-.btn-outline-success,
-.btn-outline-danger,
-.btn-outline-warning {
-  transition: all 0.2s ease-in-out !important;
+/* BETTER BUTTON STYLING */
+.btn-update {
+  background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+  border: none;
+  color: black;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn-update:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+  color: black;
 }
 
 /* FORM CONTROLS */
@@ -372,8 +392,9 @@ body.dark-mode .form-label {
   display: flex;
   align-items: center;
   gap: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
+  border-left: 4px solid transparent;
 }
 
 body.dark-mode .student-row {
@@ -384,12 +405,14 @@ body.dark-mode .student-row {
   background: rgba(26, 115, 232, 0.05);
   transform: translateX(5px);
   border-color: var(--accent-light);
+  border-left-color: var(--accent-light);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 body.dark-mode .student-row:hover {
   background: rgba(0, 255, 200, 0.05);
   border-color: var(--accent-dark);
+  border-left-color: var(--accent-dark);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -440,10 +463,6 @@ body.dark-mode .student-name {
   flex-shrink: 0;
 }
 
-.btn-check {
-  display: none;
-}
-
 /* QR SECTION */
 .qr-placeholder {
   padding: 2rem 1rem;
@@ -456,6 +475,13 @@ body.dark-mode .student-name {
 body.dark-mode .qr-placeholder {
   border-color: var(--border-dark);
   background: rgba(0, 255, 200, 0.05);
+}
+
+/* QR CONTAINER IMPROVEMENTS */
+.qr-container-fixed {
+  position: sticky;
+  top: 2rem;
+  z-index: 10;
 }
 
 /* STATISTICS CARDS - EXACT MATCH FROM dashboard_admin.css */
@@ -473,41 +499,11 @@ body.dark-mode .qr-placeholder {
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
-.stats-card.bg-success {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
-}
-
-.stats-card.bg-success:hover {
-  box-shadow: 0 8px 25px rgba(17, 153, 142, 0.3);
-}
-
-.stats-card.bg-danger {
-  background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%) !important;
-}
-
-.stats-card.bg-danger:hover {
-  box-shadow: 0 8px 25px rgba(252, 70, 107, 0.3);
-}
-
-.stats-card.bg-warning {
-  background: linear-gradient(135deg, #ffa726 0%, #ffcc02 100%) !important;
-}
-
-.stats-card.bg-warning:hover {
-  box-shadow: 0 8px 25px rgba(255, 167, 38, 0.3);
-}
-
-.stats-card.bg-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-}
-
-body.dark-mode .stats-card {
-  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-}
-
-body.dark-mode .stats-card:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+/* Dark mode button states */
+body.dark-mode .btn-check:checked + .btn-outline-success {
+  background-color: #20c997 !important;
+  border-color: #20c997 !important;
+  color: white !important;
 }
 
 body.dark-mode .stats-card.bg-success {
@@ -530,14 +526,117 @@ body.dark-mode .stats-card.bg-warning {
 
 /* STATS SUMMARY */
 .stats-summary {
-  background: var(--border-light);
+  background: linear-gradient(135deg, rgba(26, 115, 232, 0.1), rgba(0, 123, 255, 0.05));
+  border: 2px solid var(--accent-light);
   border-radius: 15px;
   padding: 1.5rem;
   transition: all 0.3s ease;
 }
 
 body.dark-mode .stats-summary {
-  background: var(--border-dark);
+  background: linear-gradient(135deg, rgba(0, 255, 200, 0.1), rgba(0, 212, 170, 0.05));
+  border-color: var(--accent-dark);
+}
+
+/* FIXED POSITIONING FOR UPDATE SECTIONS - CRITICAL FIX */
+.attendance-container {
+  position: relative;
+  min-height: 400px;
+}
+
+.completed-view {
+  position: relative;
+  transition: all 0.3s ease-in-out;
+  z-index: 2;
+  width: 100%;
+  display: block;
+}
+
+.completed-view.hide {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  display: none;
+}
+
+/* UPDATE SECTION - POSITIONED TO REPLACE COMPLETED VIEW */
+.update-section {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease-in-out;
+  z-index: 1;
+  padding: 0;
+  min-height: 400px;
+  background-color: var(--card-light);
+}
+
+body.dark-mode .update-section {
+  background-color: var(--card-dark);
+}
+
+.update-section.show {
+  opacity: 1;
+  transform: translateY(0);
+  z-index: 3;
+  position: relative;
+  display: block;
+}
+
+/* ATTENDANCE SECTION - NORMAL FLOW POSITIONING */
+.attendance-section {
+  margin-top: 1.5rem;
+  position: relative;
+}
+
+/* IMPROVED FORM STYLING */
+.attendance-form-container {
+  background: var(--card-light);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-top: 0;
+  border: 2px solid var(--accent-light);
+  box-shadow: 0 8px 25px var(--shadow-light);
+}
+
+body.dark-mode .attendance-form-container {
+  background: var(--card-dark);
+  border-color: var(--accent-dark);
+  box-shadow: 0 8px 25px var(--shadow-dark);
+}
+
+/* LOADING STATES */
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* NAVBAR Z-INDEX FIX */
@@ -566,7 +665,6 @@ body.dark-mode .stats-summary {
 body.dark-mode .sidebar {
   background-color: var(--card-dark);
   color: var(--text-dark);
-  box-shadow: 2px 0 5px rgba(255, 255, 255, 0.1);
 }
 
 /* SIDEBAR TITLE */
@@ -581,156 +679,30 @@ body.dark-mode .sidebar h5 {
   color: var(--accent-dark);
 }
 
-/* SIDEBAR NAV LINKS */
-.sidebar .nav-link {
-  color: var(--text-light);
-  font-size: 1rem;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: background-color 0.2s;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
+/* Hover states for unchecked buttons */
+.btn-outline-success:hover:not(.btn-check:checked + *) {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  border-color: #28a745 !important;
+  color: #28a745 !important;
 }
 
-body.dark-mode .sidebar .nav-link {
-  color: var(--text-dark);
-}
-
-.sidebar .nav-link:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: var(--accent-light);
-}
-
-body.dark-mode .sidebar .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--accent-dark);
-}
-
-.sidebar .nav-link.active {
-  background-color: var(--accent-light);
-  color: white;
-}
-
-body.dark-mode .sidebar .nav-link.active {
-  background-color: var(--accent-dark);
-  color: black;
-}
-
-/* HORIZONTAL RULE */
-.sidebar hr {
-  border-color: var(--text-light);
-  opacity: 0.3;
-}
-
-body.dark-mode .sidebar hr {
-  border-color: var(--text-dark);
-  opacity: 0.3;
-}
-
-/* LOGOUT LINK */
-.sidebar .nav-link.text-danger {
+.btn-outline-danger:hover:not(.btn-check:checked + *) {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  border-color: #dc3545 !important;
   color: #dc3545 !important;
 }
 
-body.dark-mode .sidebar .nav-link.text-danger {
-  color: #ff6b6b !important;
+.btn-outline-warning:hover:not(.btn-check:checked + *) {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  border-color: #ffc107 !important;
+  color: #856404 !important;
 }
 
-.sidebar .nav-link.text-danger:hover {
-  background-color: rgba(220, 53, 69, 0.1);
-  color: #dc3545 !important;
-}
-
-body.dark-mode .sidebar .nav-link.text-danger:hover {
-  background-color: rgba(255, 107, 107, 0.1);
-  color: #ff6b6b !important;
-}
-
-/* LEGACY COMPAT */
-.sidebar-title {
-  font-size: 1.3rem;
-  font-weight: bold;
-  margin-bottom: 25px;
-  color: var(--accent-light);
-}
-
-body.dark-mode .sidebar-title {
-  color: var(--accent-dark);
-}
-
-.sidebar ul {
-  list-style-type: none;
-  padding-left: 0;
-  margin: 0;
-}
-
-.sidebar ul li {
-  margin-bottom: 15px;
-}
-
-.sidebar ul li a {
-  color: var(--text-light);
-  text-decoration: none;
-  font-size: 1rem;
-  display: block;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: background-color 0.2s;
-}
-
-body.dark-mode .sidebar ul li a {
-  color: var(--text-dark);
-}
-
-.sidebar ul li a:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-body.dark-mode .sidebar ul li a:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* OVERLAY */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  top: 56px;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  z-index: 1040;
-}
-
-body.sidebar-open .sidebar-overlay {
-  display: block;
-}
-
-/* PUSH EFFECT */
-body.sidebar-open .dashboard-container {
-  margin-left: 0;
-  transition: margin-left 0.3s ease;
-}
-
-@media (max-width: 767.98px) {
-  body.sidebar-open .dashboard-container {
-    pointer-events: none;
-    filter: blur(2px);
-  }
-}
-
-@media (min-width: 768px) {
-  body.sidebar-open .dashboard-container {
-    margin-left: 250px !important;
-    pointer-events: auto;
-    filter: none;
-  }
-}
-
-/* TEXT MUTED - DARK MODE SUPPORT */
-.text-muted {
-  color: var(--text-muted-light) !important;
+/* Dark mode hover states */
+body.dark-mode .btn-outline-success:hover:not(.btn-check:checked + *) {
+  background-color: rgba(32, 201, 151, 0.1) !important;
+  border-color: #20c997 !important;
+  color: #20c997 !important;
 }
 
 body.dark-mode .text-muted {
@@ -746,5 +718,420 @@ body.dark-mode .text-muted {
 }
 
 .bg-success { 
-    background-color: #28a745 !important;
+  background-color: #28a745 !important;
+}
+
+body.dark-mode .bg-success {
+  background-color: #20c997 !important;
+}
+
+.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+body.dark-mode .bg-danger {
+  background-color: #fd7e14 !important;
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
+}
+
+.bg-info {
+  background-color: #17a2b8 !important;
+}
+
+body.dark-mode .bg-info {
+  background-color: #0dcaf0 !important;
+}
+
+.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+body.dark-mode .bg-secondary {
+  background-color: #4a5568 !important;
+}
+
+.bg-primary {
+  background-color: #1A73E8 !important;
+}
+
+body.dark-mode .bg-primary {
+  background-color: var(--accent-dark) !important;
+  color: #000 !important;
+}
+
+/* ENHANCED TABLE STYLING WITH DARK MODE SUPPORT */
+.table {
+  margin-bottom: 0;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--text-light);
+  background-color: var(--card-light);
+}
+
+body.dark-mode .table {
+  color: var(--text-dark);
+  background-color: var(--card-dark);
+}
+
+.table thead th {
+  border-top: none;
+  border-bottom: 2px solid var(--table-border-light);
+  font-weight: 600;
+  color: var(--text-light);
+  background: var(--table-head-light);
+  padding: 1rem 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+body.dark-mode .table thead th {
+  color: var(--text-dark);
+  background: var(--table-head-dark);
+  border-bottom-color: var(--table-border-dark);
+}
+
+.table td {
+  vertical-align: middle;
+  color: var(--text-light);
+  padding: 1rem 0.75rem;
+  border-top: 1px solid var(--table-border-light);
+  transition: background-color 0.2s;
+  background-color: var(--card-light);
+}
+
+body.dark-mode .table td {
+  color: var(--text-dark);
+  border-top-color: var(--table-border-dark);
+  background-color: var(--card-dark);
+}
+
+.table-hover tbody tr {
+  transition: background-color 0.2s, transform 0.2s;
+  background-color: var(--card-light);
+}
+
+body.dark-mode .table-hover tbody tr {
+  background-color: var(--card-dark);
+}
+
+.table-hover tbody tr:hover {
+  background: var(--table-hover-light) !important;
+  transform: translateX(5px);
+}
+
+body.dark-mode .table-hover tbody tr:hover {
+  background: var(--table-hover-dark) !important;
+}
+
+/* Force table cell backgrounds in dark mode */
+body.dark-mode .table tbody td {
+  background-color: var(--card-dark) !important;
+}
+
+body.dark-mode .table thead th {
+  background-color: var(--table-head-dark) !important;
+}
+
+/* Override Bootstrap's default table styling */
+body.dark-mode .table-responsive .table {
+  background-color: var(--card-dark) !important;
+}
+
+body.dark-mode .table tbody tr {
+  background-color: var(--card-dark) !important;
+}
+
+/* Update this to ensure border colors work in dark mode */
+.table-bordered,
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid var(--table-border-light);
+}
+
+body.dark-mode .table-bordered,
+body.dark-mode .table-bordered th,
+body.dark-mode .table-bordered td {
+  border-color: var(--table-border-dark);
+}
+
+/* Add striped table support for dark mode */
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+body.dark-mode .table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Table container styling */
+.table-responsive {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--table-border-light);
+  background-color: var(--card-light) !important;
+}
+
+body.dark-mode .table-responsive {
+  box-shadow: 0 0 0 1px var(--table-border-dark);
+  background-color: var(--card-dark) !important;
+}
+
+/* Additional dark mode fixes for table elements */
+body.dark-mode .table,
+body.dark-mode .table > :not(caption) > * > * {
+  background-color: var(--card-dark) !important;
+  color: var(--text-dark) !important;
+  border-color: var(--table-border-dark) !important;
+}
+
+body.dark-mode .table-responsive .table {
+  background-color: var(--card-dark) !important;
+}
+
+body.dark-mode .table .fw-medium {
+  color: var(--text-dark) !important;
+}
+
+/* COMPREHENSIVE DARK MODE TABLE FIXES - FINAL VERSION */
+body.dark-mode .table,
+body.dark-mode .table *,
+body.dark-mode .table thead,
+body.dark-mode .table thead th,
+body.dark-mode .table tbody,
+body.dark-mode .table tbody tr,
+body.dark-mode .table tbody td {
+  background-color: var(--card-dark) !important;
+  color: var(--text-dark) !important;
+  border-color: var(--table-border-dark) !important;
+}
+
+/* Fix for Bootstrap table styles in dark mode */
+body.dark-mode .table > :not(caption) > * {
+  background-color: var(--card-dark) !important;
+  color: var(--text-dark) !important;
+}
+
+/* Force dark background on all table elements */
+body.dark-mode .table-responsive,
+body.dark-mode .table-responsive * {
+  background-color: var(--card-dark) !important;
+  color: var(--text-dark) !important;
+}
+
+/* Override any inline styles or Bootstrap defaults */
+body.dark-mode table,
+body.dark-mode table * {
+  background-color: var(--card-dark) !important;
+  color: var(--text-dark) !important;
+}
+
+/* Table headers get special dark styling */
+body.dark-mode .table th {
+  background-color: var(--table-head-dark) !important;
+  color: var(--text-dark) !important;
+  border-color: var(--table-border-dark) !important;
+}
+
+/* Hover states with proper dark mode colors */
+body.dark-mode .table-hover tbody tr:hover,
+body.dark-mode .table-hover tbody tr:hover td {
+  background-color: var(--table-hover-dark) !important;
+}
+
+/* Style for table caption */
+.table caption {
+  color: var(--text-muted-light);
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  text-align: left;
+  caption-side: bottom;
+}
+
+body.dark-mode .table caption {
+  color: var(--text-muted-dark);
+}
+
+/* ALERT CUSTOMIZATION */
+.alert {
+  border-radius: 10px;
+  border: none;
+  padding: 1rem 1.5rem;
+  font-weight: 500;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+  color: #155724;
+  border-left: 4px solid #28a745;
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+  color: #721c24;
+  border-left: 4px solid #dc3545;
+}
+
+.alert-info {
+  background: linear-gradient(135deg, rgba(26, 115, 232, 0.1), rgba(26, 115, 232, 0.05));
+  color: #0c5460;
+  border-left: 4px solid var(--accent-light);
+}
+
+body.dark-mode .alert-success {
+  background: linear-gradient(135deg, rgba(32, 201, 151, 0.1), rgba(32, 201, 151, 0.05));
+  color: #20c997;
+}
+
+body.dark-mode .alert-danger {
+  background: linear-gradient(135deg, rgba(253, 126, 20, 0.1), rgba(253, 126, 20, 0.05));
+  color: #fd7e14;
+}
+
+body.dark-mode .alert-info {
+  background: linear-gradient(135deg, rgba(0, 255, 200, 0.1), rgba(0, 255, 200, 0.05));
+  color: var(--accent-dark);
+  border-left-color: var(--accent-dark);
+}
+
+/* PROGRESS BARS */
+.progress {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border-light);
+}
+
+body.dark-mode .progress {
+  background: var(--border-dark);
+}
+
+.progress-bar {
+  border-radius: 4px;
+}
+
+/* CUSTOM SCROLLBAR */
+.students-list::-webkit-scrollbar,
+.table-responsive::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.students-list::-webkit-scrollbar-track,
+.table-responsive::-webkit-scrollbar-track {
+  background: var(--border-light);
+  border-radius: 3px;
+}
+
+body.dark-mode .students-list::-webkit-scrollbar-track,
+body.dark-mode .table-responsive::-webkit-scrollbar-track {
+  background: var(--border-dark);
+}
+
+.students-list::-webkit-scrollbar-thumb,
+.table-responsive::-webkit-scrollbar-thumb {
+  background: var(--accent-light);
+  border-radius: 3px;
+}
+
+body.dark-mode .students-list::-webkit-scrollbar-thumb,
+body.dark-mode .table-responsive::-webkit-scrollbar-thumb {
+  background: var(--accent-dark);
+}
+
+.students-list::-webkit-scrollbar-thumb:hover,
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #0056b3;
+}
+
+body.dark-mode .students-list::-webkit-scrollbar-thumb:hover,
+body.dark-mode .table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #00d4aa;
+}
+
+/* RESPONSIVE IMPROVEMENTS */
+@media (max-width: 991.98px) {
+  .qr-container-fixed {
+    position: relative;
+    top: 0;
+    margin-top: 1rem;
+  }
+  
+  .attendance-form-container {
+    margin-top: 1rem;
+  }
+  
+  /* Adjust positioning for mobile */
+  .update-section {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+  }
+  
+  .completed-view.hide {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .attendance-controls {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .btn-outline-success,
+  .btn-outline-danger,
+  .btn-outline-warning {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .student-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .student-info {
+    order: 1;
+  }
+  
+  .attendance-controls {
+    order: 2;
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+  }
+  
+  .table {
+    width: 100%;
+    min-width: 500px;
+  }
+}
+@media (max-width: 767.98px) {
+  .sidebar {
+    width: 200px;
+  }
+  
+  .sidebar.active {
+    left: 0;
+  }
+  
+  body.sidebar-open .dashboard-container {
+    margin-left: 200px !important;
+  }
+  
+  .sidebar-overlay {
+    top: 56px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 56px);
+  }
 }
