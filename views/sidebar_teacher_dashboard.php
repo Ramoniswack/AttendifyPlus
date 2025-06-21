@@ -30,7 +30,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </a>
 
       <!-- Upload Materials -->
-      <a class="nav-link <?= ($currentPage == 'upload_slides.php') ? 'active' : '' ?>" href="upload_slides.php">
+      <a class="nav-link <?= ($currentPage == 'upload_materials.php') ? 'active' : '' ?>" href="upload_materials.php">
         <i data-lucide="upload-cloud" class="me-2"></i>Upload Materials
       </a>
 
