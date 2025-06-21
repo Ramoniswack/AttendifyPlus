@@ -29,10 +29,10 @@ $deptStmt = $conn->prepare("
     SELECT DISTINCT d.DepartmentID, d.DepartmentName
     FROM departments d
     JOIN subjects s ON s.DepartmentID = d.DepartmentID
+");
     JOIN teacher_subject_map ts ON ts.SubjectID = s.SubjectID
     WHERE ts.TeacherID = ?
     LIMIT 1
-");
 $deptStmt->bind_param("i", $teacherID);
 $deptStmt->execute();
 $teacherDept = $deptStmt->get_result()->fetch_assoc();
@@ -121,6 +121,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     $conn->begin_transaction();
     try {
         if ($attendanceExists) {
+
+            // Delete existing records for this date/subject/teacher first
+            $deleteStmt = $conn->prepare("DELETE FROM attendance_records WHERE SubjectID = ? AND DATE(DateTime) = ? AND TeacherID = ?");
+            $deleteStmt->bind_param("isi", $selectedSubjectID, $date, $teacherID);
+            $deleteStmt->execute();
+            $deleteStmt->close();
+        }
+
+        // Insert all new attendance records
+        foreach ($_POST['attendance'] as $studentID => $status) {
+            $insertStmt = $conn->prepare("INSERT INTO attendance_records (StudentID, TeacherID, SubjectID, DateTime, Status, Method) VALUES (?, ?, ?, ?, ?, 'manual')");
+            $dateTime = $date . ' ' . date('H:i:s');
+            $insertStmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $dateTime, $status);
+
+            if (!$insertStmt->execute()) {
+                throw new Exception("Failed to insert attendance for student ID: " . $studentID);
+=======
             // Update existing attendance records
             foreach ($_POST['attendance'] as $studentID => $status) {
                 $updateStmt = $conn->prepare("
@@ -139,9 +156,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
                 $dateTime = $date . ' ' . date('H:i:s');
                 $insertStmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $dateTime, $status);
                 $insertStmt->execute();
+
             }
             $insertStmt->close();
         }
+
 
         $conn->commit();
 
@@ -157,6 +176,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
         exit();
     } catch (Exception $e) {
         $conn->rollback();
+
+        error_log("Attendance save error: " . $e->getMessage());
+
+        $params = http_build_query([
+            'error' => 'Failed to save attendance. Please try again. Error: ' . $e->getMessage(),
+            'semester' => $selectedSemesterID,
+            'subject' => $selectedSubjectID,
+            'date' => $date
+        ]);
+        header("Location: attendance.php?" . $params);
+
         header("Location: attendance.php?error=Failed to save attendance. Please try again.");
         exit();
     }
@@ -806,6 +836,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
                                             <p class="text-muted mt-2">Click Generate QR</p>
                                         </div>
                                         <canvas id="qrCanvas" style="display: none; max-width: 100%;"></canvas>
+
+                                    </div>
+
+                                    <div class="d-grid gap-2 mt-3">
+                                        <button type="button" class="btn btn-primary" onclick="generateQR()">
+                                            <i data-lucide="refresh-cw" class="me-1"></i>
+                                            <span id="qrButtonText">Generate QR Code</span>
+                                        </button>
+                                        <div id="qrTimer" class="text-center text-muted" style="display: none;">
+                                            <small>Expires in: <span id="countdown">60</span>s</small>
+                                        </div>
+                                    </div>
+
+
                                     </div>
 
                                     <div class="d-grid gap-2 mt-3">
@@ -920,6 +964,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
             // Remove active state from all buttons in this row
             labels.forEach(label => {
                 label.classList.remove('btn-success', 'btn-danger', 'btn-warning');
+                const forAttr = label.getAttribute('for');
+                if (forAttr && forAttr.includes('present')) {
+                    label.classList.add('btn-outline-success');
+                    label.classList.remove('btn-outline-danger', 'btn-outline-warning');
+                } else if (forAttr && forAttr.includes('absent')) {
+                    label.classList.add('btn-outline-danger');
+                    label.classList.remove('btn-outline-success', 'btn-outline-warning');
+                } else if (forAttr && forAttr.includes('late')) {
+                    label.classList.add('btn-outline-warning');
+                    label.classList.remove('btn-outline-success', 'btn-outline-danger');
+                }
                 label.classList.add('btn-outline-success', 'btn-outline-danger', 'btn-outline-warning');
             });
 
