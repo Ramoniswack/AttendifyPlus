@@ -110,24 +110,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
         if ($attendanceExists) {
             // Update existing attendance records
             foreach ($_POST['attendance'] as $studentID => $status) {
-                $updateStmt = $conn->prepare("
-                    UPDATE attendance_records 
-                    SET Status = ?, DateTime = ?, Method = 'manual'
-                    WHERE StudentID = ? AND TeacherID = ? AND SubjectID = ? AND DATE(DateTime) = ?
-                ");
-                $dateTime = $date . ' ' . date('H:i:s');
-                $updateStmt->bind_param("siiiis", $status, $dateTime, $studentID, $teacherID, $selectedSubjectID, $date);
-                $updateStmt->execute();
+                // First check if record exists for this specific student
+                $studentCheckStmt = $conn->prepare("SELECT COUNT(*) as count FROM attendance_records WHERE StudentID = ? AND SubjectID = ? AND DATE(DateTime) = ? AND TeacherID = ?");
+                $studentCheckStmt->bind_param("iisi", $studentID, $selectedSubjectID, $date, $teacherID);
+                $studentCheckStmt->execute();
+                $studentResult = $studentCheckStmt->get_result();
+                $studentRecordExists = $studentResult->fetch_assoc()['count'] > 0;
+
+                if ($studentRecordExists) {
+                    // Update existing record
+                    $updateStmt = $conn->prepare("
+                        UPDATE attendance_records 
+                        SET Status = ?, DateTime = ?, Method = 'manual'
+                        WHERE StudentID = ? AND TeacherID = ? AND SubjectID = ? AND DATE(DateTime) = ?
+                    ");
+                    $dateTime = $date . ' ' . date('H:i:s');
+                    $updateStmt->bind_param("siiiis", $status, $dateTime, $studentID, $teacherID, $selectedSubjectID, $date);
+                    $updateStmt->execute();
+                    $updateStmt->close();
+                } else {
+                    // Insert new record for this student
+                    $insertStmt = $conn->prepare("INSERT INTO attendance_records (StudentID, TeacherID, SubjectID, DateTime, Status, Method) VALUES (?, ?, ?, ?, ?, 'manual')");
+                    $dateTime = $date . ' ' . date('H:i:s');
+                    $insertStmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $dateTime, $status);
+                    $insertStmt->execute();
+                    $insertStmt->close();
+                }
+                $studentCheckStmt->close();
             }
         } else {
-            // Insert new attendance records
+            // Insert new attendance records for all students
             foreach ($_POST['attendance'] as $studentID => $status) {
                 $insertStmt = $conn->prepare("INSERT INTO attendance_records (StudentID, TeacherID, SubjectID, DateTime, Status, Method) VALUES (?, ?, ?, ?, ?, 'manual')");
                 $dateTime = $date . ' ' . date('H:i:s');
                 $insertStmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $dateTime, $status);
                 $insertStmt->execute();
+                $insertStmt->close();
             }
         }
+
         $conn->commit();
         $params = http_build_query([
             'success' => 1,
@@ -139,6 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
         exit();
     } catch (Exception $e) {
         $conn->rollback();
+        error_log("Attendance save error: " . $e->getMessage());
         header("Location: attendance.php?error=Failed to save attendance. Please try again.");
         exit();
     }
@@ -666,24 +688,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
             const row = radio.closest('.student-row');
             const labels = row.querySelectorAll('label');
 
-            // Remove active state from all buttons
+            // Remove active state from all buttons in this row
             labels.forEach(label => {
                 label.classList.remove('btn-success', 'btn-danger', 'btn-warning');
-                label.classList.add('btn-outline-success', 'btn-outline-danger', 'btn-outline-warning');
+                if (label.getAttribute('for').includes('present')) {
+                    label.classList.add('btn-outline-success');
+                    label.classList.remove('btn-outline-danger', 'btn-outline-warning');
+                } else if (label.getAttribute('for').includes('absent')) {
+                    label.classList.add('btn-outline-danger');
+                    label.classList.remove('btn-outline-success', 'btn-outline-warning');
+                } else if (label.getAttribute('for').includes('late')) {
+                    label.classList.add('btn-outline-warning');
+                    label.classList.remove('btn-outline-success', 'btn-outline-danger');
+                }
             });
 
             // Add active state to selected button
-            const selectedLabel = row.querySelector(`label[for="${radio.id}"]`);
-            if (selectedLabel) {
-                if (radio.value === 'present') {
-                    selectedLabel.classList.remove('btn-outline-success');
-                    selectedLabel.classList.add('btn-success');
-                } else if (radio.value === 'absent') {
-                    selectedLabel.classList.remove('btn-outline-danger');
-                    selectedLabel.classList.add('btn-danger');
-                } else if (radio.value === 'late') {
-                    selectedLabel.classList.remove('btn-outline-warning');
-                    selectedLabel.classList.add('btn-warning');
+            if (radio.checked) {
+                const selectedLabel = row.querySelector(`label[for="${radio.id}"]`);
+                if (selectedLabel) {
+                    if (radio.value === 'present') {
+                        selectedLabel.classList.remove('btn-outline-success');
+                        selectedLabel.classList.add('btn-success');
+                    } else if (radio.value === 'absent') {
+                        selectedLabel.classList.remove('btn-outline-danger');
+                        selectedLabel.classList.add('btn-danger');
+                    } else if (radio.value === 'late') {
+                        selectedLabel.classList.remove('btn-outline-warning');
+                        selectedLabel.classList.add('btn-warning');
+                    }
                 }
             }
         }
@@ -693,9 +726,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
             const absentCount = document.querySelectorAll('input[value="absent"]:checked').length;
             const lateCount = document.querySelectorAll('input[value="late"]:checked').length;
 
-            document.getElementById('presentCount').textContent = presentCount;
-            document.getElementById('absentCount').textContent = absentCount;
-            document.getElementById('lateCount').textContent = lateCount;
+            const presentElement = document.getElementById('presentCount');
+            const absentElement = document.getElementById('absentCount');
+            const lateElement = document.getElementById('lateCount');
+
+            if (presentElement) presentElement.textContent = presentCount;
+            if (absentElement) absentElement.textContent = absentCount;
+            if (lateElement) lateElement.textContent = lateCount;
         }
 
         function generateQR() {
@@ -780,16 +817,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
         document.addEventListener('DOMContentLoaded', function() {
             updateStats();
 
-            // Set up radio button listeners
+            // Set up radio button listeners with improved state management
             document.querySelectorAll('input[type="radio"][name^="attendance"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     updateButtonStates(this);
                     updateStats();
                 });
 
-                // Set initial states
+                // Set initial states based on existing selection
                 if (radio.checked) {
                     updateButtonStates(radio);
+                }
+            });
+
+            // Initialize button states for all rows
+            document.querySelectorAll('.student-row').forEach(row => {
+                const checkedRadio = row.querySelector('input[type="radio"]:checked');
+                if (checkedRadio) {
+                    updateButtonStates(checkedRadio);
                 }
             });
 
