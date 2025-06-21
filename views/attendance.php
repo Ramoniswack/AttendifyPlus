@@ -29,10 +29,10 @@ $deptStmt = $conn->prepare("
     SELECT DISTINCT d.DepartmentID, d.DepartmentName
     FROM departments d
     JOIN subjects s ON s.DepartmentID = d.DepartmentID
-");
     JOIN teacher_subject_map ts ON ts.SubjectID = s.SubjectID
     WHERE ts.TeacherID = ?
     LIMIT 1
+");
 $deptStmt->bind_param("i", $teacherID);
 $deptStmt->execute();
 $teacherDept = $deptStmt->get_result()->fetch_assoc();
@@ -121,7 +121,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     $conn->begin_transaction();
     try {
         if ($attendanceExists) {
-
             // Delete existing records for this date/subject/teacher first
             $deleteStmt = $conn->prepare("DELETE FROM attendance_records WHERE SubjectID = ? AND DATE(DateTime) = ? AND TeacherID = ?");
             $deleteStmt->bind_param("isi", $selectedSubjectID, $date, $teacherID);
@@ -137,26 +136,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 
             if (!$insertStmt->execute()) {
                 throw new Exception("Failed to insert attendance for student ID: " . $studentID);
-=======
-            // Update existing attendance records
-            foreach ($_POST['attendance'] as $studentID => $status) {
-                $updateStmt = $conn->prepare("
-                    UPDATE attendance_records 
-                    SET Status = ?, DateTime = ?, Method = 'manual'
-                    WHERE StudentID = ? AND TeacherID = ? AND SubjectID = ? AND DATE(DateTime) = ?
-                ");
-                $dateTime = $date . ' ' . date('H:i:s');
-                $updateStmt->bind_param("siiiis", $status, $dateTime, $studentID, $teacherID, $selectedSubjectID, $date);
-                $updateStmt->execute();
-            }
-        } else {
-            // Insert new attendance records
-            foreach ($_POST['attendance'] as $studentID => $status) {
-                $insertStmt = $conn->prepare("INSERT INTO attendance_records (StudentID, TeacherID, SubjectID, DateTime, Status, Method) VALUES (?, ?, ?, ?, ?, 'manual')");
-                $dateTime = $date . ' ' . date('H:i:s');
-                $insertStmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $dateTime, $status);
-                $insertStmt->execute();
-
             }
             $insertStmt->close();
         }
@@ -176,7 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
         exit();
     } catch (Exception $e) {
         $conn->rollback();
-
         error_log("Attendance save error: " . $e->getMessage());
 
         $params = http_build_query([
@@ -186,8 +164,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
             'date' => $date
         ]);
         header("Location: attendance.php?" . $params);
-
-        header("Location: attendance.php?error=Failed to save attendance. Please try again.");
         exit();
     }
 }
@@ -836,20 +812,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
                                             <p class="text-muted mt-2">Click Generate QR</p>
                                         </div>
                                         <canvas id="qrCanvas" style="display: none; max-width: 100%;"></canvas>
-
-                                    </div>
-
-                                    <div class="d-grid gap-2 mt-3">
-                                        <button type="button" class="btn btn-primary" onclick="generateQR()">
-                                            <i data-lucide="refresh-cw" class="me-1"></i>
-                                            <span id="qrButtonText">Generate QR Code</span>
-                                        </button>
-                                        <div id="qrTimer" class="text-center text-muted" style="display: none;">
-                                            <small>Expires in: <span id="countdown">60</span>s</small>
-                                        </div>
-                                    </div>
-
-
                                     </div>
 
                                     <div class="d-grid gap-2 mt-3">
@@ -975,7 +937,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
                     label.classList.add('btn-outline-warning');
                     label.classList.remove('btn-outline-success', 'btn-outline-danger');
                 }
-                label.classList.add('btn-outline-success', 'btn-outline-danger', 'btn-outline-warning');
             });
 
             // Add active state to selected button
