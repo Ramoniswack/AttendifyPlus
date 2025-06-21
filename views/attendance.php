@@ -57,8 +57,14 @@ $semResult = $semQuery->get_result();
 $selectedSemesterID = $_POST['semester'] ?? $_GET['semester'] ?? null;
 $selectedSubjectID = $_POST['subject'] ?? $_GET['subject'] ?? null;
 $date = $_POST['date'] ?? $_GET['date'] ?? date('Y-m-d');
-$successMsg = isset($_GET['success']) ? "Attendance saved successfully." : "";
+$action = $_GET['action'] ?? '';
+$successMsg = "";
 $errorMsg = $_GET['error'] ?? "";
+
+if (isset($_GET['success'])) {
+    $action = $_GET['action'] ?? 'saved';
+    $successMsg = "Attendance " . $action . " successfully.";
+}
 
 // Handle QR Code Generation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_qr'])) {
@@ -94,7 +100,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_qr'])) {
 // Handle form submission (both new and update)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     if (!$selectedSubjectID || !$selectedSemesterID || !$date) {
-        header("Location: attendance.php?error=Missing required fields.");
+        $params = http_build_query([
+            'error' => 'Missing required fields.',
+            'semester' => $selectedSemesterID,
+            'subject' => $selectedSubjectID,
+            'date' => $date
+        ]);
+        header("Location: attendance.php?" . $params);
         exit();
     }
 
@@ -104,54 +116,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     $checkStmt->execute();
     $result = $checkStmt->get_result();
     $attendanceExists = $result->fetch_assoc()['count'] > 0;
+    $checkStmt->close();
 
     $conn->begin_transaction();
     try {
         if ($attendanceExists) {
-            // Update existing attendance records
-            foreach ($_POST['attendance'] as $studentID => $status) {
-                // First check if record exists for this specific student
-                $studentCheckStmt = $conn->prepare("SELECT COUNT(*) as count FROM attendance_records WHERE StudentID = ? AND SubjectID = ? AND DATE(DateTime) = ? AND TeacherID = ?");
-                $studentCheckStmt->bind_param("iisi", $studentID, $selectedSubjectID, $date, $teacherID);
-                $studentCheckStmt->execute();
-                $studentResult = $studentCheckStmt->get_result();
-                $studentRecordExists = $studentResult->fetch_assoc()['count'] > 0;
-
-                if ($studentRecordExists) {
-                    // Update existing record
-                    $updateStmt = $conn->prepare("
-                        UPDATE attendance_records 
-                        SET Status = ?, DateTime = ?, Method = 'manual'
-                        WHERE StudentID = ? AND TeacherID = ? AND SubjectID = ? AND DATE(DateTime) = ?
-                    ");
-                    $dateTime = $date . ' ' . date('H:i:s');
-                    $updateStmt->bind_param("siiiis", $status, $dateTime, $studentID, $teacherID, $selectedSubjectID, $date);
-                    $updateStmt->execute();
-                    $updateStmt->close();
-                } else {
-                    // Insert new record for this student
-                    $insertStmt = $conn->prepare("INSERT INTO attendance_records (StudentID, TeacherID, SubjectID, DateTime, Status, Method) VALUES (?, ?, ?, ?, ?, 'manual')");
-                    $dateTime = $date . ' ' . date('H:i:s');
-                    $insertStmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $dateTime, $status);
-                    $insertStmt->execute();
-                    $insertStmt->close();
-                }
-                $studentCheckStmt->close();
-            }
-        } else {
-            // Insert new attendance records for all students
-            foreach ($_POST['attendance'] as $studentID => $status) {
-                $insertStmt = $conn->prepare("INSERT INTO attendance_records (StudentID, TeacherID, SubjectID, DateTime, Status, Method) VALUES (?, ?, ?, ?, ?, 'manual')");
-                $dateTime = $date . ' ' . date('H:i:s');
-                $insertStmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $dateTime, $status);
-                $insertStmt->execute();
-                $insertStmt->close();
-            }
+            // Delete existing records for this date/subject/teacher first
+            $deleteStmt = $conn->prepare("DELETE FROM attendance_records WHERE SubjectID = ? AND DATE(DateTime) = ? AND TeacherID = ?");
+            $deleteStmt->bind_param("isi", $selectedSubjectID, $date, $teacherID);
+            $deleteStmt->execute();
+            $deleteStmt->close();
         }
 
+        // Insert all new attendance records
+        foreach ($_POST['attendance'] as $studentID => $status) {
+            $insertStmt = $conn->prepare("INSERT INTO attendance_records (StudentID, TeacherID, SubjectID, DateTime, Status, Method) VALUES (?, ?, ?, ?, ?, 'manual')");
+            $dateTime = $date . ' ' . date('H:i:s');
+            $insertStmt->bind_param("iiiss", $studentID, $teacherID, $selectedSubjectID, $dateTime, $status);
+
+            if (!$insertStmt->execute()) {
+                throw new Exception("Failed to insert attendance for student ID: " . $studentID);
+            }
+            $insertStmt->close();
+        }
+
+
         $conn->commit();
+
+        $action = $attendanceExists ? 'updated' : 'saved';
         $params = http_build_query([
             'success' => 1,
+            'action' => $action,
             'semester' => $selectedSemesterID,
             'subject' => $selectedSubjectID,
             'date' => $date
@@ -161,7 +156,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     } catch (Exception $e) {
         $conn->rollback();
         error_log("Attendance save error: " . $e->getMessage());
-        header("Location: attendance.php?error=Failed to save attendance. Please try again.");
+
+        $params = http_build_query([
+            'error' => 'Failed to save attendance. Please try again. Error: ' . $e->getMessage(),
+            'semester' => $selectedSemesterID,
+            'subject' => $selectedSubjectID,
+            'date' => $date
+        ]);
+        header("Location: attendance.php?" . $params);
         exit();
     }
 }
@@ -179,7 +181,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="../assets/js/lucide.min.js"></script>
     <script src="../assets/js/dashboard_teacher.js" defer></script>
-
 </head>
 
 <body>
@@ -312,19 +313,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 
             // Get existing attendance if exists
             $existingAttendance = [];
+            $lastUpdatedTime = null;
             if ($attendanceExists) {
                 $existingStmt = $conn->prepare("
-                    SELECT StudentID, Status, Method
+                    SELECT StudentID, Status, Method, DateTime
                     FROM attendance_records 
                     WHERE SubjectID = ? AND DATE(DateTime) = ? AND TeacherID = ?
+                    ORDER BY DateTime DESC
                 ");
                 $existingStmt->bind_param("isi", $selectedSubjectID, $date, $teacherID);
                 $existingStmt->execute();
                 $existingResult = $existingStmt->get_result();
+
+                // Get the most recent update time
+                $firstRow = $existingResult->fetch_assoc();
+                if ($firstRow) {
+                    $lastUpdatedTime = new DateTime($firstRow['DateTime']);
+                    $existingAttendance[$firstRow['StudentID']] = [
+                        'status' => $firstRow['Status'],
+                        'method' => $firstRow['Method'] ?? 'manual',
+                        'datetime' => $firstRow['DateTime']
+                    ];
+                }
+
+                // Get the rest of the records
                 while ($row = $existingResult->fetch_assoc()) {
                     $existingAttendance[$row['StudentID']] = [
                         'status' => $row['Status'],
-                        'method' => $row['Method'] ?? 'manual'
+                        'method' => $row['Method'] ?? 'manual',
+                        'datetime' => $row['DateTime']
                     ];
                 }
             }
@@ -346,295 +363,477 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
             $subjectInfoQuery->bind_param("i", $selectedSubjectID);
             $subjectInfoQuery->execute();
             $subjectInfo = $subjectInfoQuery->get_result()->fetch_assoc();
+
+            // Calculate attendance statistics
+            $presentCount = $absentCount = $lateCount = 0;
+            if ($attendanceExists) {
+                foreach ($existingAttendance as $data) {
+                    switch ($data['status']) {
+                        case 'present':
+                            $presentCount++;
+                            break;
+                        case 'absent':
+                            $absentCount++;
+                            break;
+                        case 'late':
+                            $lateCount++;
+                            break;
+                    }
+                }
+            }
             ?>
 
+            <!-- Attendance Summary Stats -->
             <?php if ($attendanceExists): ?>
-                <!-- COMPLETED ATTENDANCE VIEW -->
-                <div class="row g-4">
-                    <!-- Left - Table View -->
-                    <div class="col-lg-8">
-                        <div class="card equal-height-card">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div>
-                                        <h5 class="card-title mb-1"><?= htmlspecialchars($subjectInfo['SubjectCode']) ?> - <?= htmlspecialchars($subjectInfo['SubjectName']) ?></h5>
-                                        <p class="text-muted mb-0">
-                                            <?= date('M j, Y', strtotime($date)) ?> • <?= $studentCount ?> Students
-                                            <span class="badge bg-success ms-2">Completed</span>
-                                        </p>
-                                    </div>
-                                    <button type="button" class="btn btn-warning" onclick="switchToUpdateMode()">
-                                        <i data-lucide="edit-3" class="me-1"></i> Update Attendance
-                                    </button>
-                                </div>
+                <div class="card equal-height-card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">
+                                <i data-lucide="pie-chart" class="me-2"></i>
+                                Attendance Summary
+                            </h5>
+                            <div>
+                                <span class="badge bg-info">
+                                    <i data-lucide="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    Last Updated: <?= $lastUpdatedTime ? $lastUpdatedTime->format('M j, Y g:i A') : 'N/A' ?>
+                                </span>
+                            </div>
+                        </div>
 
-                                <!-- Attendance Table -->
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>#</th>
-                                                <th>Student Name</th>
-                                                <th>Status</th>
-                                                <th>Method</th>
-                                                <th>Time</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+                        <div class="row text-center g-3">
+                            <div class="col-md-3 col-6">
+                                <div class="stats-card bg-success text-white">
+                                    <div class="stats-number"><?= $presentCount ?></div>
+                                    <div>Present</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="stats-card bg-danger text-white">
+                                    <div class="stats-number"><?= $absentCount ?></div>
+                                    <div>Absent</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="stats-card bg-warning text-dark">
+                                    <div class="stats-number"><?= $lateCount ?></div>
+                                    <div>Late</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="stats-card bg-primary text-white">
+                                    <div class="stats-number"><?= $studentCount ?></div>
+                                    <div>Total</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Main Attendance Container -->
+            <div class="attendance-container">
+                <?php if ($attendanceExists): ?>
+                    <!-- COMPLETED ATTENDANCE VIEW -->
+                    <div class="completed-view" id="completedView">
+                        <div class="row g-4">
+                            <!-- Left - Table View -->
+                            <div class="col-lg-8">
+                                <div class="card equal-height-card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div>
+                                                <h5 class="card-title mb-1"><?= htmlspecialchars($subjectInfo['SubjectCode']) ?> - <?= htmlspecialchars($subjectInfo['SubjectName']) ?></h5>
+                                                <p class="text-muted mb-0">
+                                                    <?= date('M j, Y', strtotime($date)) ?> • <?= $studentCount ?> Students
+                                                    <span class="badge bg-success ms-2">Completed</span>
+                                                </p>
+                                            </div>
+                                            <button type="button" class="btn btn-update" onclick="switchToUpdateMode()">
+                                                <i data-lucide="edit-3" class="me-1"></i> Update Attendance
+                                            </button>
+                                        </div>
+
+                                        <!-- Attendance Table -->
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Student Name</th>
+                                                        <th>Status</th>
+                                                        <th>Method</th>
+                                                        <th>Time</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php
+                                                    $students->data_seek(0);
+                                                    $index = 1;
+                                                    while ($student = $students->fetch_assoc()):
+                                                        $studentID = $student['StudentID'];
+                                                        $currentData = $existingAttendance[$studentID] ?? null;
+                                                        $currentStatus = $currentData['status'] ?? 'absent';
+                                                        $currentMethod = $currentData['method'] ?? 'manual';
+                                                        $recordTime = isset($currentData['datetime']) ? date('g:i A', strtotime($currentData['datetime'])) : '';
+                                                    ?>
+                                                        <tr>
+                                                            <td><?= $index ?></td>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="student-avatar me-2">
+                                                                        <?= strtoupper(substr($student['FullName'], 0, 2)) ?>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div class="fw-medium"><?= htmlspecialchars($student['FullName']) ?></div>
+                                                                        <?php if ($student['ProgramCode']): ?>
+                                                                            <small class="text-muted"><?= htmlspecialchars($student['ProgramCode']) ?></small>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-<?= $currentStatus === 'present' ? 'success' : ($currentStatus === 'late' ? 'warning' : 'danger') ?>">
+                                                                    <?= ucfirst($currentStatus) ?>
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-<?= $currentMethod === 'qr' ? 'primary' : 'secondary' ?>">
+                                                                    <?= $currentMethod === 'qr' ? 'QR Code' : 'Manual' ?>
+                                                                </span>
+                                                            </td>
+                                                            <td><?= $recordTime ?></td>
+                                                        </tr>
+                                                    <?php
+                                                        $index++;
+                                                    endwhile;
+                                                    ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right - QR Code Generator -->
+                            <div class="col-lg-4">
+                                <div class="card equal-height-card qr-container-fixed">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">
+                                            <i data-lucide="qr-code" class="me-2"></i>
+                                            QR Attendance
+                                        </h5>
+                                        <p class="text-muted">Students scan to mark attendance</p>
+
+                                        <div id="qrContainer" class="text-center">
+                                            <div id="qrPlaceholder" class="qr-placeholder">
+                                                <i data-lucide="qr-code" style="width: 80px; height: 80px;" class="text-muted"></i>
+                                                <p class="text-muted mt-2">Click Generate QR</p>
+                                            </div>
+                                            <canvas id="qrCanvas" style="display: none; max-width: 100%;"></canvas>
+                                        </div>
+
+                                        <div class="d-grid gap-2 mt-3">
+                                            <button type="button" class="btn btn-primary" onclick="generateQR()">
+                                                <i data-lucide="refresh-cw" class="me-1"></i>
+                                                <span id="qrButtonText">Generate QR Code</span>
+                                            </button>
+                                            <div id="qrTimer" class="text-center text-muted" style="display: none;">
+                                                <small>Expires in: <span id="countdown">60</span>s</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="alert alert-info mt-3">
+                                            <i data-lucide="info" class="me-1"></i>
+                                            <small>QR codes expire every 60 seconds. Students who scan will be marked Present automatically.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Update Form Container -->
+                    <div id="updateForm" style="display: none;" class="update-section">
+                        <div class="row g-4">
+                            <div class="col-lg-8">
+                                <div class="card equal-height-card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div>
+                                                <h5 class="card-title mb-1">
+                                                    <i data-lucide="edit-3" class="me-2"></i>
+                                                    Update Attendance: <?= htmlspecialchars($subjectInfo['SubjectCode']) ?>
+                                                </h5>
+                                                <p class="text-muted mb-0">
+                                                    <?= date('M j, Y', strtotime($date)) ?> • <?= $studentCount ?> Students
+                                                    <span class="badge bg-info ms-2">Update Mode</span>
+                                                </p>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="cancelUpdate()">
+                                                <i data-lucide="x" class="me-1"></i> Cancel
+                                            </button>
+                                        </div>
+
+                                        <div class="d-flex gap-2 mb-3">
+                                            <button type="button" class="btn btn-outline-success btn-sm" onclick="markAllPresent()">
+                                                <i data-lucide="check-circle" class="me-1"></i> All Present
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="markAllAbsent()">
+                                                <i data-lucide="x-circle" class="me-1"></i> All Absent
+                                            </button>
+                                        </div>
+
+                                        <!-- Student List -->
+                                        <form method="POST" id="attendanceForm" onsubmit="return submitAttendanceForm()">
+                                            <input type="hidden" name="department" value="<?= $teacherDept['DepartmentID'] ?>">
+                                            <input type="hidden" name="semester" value="<?= $selectedSemesterID ?>">
+                                            <input type="hidden" name="subject" value="<?= $selectedSubjectID ?>">
+                                            <input type="hidden" name="date" value="<?= $date ?>">
+
+                                            <div class="students-list">
+                                                <?php
+                                                $students->data_seek(0);
+                                                $index = 1;
+                                                while ($student = $students->fetch_assoc()):
+                                                    $studentID = $student['StudentID'];
+                                                    $currentData = $existingAttendance[$studentID] ?? null;
+                                                    $currentStatus = $currentData['status'] ?? null;
+                                                ?>
+                                                    <div class="student-row" data-student-id="<?= $studentID ?>">
+                                                        <div class="student-avatar">
+                                                            <?= strtoupper(substr($student['FullName'], 0, 2)) ?>
+                                                        </div>
+                                                        <div class="student-info">
+                                                            <div class="student-name"><?= htmlspecialchars($student['FullName']) ?></div>
+                                                            <?php if ($student['ProgramCode']): ?>
+                                                                <small class="text-muted"><?= htmlspecialchars($student['ProgramCode']) ?></small>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <div class="attendance-controls">
+                                                            <input type="radio" class="btn-check" name="attendance[<?= $studentID ?>]" id="present_<?= $studentID ?>" value="present" <?= $currentStatus === 'present' ? 'checked' : '' ?> required>
+                                                            <label class="btn btn-outline-success" for="present_<?= $studentID ?>">Present</label>
+
+                                                            <input type="radio" class="btn-check" name="attendance[<?= $studentID ?>]" id="absent_<?= $studentID ?>" value="absent" <?= $currentStatus === 'absent' ? 'checked' : '' ?>>
+                                                            <label class="btn btn-outline-danger" for="absent_<?= $studentID ?>">Absent</label>
+
+                                                            <input type="radio" class="btn-check" name="attendance[<?= $studentID ?>]" id="late_<?= $studentID ?>" value="late" <?= $currentStatus === 'late' ? 'checked' : '' ?>>
+                                                            <label class="btn btn-outline-warning" for="late_<?= $studentID ?>">Late</label>
+                                                        </div>
+                                                    </div>
+                                                <?php
+                                                    $index++;
+                                                endwhile;
+                                                ?>
+                                            </div>
+
+                                            <!-- Stats and Submit -->
+                                            <div class="row g-3 mt-3">
+                                                <div class="col-md-6">
+                                                    <div class="stats-summary d-flex justify-content-around text-center">
+                                                        <div>
+                                                            <span class="stats-number text-success" id="presentCount">0</span>
+                                                            <small class="d-block">Present</small>
+                                                        </div>
+                                                        <div>
+                                                            <span class="stats-number text-danger" id="absentCount">0</span>
+                                                            <small class="d-block">Absent</small>
+                                                        </div>
+                                                        <div>
+                                                            <span class="stats-number text-warning" id="lateCount">0</span>
+                                                            <small class="d-block">Late</small>
+                                                        </div>
+                                                        <div>
+                                                            <span class="stats-number text-primary"><?= $studentCount ?></span>
+                                                            <small class="d-block">Total</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 text-end">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i data-lucide="save" class="me-1"></i>
+                                                        Update Attendance
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right - QR Code Generator (in update mode) -->
+                            <div class="col-lg-4">
+                                <div class="card equal-height-card qr-container-fixed">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">
+                                            <i data-lucide="qr-code" class="me-2"></i>
+                                            QR Attendance
+                                        </h5>
+                                        <p class="text-muted">Students scan to mark attendance</p>
+
+                                        <div id="qrContainer" class="text-center">
+                                            <div id="qrPlaceholder" class="qr-placeholder">
+                                                <i data-lucide="qr-code" style="width: 80px; height: 80px;" class="text-muted"></i>
+                                                <p class="text-muted mt-2">Click Generate QR</p>
+                                            </div>
+                                            <canvas id="qrCanvas" style="display: none; max-width: 100%;"></canvas>
+                                        </div>
+
+                                        <div class="d-grid gap-2 mt-3">
+                                            <button type="button" class="btn btn-primary" onclick="generateQR()">
+                                                <i data-lucide="refresh-cw" class="me-1"></i>
+                                                <span id="qrButtonText">Generate QR Code</span>
+                                            </button>
+                                            <div id="qrTimer" class="text-center text-muted" style="display: none;">
+                                                <small>Expires in: <span id="countdown">60</span>s</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="alert alert-info mt-3">
+                                            <i data-lucide="info" class="me-1"></i>
+                                            <small>QR codes expire every 60 seconds. Students who scan will be marked Present automatically.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <!-- NEW ATTENDANCE MARKING VIEW -->
+                    <div class="row g-4" id="markingMode">
+                        <!-- Left Side - Student List -->
+                        <div class="col-lg-8">
+                            <div class="card equal-height-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <h5 class="card-title mb-1"><?= htmlspecialchars($subjectInfo['SubjectCode']) ?> - <?= htmlspecialchars($subjectInfo['SubjectName']) ?></h5>
+                                            <p class="text-muted mb-0">
+                                                <?= date('M j, Y', strtotime($date)) ?> • <?= $studentCount ?> Students
+                                            </p>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-outline-success btn-sm" onclick="markAllPresent()">
+                                                <i data-lucide="check-circle" class="me-1"></i> All Present
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="markAllAbsent()">
+                                                <i data-lucide="x-circle" class="me-1"></i> All Absent
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Student List -->
+                                    <form method="POST" id="attendanceForm" onsubmit="return submitAttendanceForm()">
+                                        <input type="hidden" name="department" value="<?= $teacherDept['DepartmentID'] ?>">
+                                        <input type="hidden" name="semester" value="<?= $selectedSemesterID ?>">
+                                        <input type="hidden" name="subject" value="<?= $selectedSubjectID ?>">
+                                        <input type="hidden" name="date" value="<?= $date ?>">
+
+                                        <div class="students-list">
                                             <?php
                                             $students->data_seek(0);
                                             $index = 1;
                                             while ($student = $students->fetch_assoc()):
                                                 $studentID = $student['StudentID'];
-                                                $currentData = $existingAttendance[$studentID] ?? null;
-                                                $currentStatus = $currentData['status'] ?? 'absent';
-                                                $currentMethod = $currentData['method'] ?? 'manual';
                                             ?>
-                                                <tr>
-                                                    <td><?= $index ?></td>
-                                                    <td>
-                                                        <div class="d-flex align-items-center">
-                                                            <div class="student-avatar me-2">
-                                                                <?= strtoupper(substr($student['FullName'], 0, 2)) ?>
-                                                            </div>
-                                                            <div>
-                                                                <div class="fw-medium"><?= htmlspecialchars($student['FullName']) ?></div>
-                                                                <?php if ($student['ProgramCode']): ?>
-                                                                    <small class="text-muted"><?= htmlspecialchars($student['ProgramCode']) ?></small>
-                                                                <?php endif; ?>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <span class="badge bg-<?= $currentStatus === 'present' ? 'success' : ($currentStatus === 'late' ? 'warning' : 'danger') ?>">
-                                                            <?= ucfirst($currentStatus) ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <span class="badge bg-<?= $currentMethod === 'qr' ? 'primary' : 'secondary' ?>">
-                                                            <?= $currentMethod === 'qr' ? 'QR Code' : 'Manual' ?>
-                                                        </span>
-                                                    </td>
-                                                    <td><?= date('g:i A') ?></td>
-                                                </tr>
+                                                <div class="student-row" data-student-id="<?= $studentID ?>">
+                                                    <div class="student-avatar">
+                                                        <?= strtoupper(substr($student['FullName'], 0, 2)) ?>
+                                                    </div>
+                                                    <div class="student-info">
+                                                        <div class="student-name"><?= htmlspecialchars($student['FullName']) ?></div>
+                                                        <?php if ($student['ProgramCode']): ?>
+                                                            <small class="text-muted"><?= htmlspecialchars($student['ProgramCode']) ?></small>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <div class="attendance-controls">
+                                                        <input type="radio" class="btn-check" name="attendance[<?= $studentID ?>]" id="present_<?= $studentID ?>" value="present" required>
+                                                        <label class="btn btn-outline-success" for="present_<?= $studentID ?>">Present</label>
+
+                                                        <input type="radio" class="btn-check" name="attendance[<?= $studentID ?>]" id="absent_<?= $studentID ?>" value="absent" checked>
+                                                        <label class="btn btn-outline-danger" for="absent_<?= $studentID ?>">Absent</label>
+
+                                                        <input type="radio" class="btn-check" name="attendance[<?= $studentID ?>]" id="late_<?= $studentID ?>" value="late">
+                                                        <label class="btn btn-outline-warning" for="late_<?= $studentID ?>">Late</label>
+                                                    </div>
+                                                </div>
                                             <?php
                                                 $index++;
                                             endwhile;
                                             ?>
-                                        </tbody>
-                                    </table>
+                                        </div>
+
+                                        <!-- Stats and Submit -->
+                                        <div class="row g-3 mt-3">
+                                            <div class="col-md-6">
+                                                <div class="stats-summary d-flex justify-content-around text-center">
+                                                    <div>
+                                                        <span class="stats-number text-success" id="presentCount">0</span>
+                                                        <small class="d-block">Present</small>
+                                                    </div>
+                                                    <div>
+                                                        <span class="stats-number text-danger" id="absentCount"><?= $studentCount ?></span>
+                                                        <small class="d-block">Absent</small>
+                                                    </div>
+                                                    <div>
+                                                        <span class="stats-number text-warning" id="lateCount">0</span>
+                                                        <small class="d-block">Late</small>
+                                                    </div>
+                                                    <div>
+                                                        <span class="stats-number text-primary"><?= $studentCount ?></span>
+                                                        <small class="d-block">Total</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 text-end">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i data-lucide="save" class="me-1"></i>
+                                                    Save Attendance
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Side - QR Code -->
+                        <div class="col-lg-4">
+                            <div class="card equal-height-card qr-container-fixed">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">
+                                        <i data-lucide="qr-code" class="me-2"></i>
+                                        QR Attendance
+                                    </h5>
+                                    <p class="text-muted">Students scan to mark attendance</p>
+
+                                    <div id="qrContainer" class="text-center">
+                                        <div id="qrPlaceholder" class="qr-placeholder">
+                                            <i data-lucide="qr-code" style="width: 80px; height: 80px;" class="text-muted"></i>
+                                            <p class="text-muted mt-2">Click Generate QR</p>
+                                        </div>
+                                        <canvas id="qrCanvas" style="display: none; max-width: 100%;"></canvas>
+                                    </div>
+
+                                    <div class="d-grid gap-2 mt-3">
+                                        <button type="button" class="btn btn-primary" onclick="generateQR()">
+                                            <i data-lucide="refresh-cw" class="me-1"></i>
+                                            <span id="qrButtonText">Generate QR Code</span>
+                                        </button>
+                                        <div id="qrTimer" class="text-center text-muted" style="display: none;">
+                                            <small>Expires in: <span id="countdown">60</span>s</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-info mt-3">
+                                        <i data-lucide="info" class="me-1"></i>
+                                        <small>QR codes expire every 60 seconds. Students who scan will be marked Present automatically.</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Right - Stats -->
-                    <div class="col-lg-4">
-                        <div class="card equal-height-card">
-                            <div class="card-body text-center">
-                                <h5 class="card-title">Attendance Summary</h5>
-                                <p class="text-muted"><?= date('M j, Y', strtotime($date)) ?></p>
-
-                                <?php
-                                $presentCount = $absentCount = $lateCount = 0;
-                                foreach ($existingAttendance as $data) {
-                                    switch ($data['status']) {
-                                        case 'present':
-                                            $presentCount++;
-                                            break;
-                                        case 'absent':
-                                            $absentCount++;
-                                            break;
-                                        case 'late':
-                                            $lateCount++;
-                                            break;
-                                    }
-                                }
-                                ?>
-                                <div class="row text-center g-3">
-                                    <div class="col-6">
-                                        <div class="stats-card bg-success text-white">
-                                            <div class="stats-number"><?= $presentCount ?></div>
-                                            <div>Present</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="stats-card bg-danger text-white">
-                                            <div class="stats-number"><?= $absentCount ?></div>
-                                            <div>Absent</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="stats-card bg-warning text-dark">
-                                            <div class="stats-number"><?= $lateCount ?></div>
-                                            <div>Late</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="stats-card bg-primary text-white">
-                                            <div class="stats-number"><?= $studentCount ?></div>
-                                            <div>Total</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="alert alert-info mt-3">
-                                    <i data-lucide="info" class="me-1"></i>
-                                    <small>Attendance recorded. Use "Update Attendance" to make changes.</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Hidden Update Form -->
-                <div id="updateForm" style="display: none;">
                 <?php endif; ?>
-
-                <!-- ATTENDANCE MARKING VIEW -->
-                <div class="row g-4" id="markingMode" <?= $attendanceExists ? 'style="display: none;"' : '' ?>>
-                    <!-- Left Side - Student List -->
-                    <div class="col-lg-8">
-                        <div class="card equal-height-card">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div>
-                                        <h5 class="card-title mb-1"><?= htmlspecialchars($subjectInfo['SubjectCode']) ?> - <?= htmlspecialchars($subjectInfo['SubjectName']) ?></h5>
-                                        <p class="text-muted mb-0">
-                                            <?= date('M j, Y', strtotime($date)) ?> • <?= $studentCount ?> Students
-                                            <?php if ($attendanceExists): ?>
-                                                <span class="badge bg-info ms-2">Update Mode</span>
-                                            <?php endif; ?>
-                                        </p>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <button type="button" class="btn btn-outline-success btn-sm" onclick="markAllPresent()">
-                                            <i data-lucide="check-circle" class="me-1"></i> All Present
-                                        </button>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="markAllAbsent()">
-                                            <i data-lucide="x-circle" class="me-1"></i> All Absent
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Student List -->
-                                <form method="POST" id="attendanceForm">
-                                    <input type="hidden" name="department" value="<?= $teacherDept['DepartmentID'] ?>">
-                                    <input type="hidden" name="semester" value="<?= $selectedSemesterID ?>">
-                                    <input type="hidden" name="subject" value="<?= $selectedSubjectID ?>">
-                                    <input type="hidden" name="date" value="<?= $date ?>">
-
-                                    <div class="students-list">
-                                        <?php
-                                        $students->data_seek(0);
-                                        $index = 1;
-                                        while ($student = $students->fetch_assoc()):
-                                            $studentID = $student['StudentID'];
-                                            $currentData = $existingAttendance[$studentID] ?? null;
-                                            $currentStatus = $currentData['status'] ?? null;
-                                        ?>
-                                            <div class="student-row" data-student-id="<?= $studentID ?>">
-                                                <div class="student-avatar">
-                                                    <?= strtoupper(substr($student['FullName'], 0, 2)) ?>
-                                                </div>
-                                                <div class="student-info">
-                                                    <div class="student-name"><?= htmlspecialchars($student['FullName']) ?></div>
-                                                    <?php if ($student['ProgramCode']): ?>
-                                                        <small class="text-muted"><?= htmlspecialchars($student['ProgramCode']) ?></small>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="attendance-controls">
-                                                    <input type="radio" class="btn-check" name="attendance[<?= $studentID ?>]" id="present_<?= $studentID ?>" value="present" <?= $currentStatus === 'present' ? 'checked' : '' ?> required>
-                                                    <label class="btn btn-outline-success" for="present_<?= $studentID ?>">Present</label>
-
-                                                    <input type="radio" class="btn-check" name="attendance[<?= $studentID ?>]" id="absent_<?= $studentID ?>" value="absent" <?= $currentStatus === 'absent' ? 'checked' : '' ?>>
-                                                    <label class="btn btn-outline-danger" for="absent_<?= $studentID ?>">Absent</label>
-
-                                                    <input type="radio" class="btn-check" name="attendance[<?= $studentID ?>]" id="late_<?= $studentID ?>" value="late" <?= $currentStatus === 'late' ? 'checked' : '' ?>>
-                                                    <label class="btn btn-outline-warning" for="late_<?= $studentID ?>">Late</label>
-                                                </div>
-                                            </div>
-                                        <?php
-                                            $index++;
-                                        endwhile;
-                                        ?>
-                                    </div>
-
-                                    <!-- Stats and Submit -->
-                                    <div class="row g-3 mt-3">
-                                        <div class="col-md-6">
-                                            <div class="stats-summary d-flex justify-content-around text-center">
-                                                <div>
-                                                    <span class="stats-number text-success" id="presentCount">0</span>
-                                                    <small class="d-block">Present</small>
-                                                </div>
-                                                <div>
-                                                    <span class="stats-number text-danger" id="absentCount">0</span>
-                                                    <small class="d-block">Absent</small>
-                                                </div>
-                                                <div>
-                                                    <span class="stats-number text-warning" id="lateCount">0</span>
-                                                    <small class="d-block">Late</small>
-                                                </div>
-                                                <div>
-                                                    <span class="stats-number text-primary"><?= $studentCount ?></span>
-                                                    <small class="d-block">Total</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 text-end">
-                                            <button type="submit" class="btn btn-primary">
-                                                <i data-lucide="save" class="me-1"></i>
-                                                <?= $attendanceExists ? 'Update Attendance' : 'Save Attendance' ?>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Side - QR Code -->
-                    <div class="col-lg-4">
-                        <div class="card equal-height-card">
-                            <div class="card-body text-center">
-                                <h5 class="card-title">
-                                    <i data-lucide="qr-code" class="me-2"></i>
-                                    QR Attendance
-                                </h5>
-                                <p class="text-muted">Students scan to mark attendance</p>
-
-                                <div id="qrContainer" class="text-center">
-                                    <div id="qrPlaceholder" class="qr-placeholder">
-                                        <i data-lucide="qr-code" style="width: 80px; height: 80px;" class="text-muted"></i>
-                                        <p class="text-muted mt-2">Click Generate QR</p>
-                                    </div>
-                                    <canvas id="qrCanvas" style="display: none; max-width: 100%;"></canvas>
-                                </div>
-
-                                <div class="d-grid gap-2 mt-3">
-                                    <button type="button" class="btn btn-primary" onclick="generateQR()">
-                                        <i data-lucide="refresh-cw" class="me-1"></i>
-                                        <span id="qrButtonText">Generate QR Code</span>
-                                    </button>
-                                    <div id="qrTimer" class="text-center text-muted" style="display: none;">
-                                        <small>Expires in: <span id="countdown">60</span>s</small>
-                                    </div>
-                                </div>
-
-                                <div class="alert alert-info mt-3">
-                                    <i data-lucide="info" class="me-1"></i>
-                                    <small>QR codes expire every 60 seconds. Students who scan will be marked Present automatically.</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <?php if ($attendanceExists): ?>
-                </div> <!-- Close hidden update form -->
-            <?php endif; ?>
-
+            </div>
         <?php else: ?>
             <!-- Empty State -->
             <div class="card equal-height-card text-center">
@@ -663,41 +862,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
         }
 
         function switchToUpdateMode() {
-            document.querySelector('.col-lg-8 .card').style.display = 'none';
-            document.getElementById('markingMode').style.display = 'block';
-            document.getElementById('updateForm').style.display = 'block';
+            const completedView = document.querySelector('.completed-view');
+            const updateSection = document.getElementById('updateForm');
+
+            if (completedView) {
+                completedView.classList.add('hide');
+            }
+
+            setTimeout(() => {
+                if (completedView) {
+                    completedView.style.display = 'none';
+                }
+                if (updateSection) {
+                    updateSection.style.display = 'block';
+                    updateSection.classList.add('show');
+                }
+            }, 300);
+        }
+
+        function cancelUpdate() {
+            const completedView = document.querySelector('.completed-view');
+            const updateSection = document.getElementById('updateForm');
+
+            if (updateSection) {
+                updateSection.classList.remove('show');
+                setTimeout(() => {
+                    updateSection.style.display = 'none';
+                    if (completedView) {
+                        completedView.style.display = 'block';
+                        completedView.classList.remove('hide');
+                    }
+                }, 300);
+            }
         }
 
         function markAllPresent() {
-            document.querySelectorAll('input[value="present"]').forEach(radio => {
+            const buttons = document.querySelectorAll('input[value="present"]');
+            buttons.forEach(radio => {
                 radio.checked = true;
                 updateButtonStates(radio);
             });
             updateStats();
+            showToast('All students marked as Present', 'success');
         }
 
         function markAllAbsent() {
-            document.querySelectorAll('input[value="absent"]').forEach(radio => {
+            const buttons = document.querySelectorAll('input[value="absent"]');
+            buttons.forEach(radio => {
                 radio.checked = true;
                 updateButtonStates(radio);
             });
             updateStats();
+            showToast('All students marked as Absent', 'warning');
         }
 
         function updateButtonStates(radio) {
             const row = radio.closest('.student-row');
+            if (!row) return;
+
             const labels = row.querySelectorAll('label');
 
             // Remove active state from all buttons in this row
+            // Remove active state from all buttons in this row
             labels.forEach(label => {
                 label.classList.remove('btn-success', 'btn-danger', 'btn-warning');
-                if (label.getAttribute('for').includes('present')) {
+                const forAttr = label.getAttribute('for');
+                if (forAttr && forAttr.includes('present')) {
                     label.classList.add('btn-outline-success');
                     label.classList.remove('btn-outline-danger', 'btn-outline-warning');
-                } else if (label.getAttribute('for').includes('absent')) {
+                } else if (forAttr && forAttr.includes('absent')) {
                     label.classList.add('btn-outline-danger');
                     label.classList.remove('btn-outline-success', 'btn-outline-warning');
-                } else if (label.getAttribute('for').includes('late')) {
+                } else if (forAttr && forAttr.includes('late')) {
                     label.classList.add('btn-outline-warning');
                     label.classList.remove('btn-outline-success', 'btn-outline-danger');
                 }
@@ -726,16 +962,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
             const absentCount = document.querySelectorAll('input[value="absent"]:checked').length;
             const lateCount = document.querySelectorAll('input[value="late"]:checked').length;
 
-            const presentElement = document.getElementById('presentCount');
-            const absentElement = document.getElementById('absentCount');
-            const lateElement = document.getElementById('lateCount');
-
-            if (presentElement) presentElement.textContent = presentCount;
-            if (absentElement) absentElement.textContent = absentCount;
-            if (lateElement) lateElement.textContent = lateCount;
+            document.getElementById('presentCount').textContent = presentCount;
+            document.getElementById('absentCount').textContent = absentCount;
+            document.getElementById('lateCount').textContent = lateCount;
         }
 
         function generateQR() {
+            const button = document.querySelector('button[onclick="generateQR()"]');
+            const originalText = button.innerHTML;
+
+            // Add loading state
+            button.classList.add('btn-loading');
+            button.innerHTML = '<span>Generating...</span>';
+            button.disabled = true;
+
             const formData = new FormData();
             formData.append('generate_qr', '1');
             formData.append('semester', '<?= $selectedSemesterID ?>');
@@ -751,13 +991,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
                     if (data.success) {
                         displayQR(data.qr_token);
                         startQRTimer();
+                        showToast('QR Code generated successfully!', 'success');
                     } else {
-                        alert('Failed to generate QR: ' + (data.error || 'Unknown error'));
+                        showToast('Failed to generate QR: ' + (data.error || 'Unknown error'), 'danger');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to generate QR code.');
+                    showToast('Failed to generate QR code.', 'danger');
+                })
+                .finally(() => {
+                    // Remove loading state
+                    button.classList.remove('btn-loading');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
                 });
         }
 
@@ -813,6 +1060,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
             }
         }
 
+        // Enhanced form submission
+        function submitAttendanceForm() {
+            const form = document.getElementById('attendanceForm');
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+
+            // Add loading state
+            submitButton.classList.add('btn-loading');
+            submitButton.innerHTML = '<span>Saving...</span>';
+            submitButton.disabled = true;
+
+            // Let the form submit naturally
+            return true;
+        }
+
         // Initialize functionality on page load
         document.addEventListener('DOMContentLoaded', function() {
             updateStats();
@@ -827,14 +1089,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
                 // Set initial states based on existing selection
                 if (radio.checked) {
                     updateButtonStates(radio);
-                }
-            });
-
-            // Initialize button states for all rows
-            document.querySelectorAll('.student-row').forEach(row => {
-                const checkedRadio = row.querySelector('input[type="radio"]:checked');
-                if (checkedRadio) {
-                    updateButtonStates(checkedRadio);
                 }
             });
 
