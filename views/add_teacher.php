@@ -1,4 +1,5 @@
 <?php
+<?php
 session_start();
 require_once(__DIR__ . '/../config/db_config.php');
 
@@ -12,22 +13,52 @@ $error = "";
 $departments = mysqli_query($conn, "SELECT * FROM departments_tbl");
 $subjects = mysqli_query($conn, "SELECT * FROM subjects_tbl");
 
+function isValidFormattedName($fullname) {
+    $name = trim($fullname);
+
+    if (!preg_match('/^[A-Za-z. ]+$/', $name)) return false;
+    if (preg_match('/[.]{2,}|[ ]{2,}/', $name)) return false;
+    if (!preg_match('/^[A-Z]/', $name)) return false;
+
+    $segments = preg_split('/[. ]/', $name);
+    foreach ($segments as $seg) {
+        if ($seg === '') continue;
+        if (!preg_match('/^[A-Z][a-z]*$/', $seg)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['cancel'])) {
         header("Location: admin_dashboard_view.php");
         exit();
     }
 
-    $username = trim($_POST['username']);
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
-    $fullname = trim($_POST['fullname']);
-    $phone = trim($_POST['phone']);
-    $department = $_POST['department'];
+    $username = trim($_POST['username'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $fullname = trim($_POST['fullname'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $department = $_POST['department'] ?? '';
     $assignedSubjects = $_POST['subjects'] ?? [];
 
-    if (!is_numeric($department)) {
+    if (empty($username) || empty($email) || empty($password) || empty($fullname) || empty($phone) || empty($department)) {
+        $error = "All fields are required.";
+    } elseif (!isValidFormattedName($fullname)) {
+        $error = "Full name must contain only letters, spaces, or dots, and each part must start with a capital letter.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Invalid email format.";
+    } elseif (!preg_match('/^(?=.*[0-9])(?=.*[!@#\$%\^&\*\-_])[A-Za-z0-9!@#\$%\^&\*\-_]{6,}$/', $password)) {
+        $error = "Password must be at least 6 characters long and include at least one number and one special character.";
+    } elseif (!preg_match('/^\d{10}$/', $phone)) {
+        $error = "Phone number must be exactly 10 digits.";
+    } elseif (!is_numeric($department)) {
         $error = "Invalid department selected.";
+    } elseif (!is_array($assignedSubjects) || count($assignedSubjects) === 0) {
+        $error = "At least one subject must be assigned.";
     } else {
         $check = $conn->prepare("SELECT * FROM login_tbl WHERE Username = ? OR Email = ?");
         $check->bind_param("ss", $username, $email);
@@ -37,29 +68,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($res->num_rows > 0) {
             $error = "Username or Email already exists.";
         } else {
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $conn->prepare("INSERT INTO login_tbl (Username, Password, Email, Role) VALUES (?, ?, ?, 'teacher')");
-            $stmt->bind_param("sss", $username, $password, $email);
+            $stmt->bind_param("sss", $username, $hashedPassword, $email);
 
             if ($stmt->execute()) {
                 $loginID = $conn->insert_id;
                 $stmt2 = $conn->prepare("INSERT INTO teachers_tbl (LoginID, FullName, Phone, DepartmentID) VALUES (?, ?, ?, ?)");
                 $stmt2->bind_param("issi", $loginID, $fullname, $phone, $department);
-                $stmt2->execute();
-
-                // Assign subjects
-                $stmt3 = $conn->prepare("INSERT INTO teacher_subject_tbl (TeacherID, SubjectID) VALUES (?, ?)");
-                foreach ($assignedSubjects as $subID) {
-                    $stmt3->bind_param("ii", $loginID, $subID);
-                    $stmt3->execute();
+                if ($stmt2->execute()) {
+                    $teacherID = $conn->insert_id;
+                    $stmt3 = $conn->prepare("INSERT INTO teacher_subject_tbl (TeacherID, SubjectID) VALUES (?, ?)");
+                    foreach ($assignedSubjects as $subID) {
+                        $stmt3->bind_param("ii", $teacherID, $subID);
+                        $stmt3->execute();
+                    }
+                    $success = "Teacher added successfully.";
+                } else {
+                    $error = "Error inserting into teachers_tbl: " . $stmt2->error;
                 }
-
-                $success = "Teacher added successfully.";
             } else {
                 $error = "Error creating teacher: " . $stmt->error;
             }
         }
     }
 }
+
 ?>
 
 <!DOCTYPE html>
