@@ -1,6 +1,5 @@
 <?php
 
-
 session_start();
 require_once(__DIR__ . '/../config/db_config.php');
 
@@ -101,22 +100,29 @@ $errorMsg = $_GET['error'] ?? '';
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Minimal Custom Styles with proper color theming -->
+  <!-- Custom Styles with proper theming -->
   <style>
-    /* Import exact color variables from attendance.css */
+    /* CSS Variables - EXACT MATCH FROM MANAGE_ADMIN.CSS */
     :root {
       --primary-color: #1a73e8;
       --text-primary: #2d3748;
       --text-secondary: #718096;
       --border-light: #e2e8f0;
       --bg-subtle: #f8fafc;
-      /* Attendance.css variables */
       --accent-light: #1A73E8;
       --accent-dark: #00ffc8;
       --card-light: #ffffff;
       --card-dark: #1f1f1f;
       --text-light: #333;
       --text-dark: #eee;
+      --text-muted-light: #6c757d;
+      --text-muted-dark: #a0a0a0;
+      --shadow-light: rgba(0, 0, 0, 0.1);
+      --shadow-dark: rgba(0, 0, 0, 0.3);
+      --input-bg-light: #ffffff;
+      --input-bg-dark: #2a2a2a;
+      --hover-light: rgba(0, 0, 0, 0.05);
+      --hover-dark: rgba(255, 255, 255, 0.1);
     }
 
     body.dark-mode {
@@ -127,6 +133,7 @@ $errorMsg = $_GET['error'] ?? '';
       --bg-subtle: #1a202c;
     }
 
+    /* Subject Cards */
     .subject-card {
       border: 1px solid var(--border-light);
       transition: all 0.2s ease;
@@ -213,7 +220,7 @@ $errorMsg = $_GET['error'] ?? '';
       border-radius: 2px;
     }
 
-    /* Attendance button styling - EXACTLY matching attendance.css */
+    /* Attendance Buttons */
     .attendance-btn {
       background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
       border: none;
@@ -233,7 +240,6 @@ $errorMsg = $_GET['error'] ?? '';
       color: white;
     }
 
-    /* Dark mode - same gradient for both states */
     body.dark-mode .attendance-btn {
       background: linear-gradient(135deg, #065f46 0%, #047857 100%);
       color: white;
@@ -245,7 +251,6 @@ $errorMsg = $_GET['error'] ?? '';
       color: white;
     }
 
-    /* Completed/Update button - same styling as regular button */
     .attendance-btn.completed {
       background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
       color: white;
@@ -258,7 +263,6 @@ $errorMsg = $_GET['error'] ?? '';
       color: white;
     }
 
-    /* Dark mode completed button */
     body.dark-mode .attendance-btn.completed {
       background: linear-gradient(135deg, #065f46 0%, #047857 100%);
       color: white;
@@ -271,54 +275,135 @@ $errorMsg = $_GET['error'] ?? '';
       color: white;
     }
 
-    /* Modal fixes */
-    .modal {
-      z-index: 1055 !important;
-    }
-
-    .modal-backdrop {
-      z-index: 1054 !important;
-    }
-
-    /* Modal content dark mode adaptation */
+    /* ===== MODALS - EXACT MATCH FROM MANAGE_ADMIN.CSS ===== */
     .modal-content {
       background: var(--card-light);
       color: var(--text-light);
+      border-radius: 12px;
+      border: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
 
     body.dark-mode .modal-content {
       background: var(--card-dark);
       color: var(--text-dark);
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
     }
 
-    /* Modal section titles - Dark mode adaptive */
-    .modal-section-title {
-      color: var(--accent-light) !important;
+    .modal-header {
+      background-color: #f8f9fa;
+      border-bottom: 2px solid #dee2e6;
+      border-radius: 12px 12px 0 0;
+    }
+
+    body.dark-mode .modal-header {
+      background-color: var(--hover-dark);
+      border-bottom-color: var(--border-light);
+    }
+
+    .modal-title {
       font-weight: 600;
+      color: var(--accent-light);
+    }
+
+    body.dark-mode .modal-title {
+      color: var(--accent-dark);
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .modal-footer {
+      padding: 1.5rem;
+      border-top: 1px solid var(--border-light);
+    }
+
+    body.dark-mode .modal-footer {
+      border-color: var(--border-light);
+    }
+
+    .btn-close {
+      filter: none;
+    }
+
+    body.dark-mode .btn-close {
+      filter: invert(1);
+    }
+
+    /* Modal Section Containers - EXACT MATCH */
+    .modal-section-container {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    body.dark-mode .modal-section-container {
+      background: #2a2a2a;
+      border-color: var(--border-light);
+    }
+
+    .modal-section-title {
+      color: var(--accent-light);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     body.dark-mode .modal-section-title {
-      color: var(--accent-dark) !important;
+      color: var(--accent-dark);
     }
 
-    /* Modal table text colors */
+    /* Modal Table Styling - EXACT MATCH */
+    .modal .table {
+      background-color: transparent;
+      color: inherit;
+      border-radius: 0;
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+
+    .modal .table td {
+      background-color: transparent;
+      color: inherit;
+      padding: 0.5rem 0.25rem;
+      vertical-align: middle;
+      border-bottom: none;
+    }
+
     .modal-table-text {
-      color: var(--text-light) !important;
+      color: var(--text-light);
+      font-weight: 600;
     }
 
     body.dark-mode .modal-table-text {
-      color: var(--text-dark) !important;
+      color: var(--text-dark);
     }
 
     .modal-table-label {
-      color: #718096 !important;
+      color: var(--text-muted-light);
+      font-weight: 500;
     }
 
     body.dark-mode .modal-table-label {
-      color: #a0aec0 !important;
+      color: var(--text-muted-dark);
     }
 
-    /* Modal buttons - matching attendance.css exactly */
+    /* Modal HR separator */
+    .modal-body hr {
+      border-color: var(--border-light);
+      margin: 1.5rem 0;
+    }
+
+    body.dark-mode .modal-body hr {
+      border-color: var(--border-light);
+    }
+
+    /* Modal Buttons - EXACT MATCH FROM MANAGE_ADMIN.CSS */
     .modal .btn-primary {
       background: linear-gradient(135deg, var(--accent-light) 0%, #0056b3 100%);
       border: none;
@@ -375,18 +460,36 @@ $errorMsg = $_GET['error'] ?? '';
       color: black;
     }
 
-    /* Responsive modal */
+    /* Modal Z-Index - EXACT MATCH */
+    .modal {
+      z-index: 1070 !important;
+    }
+
+    .modal-backdrop {
+      z-index: 1060 !important;
+    }
+
+    /* Responsive Design */
     @media (max-width: 576px) {
       .modal-dialog {
-        margin: 1rem 0.5rem;
-        max-width: none;
+        margin: 0.5rem;
+        max-width: calc(100vw - 1rem);
       }
 
       .modal-body {
         padding: 1rem;
       }
 
+      .modal-section-container {
+        padding: 0.75rem;
+      }
+
       .modal-body table {
+        font-size: 0.875rem;
+      }
+
+      .modal .btn {
+        padding: 0.625rem 1rem;
         font-size: 0.875rem;
       }
     }
@@ -395,12 +498,21 @@ $errorMsg = $_GET['error'] ?? '';
       .modal-dialog {
         margin: 1rem;
       }
+
+      .modal-section-container {
+        margin-bottom: 0.75rem;
+      }
     }
 
-    /* Ensure modal content is scrollable on small screens */
     .modal-dialog {
       max-height: calc(100vh - 2rem);
       overflow-y: auto;
+    }
+
+    @media (max-width: 576px) {
+      .modal-dialog {
+        max-height: calc(100vh - 1rem);
+      }
     }
   </style>
 
@@ -421,7 +533,7 @@ $errorMsg = $_GET['error'] ?? '';
 
   <!-- Main Content -->
   <div class="container-fluid dashboard-container">
-    <!-- Simple Page Header -->
+    <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
         <h2 class="page-title mb-1">My Subjects</h2>
@@ -598,7 +710,7 @@ $errorMsg = $_GET['error'] ?? '';
     <?php endif; ?>
   </div>
 
-  <!-- Responsive Subject Details Modal -->
+  <!-- Subject Details Modal - EXACT MATCH STYLE FROM MANAGE_ADMIN -->
   <div class="modal fade" id="subjectDetailsModal" tabindex="-1" aria-labelledby="subjectDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content border-0 shadow">
@@ -622,17 +734,17 @@ $errorMsg = $_GET['error'] ?? '';
     // Initialize Lucide icons
     lucide.createIcons();
 
-    // Responsive subject details modal with proper dark mode support
+    // Modal function with proper theming - EXACT MATCH FROM MANAGE_ADMIN
     function viewSubjectDetails(subjectId, subjectName, subjectCode, departmentName, semesterNumber, creditHour, lectureHour, isElective) {
       const modalContent = document.getElementById('subjectDetailsContent');
-
       const electiveText = isElective === 'true' ? 'Yes' : 'No';
 
       modalContent.innerHTML = `
-                <div class="container-fluid">
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <h6 class="modal-section-title mb-3">
+            <div class="container-fluid">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="modal-section-container">
+                            <h6 class="modal-section-title">
                                 <i data-lucide="info" class="me-2" style="width: 16px; height: 16px;"></i>
                                 Basic Information
                             </h6>
@@ -655,8 +767,10 @@ $errorMsg = $_GET['error'] ?? '';
                                 </tr>
                             </table>
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="modal-section-title mb-3">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="modal-section-container">
+                            <h6 class="modal-section-title">
                                 <i data-lucide="clock" class="me-2" style="width: 16px; height: 16px;"></i>
                                 Academic Details
                             </h6>
@@ -680,38 +794,40 @@ $errorMsg = $_GET['error'] ?? '';
                             </table>
                         </div>
                     </div>
-                    
-                    <hr class="my-4">
-                    
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <a href="attendance.php?semester=${semesterNumber}&subject=${subjectId}&date=${new Date().toISOString().split('T')[0]}" 
-                               class="btn btn-primary w-100">
-                                <i data-lucide="clipboard-check" class="me-1" style="width: 16px; height: 16px;"></i>
-                                Mark Attendance
-                            </a>
-                        </div>
-                        <div class="col-md-6">
-                            <a href="attendance_report.php?subject=${subjectId}" 
-                               class="btn btn-outline-primary w-100">
-                                <i data-lucide="bar-chart-3" class="me-1" style="width: 16px; height: 16px;"></i>
-                                View Reports
-                            </a>
-                        </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <a href="attendance.php?semester=${semesterNumber}&subject=${subjectId}&date=${new Date().toISOString().split('T')[0]}" 
+                           class="btn btn-primary w-100">
+                            <i data-lucide="clipboard-check" class="me-1" style="width: 16px; height: 16px;"></i>
+                            Mark Attendance
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="attendance_report.php?subject=${subjectId}" 
+                           class="btn btn-outline-primary w-100">
+                            <i data-lucide="bar-chart-3" class="me-1" style="width: 16px; height: 16px;"></i>
+                            View Reports
+                        </a>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
 
-      // Re-initialize Lucide icons in modal
+      // Re-initialize Lucide icons
       lucide.createIcons();
 
       // Show modal
-      const modal = new bootstrap.Modal(document.getElementById('subjectDetailsModal'));
-      modal.show();
+      const modalInstance = new bootstrap.Modal(document.getElementById('subjectDetailsModal'));
+      modalInstance.show();
     }
 
-    // Enhanced hover effects and responsive handling
+    // DOM Content Loaded
     document.addEventListener('DOMContentLoaded', function() {
+      // Card hover effects
       const subjectCards = document.querySelectorAll('.subject-card');
       subjectCards.forEach(card => {
         card.addEventListener('mouseenter', function() {
@@ -723,10 +839,9 @@ $errorMsg = $_GET['error'] ?? '';
         });
       });
 
-      // Handle modal backdrop clicks properly
+      // Modal cleanup
       const modal = document.getElementById('subjectDetailsModal');
       modal.addEventListener('hidden.bs.modal', function() {
-        // Clean up when modal is closed
         document.body.classList.remove('modal-open');
         const backdrop = document.querySelector('.modal-backdrop');
         if (backdrop) {
@@ -740,9 +855,8 @@ $errorMsg = $_GET['error'] ?? '';
       }, 100);
     });
 
-    // Handle responsive behavior
+    // Responsive behavior
     window.addEventListener('resize', function() {
-      // Ensure modal is properly positioned on resize
       const modal = document.querySelector('.modal.show');
       if (modal) {
         const bsModal = bootstrap.Modal.getInstance(modal);
