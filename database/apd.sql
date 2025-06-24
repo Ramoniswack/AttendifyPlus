@@ -135,6 +135,49 @@ CREATE TABLE `qr_attendance_sessions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
+-- Add these tables to your existing database
+
+-- Materials table
+CREATE TABLE `materials` (
+  `MaterialID` int(11) NOT NULL AUTO_INCREMENT,
+  `TeacherID` int(11) NOT NULL,
+  `SubjectID` int(11) NOT NULL,
+  `Title` varchar(255) NOT NULL,
+  `Description` text,
+  `FileName` varchar(255) NOT NULL,
+  `OriginalFileName` varchar(255) NOT NULL,
+  `FileSize` bigint(20) NOT NULL,
+  `FileType` varchar(50) NOT NULL,
+  `FilePath` varchar(500) NOT NULL,
+  `UploadDateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `IsActive` tinyint(1) NOT NULL DEFAULT 1,
+  `DownloadCount` int(11) DEFAULT 0,
+  `Tags` varchar(500),
+  PRIMARY KEY (`MaterialID`),
+  KEY `TeacherID` (`TeacherID`),
+  KEY `SubjectID` (`SubjectID`),
+  FOREIGN KEY (`TeacherID`) REFERENCES `teachers` (`TeacherID`) ON DELETE CASCADE,
+  FOREIGN KEY (`SubjectID`) REFERENCES `subjects` (`SubjectID`) ON DELETE CASCADE
+);
+
+-- Material access logs
+CREATE TABLE `material_access_logs` (
+  `LogID` int(11) NOT NULL AUTO_INCREMENT,
+  `MaterialID` int(11) NOT NULL,
+  `StudentID` int(11),
+  `TeacherID` int(11),
+  `AccessDateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ActionType` enum('view','download') NOT NULL,
+  `IPAddress` varchar(45),
+  PRIMARY KEY (`LogID`),
+  KEY `MaterialID` (`MaterialID`),
+  KEY `StudentID` (`StudentID`),
+  KEY `TeacherID` (`TeacherID`),
+  FOREIGN KEY (`MaterialID`) REFERENCES `materials` (`MaterialID`) ON DELETE CASCADE,
+  FOREIGN KEY (`StudentID`) REFERENCES `students` (`StudentID`) ON DELETE SET NULL,
+  FOREIGN KEY (`TeacherID`) REFERENCES `teachers` (`TeacherID`) ON DELETE SET NULL
+);
+
 
 
 
