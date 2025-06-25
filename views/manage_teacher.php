@@ -10,7 +10,7 @@ include '../config/db_config.php';
 
 $successMsg = '';
 $errorMsg = '';
-$errors = [];
+$errors = [];             //declare array
 
 
 // Handle form submission for adding teacher
@@ -707,7 +707,7 @@ foreach ($statsQueries as $key => $query) {
 
               <div class="col-12">
                 <label class="form-label">Address</label>
-                <textarea name="Address" class="form-control" rows="2" placeholder="Enter full address"></textarea>
+                <textarea name="Address" class="form-control" rows="2" placeholder="Enter full address" ></textarea>
                 <span class="error text-danger"><?php echo $errors['Address'] ?? ''; ?></span>
               </div>
 

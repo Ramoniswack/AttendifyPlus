@@ -8,6 +8,7 @@ include '../config/db_config.php';
 
 $successMsg = '';
 $errorMsg = '';
+$errors = [];
 
 // Handle form submission for adding student
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_student') {
@@ -24,104 +25,174 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $ConfirmPassword = $_POST['ConfirmPassword'] ?? '';
     $PhotoURL = '';
 
-    // Basic validation
-    if (empty($FullName) || empty($Email) || empty($DepartmentID) || empty($SemesterID) || empty($JoinYear)) {
-        $errorMsg = "Please fill in all required fields.";
+
+
+    function isValidFormattedName($Fullname) {
+        $Fullname = trim($Fullname);
+        if (!preg_match('/^[A-Za-z. ]+$/', $Fullname)) return false;
+        if (preg_match('/[.]{2,}|[ ]{2,}/', $Fullname)) return false;
+        if (!preg_match('/^[A-Z]/', $Fullname)) return false;
+
+        $words = explode(' ', $Fullname);
+        foreach ($words as $word) {
+            if ($word === '') continue;
+            $parts = explode('.', $word);
+            foreach ($parts as $part) {
+                if ($part === '') continue;
+                if (!preg_match('/^[A-Z][a-z]*$/', $part)) return false;
+            }
+        }
+        return true;
+    }
+
+    //Rikita
+
+    if (empty($FullName)) {
+        $errors['FullName'] = "Full name is required.";
+    } elseif (!isValidFormattedName($FullName)) {
+        $errors['FullName'] = "Only letters, spaces, and dots allowed. Each part must start with a capital letter.";
+    }
+
+    if (empty($Email)) {
+        $errors['Email'] = "Email is required.";
+    } elseif (!filter_var($Email, FILTER_VALIDATE_EMAIL)) {
+        $errors['Email'] = "Invalid email format.";
+    }
+
+    if (empty($Contact)) {
+        $errors['Contact'] = "Contact number is required.";
+    } elseif (!preg_match('/^\d{10}$/', $Contact)) {
+        $errors['Contact'] = "Contact number must be exactly 10 digits.";
+    }
+
+    if (empty($DepartmentID)) {
+        $errors['DepartmentID'] = "Please select a department.";
+    }
+
+    if (empty($SemesterID)) {
+        $errors['SemesterID'] = "Please select a semester.";
+    }
+
+    if (empty($Address)) {
+        $errors['Address'] = "Address is required.";
+    }
+
+    if (empty($Password)) {
+        $errors['Password'] = "Password is required.";
+    } elseif (!preg_match('/^(?=.*[0-9])(?=.*[!@#\$%\^&\*\-_])[A-Za-z0-9!@#\$%\^&\*\-_]{6,}$/', $Password)) {
+        $errors['Password'] = "Password must be at least 6 characters long, with a number and a special character.";
+    }
+
+    if (empty($ConfirmPassword)) {
+        $errors['ConfirmPassword'] = "Please confirm your password.";
     } elseif ($Password !== $ConfirmPassword) {
-        $errorMsg = "Passwords do not match.";
-    } elseif (strlen($Password) < 6) {
-        $errorMsg = "Password must be at least 6 characters long.";
-    } else {
+        $errors['ConfirmPassword'] = "Passwords do not match.";
+    }
+
+
+
+    //
+
+
+
+
+    // Basic validation
+    // if (empty($FullName) || empty($Email) || empty($DepartmentID) || empty($SemesterID) || empty($JoinYear)) {
+    //     $errorMsg = "Please fill in all required fields.";
+    // } elseif ($Password !== $ConfirmPassword) {
+    //     $errorMsg = "Passwords do not match.";
+    // } elseif (strlen($Password) < 6) {
+    //     $errorMsg = "Password must be at least 6 characters long.";
+    // } else {
         // Handle photo upload
-        if (isset($_FILES['PhotoFile']) && $_FILES['PhotoFile']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = '../uploads/students/';
+    if (isset($_FILES['PhotoFile']) && $_FILES['PhotoFile']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = '../uploads/students/';
 
-            // Create directory if it doesn't exist
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
+        // Create directory if it doesn't exist
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
 
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-            $fileType = $_FILES['PhotoFile']['type'];
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $fileType = $_FILES['PhotoFile']['type'];
 
-            if (in_array($fileType, $allowedTypes)) {
-                if ($_FILES['PhotoFile']['size'] <= 5 * 1024 * 1024) { // 5MB limit
-                    $ext = pathinfo($_FILES['PhotoFile']['name'], PATHINFO_EXTENSION);
-                    $filename = uniqid('student_', true) . '.' . $ext;
-                    $targetPath = $uploadDir . $filename;
+        if (in_array($fileType, $allowedTypes)) {
+            if ($_FILES['PhotoFile']['size'] <= 5 * 1024 * 1024) { // 5MB limit
+                $ext = pathinfo($_FILES['PhotoFile']['name'], PATHINFO_EXTENSION);
+                $filename = uniqid('student_', true) . '.' . $ext;
+                $targetPath = $uploadDir . $filename;
 
-                    if (move_uploaded_file($_FILES['PhotoFile']['tmp_name'], $targetPath)) {
-                        $PhotoURL = $targetPath;
-                    } else {
-                        $errorMsg = "Failed to upload photo.";
-                    }
+                if (move_uploaded_file($_FILES['PhotoFile']['tmp_name'], $targetPath)) {
+                    $PhotoURL = $targetPath;
                 } else {
-                    $errorMsg = "Image size must be less than 5MB.";
+                    $errorMsg = "Failed to upload photo.";
                 }
             } else {
-                $errorMsg = "Only JPEG, PNG, and GIF images are allowed.";
+                $errorMsg = "Image size must be less than 5MB.";
             }
+        } else {
+            $errorMsg = "Only JPEG, PNG, and GIF images are allowed.";
         }
+    }
 
-        if (empty($errorMsg)) {
-            // Check if email already exists
-            $emailCheck = $conn->prepare("SELECT LoginID FROM login_tbl WHERE Email = ?");
-            $emailCheck->bind_param("s", $Email);
-            $emailCheck->execute();
-            $emailCheck->store_result();
+    if (empty($errors))  {
+        // Check if email already exists
+        $emailCheck = $conn->prepare("SELECT LoginID FROM login_tbl WHERE Email = ?");
+        $emailCheck->bind_param("s", $Email);
+        $emailCheck->execute();
+        $emailCheck->store_result();
 
-            if ($emailCheck->num_rows > 0) {
-                $errorMsg = "This email is already registered.";
-            } else {
-                // Generate ProgramCode
-                $deptQuery = $conn->prepare("SELECT DepartmentName FROM departments WHERE DepartmentID = ?");
-                $deptQuery->bind_param("i", $DepartmentID);
-                $deptQuery->execute();
-                $deptResult = $deptQuery->get_result();
-                $deptRow = $deptResult->fetch_assoc();
-                $ProgramCode = strtoupper($deptRow['DepartmentName']) . '-' . $JoinYear;
+        if ($emailCheck->num_rows > 0) {
+            $errorMsg = "This email is already registered.";
+        } else {
+            // Generate ProgramCode
+            $deptQuery = $conn->prepare("SELECT DepartmentName FROM departments WHERE DepartmentID = ?");
+            $deptQuery->bind_param("i", $DepartmentID);
+            $deptQuery->execute();
+            $deptResult = $deptQuery->get_result();
+            $deptRow = $deptResult->fetch_assoc();
+            $ProgramCode = strtoupper($deptRow['DepartmentName']) . '-' . $JoinYear;
 
-                // Start transaction
-                $conn->begin_transaction();
+            // Start transaction
+            $conn->begin_transaction();
 
-                try {
-                    // Insert into login_tbl
-                    $stmt1 = $conn->prepare("INSERT INTO login_tbl (Email, Password, Role, Status, CreatedDate) VALUES (?, ?, 'student', ?, NOW())");
-                    $hashedPass = password_hash($Password, PASSWORD_BCRYPT);
-                    $stmt1->bind_param("sss", $Email, $hashedPass, $Status);
+            try {
+                // Insert into login_tbl
+                $stmt1 = $conn->prepare("INSERT INTO login_tbl (Email, Password, Role, Status, CreatedDate) VALUES (?, ?, 'student', ?, NOW())");
+                $hashedPass = password_hash($Password, PASSWORD_BCRYPT);
+                $stmt1->bind_param("sss", $Email, $hashedPass, $Status);
 
-                    if (!$stmt1->execute()) {
-                        throw new Exception("Failed to create login account.");
-                    }
-
-                    $loginID = $conn->insert_id;
-
-                    // Insert into students table
-                    $stmt2 = $conn->prepare("INSERT INTO students (FullName, Contact, Address, PhotoURL, DepartmentID, SemesterID, JoinYear, ProgramCode, LoginID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmt2->bind_param("ssssiissi", $FullName, $Contact, $Address, $PhotoURL, $DepartmentID, $SemesterID, $JoinYear, $ProgramCode, $loginID);
-
-                    if (!$stmt2->execute()) {
-                        throw new Exception("Failed to create student record.");
-                    }
-
-                    // Commit transaction
-                    $conn->commit();
-
-                    // Success: Store success message in session and redirect
-                    $_SESSION['success_message'] = "Student added successfully.";
-                    header("Location: " . $_SERVER['PHP_SELF']);
-                    exit();
-                } catch (Exception $e) {
-                    // Rollback transaction
-                    $conn->rollback();
-                    $errorMsg = $e->getMessage();
+                if (!$stmt1->execute()) {
+                    throw new Exception("Failed to create login account.");
                 }
 
-                if (isset($stmt1)) $stmt1->close();
-                if (isset($stmt2)) $stmt2->close();
+                $loginID = $conn->insert_id;
+
+                // Insert into students table
+                $stmt2 = $conn->prepare("INSERT INTO students (FullName, Contact, Address, PhotoURL, DepartmentID, SemesterID, JoinYear, ProgramCode, LoginID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt2->bind_param("ssssiissi", $FullName, $Contact, $Address, $PhotoURL, $DepartmentID, $SemesterID, $JoinYear, $ProgramCode, $loginID);
+
+                if (!$stmt2->execute()) {
+                    throw new Exception("Failed to create student record.");
+                }
+
+                // Commit transaction
+                $conn->commit();
+
+                // Success: Store success message in session and redirect
+                $_SESSION['success_message'] = "Student added successfully.";
+                header("Location: " . $_SERVER['PHP_SELF']);
+                exit();
+            } catch (Exception $e) {
+                // Rollback transaction
+                $conn->rollback();
+                $errorMsg = $e->getMessage();
             }
-            $emailCheck->close();
+
+            if (isset($stmt1)) $stmt1->close();
+            if (isset($stmt2)) $stmt2->close();
         }
+        $emailCheck->close();
     }
 }
 
@@ -585,21 +656,29 @@ foreach ($statsQueries as $key => $query) {
                                 <label class="form-label">
                                     Full Name <span class="required-field">*</span>
                                 </label>
-                                <input name="FullName" type="text" class="form-control" required placeholder="Enter full name" />
+                                <input name="FullName" type="text" class="form-control" required placeholder="Enter full name" 
+                                    value="<?php echo htmlspecialchars($_POST['FullName'] ?? ''); ?>" />
+                                <span class="error text-danger"><?php echo $errors['FullName'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">
                                     Email Address <span class="required-field">*</span>
                                 </label>
-                                <input name="Email" type="email" class="form-control" required placeholder="student@example.com" />
+                                <input name="Email" type="email" class="form-control" required placeholder="student@example.com" 
+                                    value="<?php echo htmlspecialchars($_POST['Email'] ?? ''); ?>" />
+                                <span class="error text-danger"><?php echo $errors['Email'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Contact Number</label>
-                                <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx" />
+                                <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx" 
+                                    value="<?php echo htmlspecialchars($_POST['Contact'] ?? ''); ?>" />
+                                <span class="error text-danger"><?php echo $errors['Contact'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Address</label>
-                                <input name="Address" type="text" class="form-control" placeholder="City, District" />
+                                <input name="Address" type="text" class="form-control" placeholder="City, District" 
+                                    value="<?php echo htmlspecialchars($_POST['Address'] ?? ''); ?>" />
+                                <span class="error text-danger"><?php echo $errors['Address'] ?? ''; ?></span>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">
@@ -608,12 +687,14 @@ foreach ($statsQueries as $key => $query) {
                                 </label>
                                 <input name="PhotoFile" type="file" class="form-control" accept="image/*" />
                                 <small class="form-text text-muted">JPG, PNG, GIF (Max 5MB)</small>
+                                <span class="error text-danger"><?php echo $errors['Photo'] ?? ''; ?></span>
                             </div>
 
                             <!-- Academic Information -->
                             <div class="col-12 mt-4">
                                 <h6 class="text-primary border-bottom pb-2"><i data-lucide="graduation-cap"></i> Academic Information</h6>
                             </div>
+
                             <div class="col-md-6">
                                 <label class="form-label">
                                     Department <span class="required-field">*</span>
@@ -624,7 +705,9 @@ foreach ($statsQueries as $key => $query) {
                                         <option value="<?= $d['DepartmentID'] ?>"><?= htmlspecialchars($d['DepartmentName']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                                <span class="error text-danger"><?php echo $errors['DepartmentID'] ?? ''; ?></span>
                             </div>
+
                             <div class="col-md-6">
                                 <label class="form-label">
                                     Semester <span class="required-field">*</span>
@@ -635,7 +718,9 @@ foreach ($statsQueries as $key => $query) {
                                         <option value="<?= $s['SemesterID'] ?>">Semester <?= $s['SemesterNumber'] ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                                <span class="error text-danger"><?php echo $errors['SemesterID'] ?? ''; ?></span>
                             </div>
+
                             <div class="col-md-6">
                                 <label class="form-label">
                                     Join Year <span class="required-field">*</span>
@@ -660,12 +745,14 @@ foreach ($statsQueries as $key => $query) {
                                     Password <span class="required-field">*</span>
                                 </label>
                                 <input name="Password" type="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters" />
+                                <span class="error text-danger"><?php echo $errors['Password'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">
                                     Confirm Password <span class="required-field">*</span>
                                 </label>
                                 <input name="ConfirmPassword" type="password" class="form-control" required placeholder="Re-enter password" />
+                                <span class="error text-danger"><?php echo $errors['ConfirmPassword'] ?? ''; ?></span>
                             </div>
                         </div>
                     </div>
