@@ -10,6 +10,7 @@ include '../config/db_config.php';
 
 $successMsg = '';
 $errorMsg = '';
+$errors = [];             //declare array
 
 // Handle form submission for adding admin
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_admin') {
@@ -22,14 +23,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $Address = trim($_POST['Address'] ?? '');
     $PhotoURL = '';
 
-    // Basic validation
-    if (empty($FullName) || empty($Email) || empty($Password)) {
-        $errorMsg = "Please fill in all required fields.";
-    } elseif ($Password !== $ConfirmPassword) {
-        $errorMsg = "Passwords do not match.";
-    } elseif (strlen($Password) < 6) {
-        $errorMsg = "Password must be at least 6 characters long.";
+    function isValidFormattedName($Fullname) {
+        $Fullname = trim($Fullname);
+        if (!preg_match('/^[A-Za-z. ]+$/', $Fullname)) return false;
+        if (preg_match('/[.]{2,}|[ ]{2,}/', $Fullname)) return false;
+        if (!preg_match('/^[A-Z]/', $Fullname)) return false;
+
+        $words = explode(' ', $Fullname);
+        foreach ($words as $word) {
+        if ($word === '') continue;
+        $parts = explode('.', $word);
+        foreach ($parts as $part) {
+            if ($part === '') continue;
+            if (!preg_match('/^[A-Z][a-z]*$/', $part)) return false;
+        }
+        }
+        return true;
     }
+
+    function validateEmail($Email) {
+        $Email = trim($Email);
+        if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
+
+        return true;
+    }
+
+    // VALIDATION
+   if (empty($FullName)) {
+        $errors['FullName'] = "Full name is required.";
+    } elseif (!isValidFormattedName($FullName)) {
+        $errors['FullName'] = "Only letters, spaces, and dots allowed. Each part must start with a capital letter.";
+    }
+
+    if (empty($Email)) {
+        $errors['Email'] = "Email is required.";
+    } elseif (!validateEmail($Email)) {
+        $errors['Email'] = "Invalid email format. Example: example1@lagrandee.com";
+    }
+
+    if (empty($Contact)) {
+        $errors['Contact'] = "Contact number is required.";
+    } elseif (!preg_match('/^\d{10}$/', $Contact)) {
+        $errors['Contact'] = "Contact number must be exactly 10 digits.";
+    }
+
+    if (empty($Address)) {
+        $errors['Address'] = "Address is required.";
+    }
+
+    if (empty($Password)) {
+        $errors['Password'] = "Password is required.";
+    } elseif (!preg_match('/^(?=.*[0-9])(?=.*[!@#\$%\^&\*\-_])[A-Za-z0-9!@#\$%\^&\*\-_]{6,}$/', $Password)) {
+        $errors['Password'] = "Password must be at least 6 characters long, with a number and a special character.";
+    }
+
+    if (empty($ConfirmPassword)) {
+        $errors['ConfirmPassword'] = "Please confirm your password.";
+    } elseif ($Password !== $ConfirmPassword) {
+        $errors['ConfirmPassword'] = "Passwords do not match.";
+    }
+
+
+    // // Basic validation
+    // if (empty($FullName) || empty($Email) || empty($Password)) {
+    //     $errorMsg = "Please fill in all required fields.";
+    // } elseif ($Password !== $ConfirmPassword) {
+    //     $errorMsg = "Passwords do not match.";
+    // } elseif (strlen($Password) < 6) {
+    //     $errorMsg = "Password must be at least 6 characters long.";
+    // }
 
     // Photo upload
     if (isset($_FILES['PhotoFile']) && $_FILES['PhotoFile']['error'] === UPLOAD_ERR_OK) {
@@ -59,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     // Only proceed if no error so far
-    if (empty($errorMsg)) {
+    if ((empty($errors)) && (empty($errors))) {
         // Check if email already exists
         $emailCheck = $conn->prepare("SELECT LoginID FROM login_tbl WHERE Email = ?");
         $emailCheck->bind_param("s", $Email);
@@ -514,17 +576,23 @@ foreach ($statsQueries as $key => $query) {
                                 <label class="form-label">
                                     Full Name <span class="required-field">*</span>
                                 </label>
-                                <input name="FullName" type="text" class="form-control" required placeholder="Enter full name" />
+                                <input name="FullName" type="text" class="form-control" required placeholder="Enter full name"
+                                    value="<?php echo htmlspecialchars($_POST['FullName'] ?? ''); ?>" />
+                                 <span class="error text-danger"><?php echo $errors['FullName'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">
                                     Email Address <span class="required-field">*</span>
                                 </label>
-                                <input name="Email" type="email" class="form-control" required placeholder="admin@example.com" />
+                                <input name="Email" type="email" class="form-control" required placeholder="admin@example.com" 
+                                    value="<?php echo htmlspecialchars($_POST['Email'] ?? ''); ?>" />
+                                 <span class="error text-danger"><?php echo $errors['Email'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Contact Number</label>
-                                <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx" />
+                                <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx"
+                                 value="<?php echo htmlspecialchars($_POST['Contact'] ?? ''); ?>" />
+                                <span class="error text-danger"><?php echo $errors['Contact'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">
@@ -546,13 +614,17 @@ foreach ($statsQueries as $key => $query) {
                                 <label class="form-label">
                                     Password <span class="required-field">*</span>
                                 </label>
-                                <input name="Password" type="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters" />
+                                <input name="Password" type="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters" 
+                                value="<?php echo htmlspecialchars($_POST['Password'] ?? ''); ?>" />
+                                 <span class="error text-danger"><?php echo $errors['Password'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">
                                     Confirm Password <span class="required-field">*</span>
                                 </label>
-                                <input name="ConfirmPassword" type="password" class="form-control" required placeholder="Re-enter password" />
+                                <input name="ConfirmPassword" type="password" class="form-control" required placeholder="Re-enter password" 
+                                value="<?php echo htmlspecialchars($_POST['ConfirmPassword'] ?? ''); ?>" />
+                                <span class="error text-danger"><?php echo $errors['ConfirmPassword'] ?? ''; ?></span>
                             </div>
                         </div>
                     </div>

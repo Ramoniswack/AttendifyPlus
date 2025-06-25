@@ -45,6 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         return true;
     }
 
+    function validateEmail($Email) {
+      $Email = trim($Email);
+      if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
+
+      return true;
+    }
+
     //Rikita
 
     if (empty($FullName)) {
@@ -55,8 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     if (empty($Email)) {
         $errors['Email'] = "Email is required.";
-    } elseif (!filter_var($Email, FILTER_VALIDATE_EMAIL)) {
-        $errors['Email'] = "Invalid email format.";
+    } elseif (!validateEmail($Email)) {
+        $errors['Email'] = "Invalid email format. Example: example1@lagrandee.com";
     }
 
     if (empty($Contact)) {
@@ -89,22 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $errors['ConfirmPassword'] = "Passwords do not match.";
     }
 
-
-
-    //
-
-
-
-
-    // Basic validation
-    // if (empty($FullName) || empty($Email) || empty($DepartmentID) || empty($SemesterID) || empty($JoinYear)) {
-    //     $errorMsg = "Please fill in all required fields.";
-    // } elseif ($Password !== $ConfirmPassword) {
-    //     $errorMsg = "Passwords do not match.";
-    // } elseif (strlen($Password) < 6) {
-    //     $errorMsg = "Password must be at least 6 characters long.";
-    // } else {
-        // Handle photo upload
     if (isset($_FILES['PhotoFile']) && $_FILES['PhotoFile']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = '../uploads/students/';
 
@@ -135,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 
-    if (empty($errors))  {
+    if ((empty($errors)) && (empty($errorMsg))){
         // Check if email already exists
         $emailCheck = $conn->prepare("SELECT LoginID FROM login_tbl WHERE Email = ?");
         $emailCheck->bind_param("s", $Email);
@@ -637,7 +628,7 @@ foreach ($statsQueries as $key => $query) {
         <!-- Add Student Modal -->
         <div class="modal fade" id="addStudentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <form class="modal-content" method="POST" enctype="multipart/form-data">
+                <form class="modal-content" id='studentform' method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="add_student">
                     <div class="modal-header">
                         <h5 class="modal-title">
@@ -842,11 +833,13 @@ foreach ($statsQueries as $key => $query) {
             filterStudents();
         });
 
-        // Reset add student modal on close
+        // Reset add student modal on close      
         const addStudentModal = document.getElementById('addStudentModal');
         addStudentModal.addEventListener('hidden.bs.modal', () => {
-            addStudentModal.querySelector('form').reset();
+        console.log('Here');
+        document.getElementById('studentform').reset();
         });
+
 
         // Password confirmation validation
         const passwordInput = document.querySelector('input[name="Password"]');

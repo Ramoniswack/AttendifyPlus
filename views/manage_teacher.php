@@ -46,6 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         return true;
     }
 
+    function validateEmail($Email) {
+      $Email = trim($Email);
+      if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
+
+      return true;
+    }
+
+
     // Assigned subjects should be treated as an array
     $assignedSubjects = is_array($SubjectID) ? $SubjectID : [$SubjectID];
 
@@ -58,8 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     if (empty($Email)) {
         $errors['Email'] = "Email is required.";
-    } elseif (!filter_var($Email, FILTER_VALIDATE_EMAIL)) {
-        $errors['Email'] = "Invalid email format.";
+    } elseif (!validateEmail($Email)) {
+        $errors['Email'] = "Invalid email format. Example: example1@lagrandee.com";
     }
 
     if (empty($Contact)) {
