@@ -5,7 +5,7 @@ date_default_timezone_set('Asia/Kathmandu');
 $host = "localhost";
 $user = "root";
 $pass = "";
-$dbname = "attendify_aarti";
+$dbname = "attendifyplus_fainal";
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 if ($conn->connect_error) {
