@@ -201,13 +201,14 @@ body.dark-mode .btn-outline-primary:hover {
 .btn-outline-success, .btn-outline-danger, .btn-outline-warning {
   border-width: 2px;
   font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
   transition: all 0.2s ease-in-out;
+  font-size: 0.85rem;
 }
 
 .btn-outline-success:hover, .btn-outline-danger:hover, .btn-outline-warning:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .btn-warning {
@@ -233,7 +234,7 @@ body.dark-mode .btn-outline-primary:hover {
   border-color: #28a745 !important;
   color: white !important;
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
+  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
 }
 
 .btn-check:checked + .btn-outline-danger {
@@ -241,7 +242,7 @@ body.dark-mode .btn-outline-primary:hover {
   border-color: #dc3545 !important;
   color: white !important;
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
 }
 
 .btn-check:checked + .btn-outline-warning {
@@ -249,7 +250,7 @@ body.dark-mode .btn-outline-primary:hover {
   border-color: #ffc107 !important;
   color: black !important;
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(255, 193, 7, 0.3);
+  box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
 }
 
 /* Dark mode button states */
@@ -376,25 +377,26 @@ body.dark-mode .form-label {
   color: var(--text-dark);
 }
 
-/* STUDENT LIST */
+/* COMPACT STUDENT LIST - SINGLE LINE LAYOUT */
 .students-list {
-  max-height: 400px;
+  max-height: 600px;
   overflow-y: auto;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   padding-right: 0.5rem;
 }
 
 .student-row {
   background: var(--border-light);
-  border-radius: 10px;
-  padding: 1rem;
-  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.4rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid transparent;
-  border-left: 4px solid transparent;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  min-height: 48px;
 }
 
 body.dark-mode .student-row {
@@ -403,23 +405,30 @@ body.dark-mode .student-row {
 
 .student-row:hover {
   background: rgba(26, 115, 232, 0.05);
-  transform: translateX(5px);
-  border-color: var(--accent-light);
   border-left-color: var(--accent-light);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transform: translateX(3px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 body.dark-mode .student-row:hover {
   background: rgba(0, 255, 200, 0.05);
-  border-color: var(--accent-dark);
   border-left-color: var(--accent-dark);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* STUDENT AVATAR */
+/* COMPACT STUDENT INFO SECTION */
+.student-info-section {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex: 1;
+  min-width: 0;
+}
+
+/* COMPACT STUDENT AVATAR */
 .student-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent-light) 0%, #0056b3 100%);
   display: flex;
@@ -427,9 +436,9 @@ body.dark-mode .student-row:hover {
   justify-content: center;
   color: white;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   flex-shrink: 0;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 body.dark-mode .student-avatar {
@@ -437,30 +446,72 @@ body.dark-mode .student-avatar {
   color: black;
 }
 
-.student-info {
+/* COMPACT STUDENT DETAILS */
+.student-details {
   flex: 1;
   min-width: 0;
 }
 
 .student-name {
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--text-light);
-  margin-bottom: 0.25rem;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 body.dark-mode .student-name {
   color: var(--text-dark);
 }
 
-/* ATTENDANCE CONTROLS */
+.student-program {
+  font-size: 0.75rem;
+  color: var(--text-muted-light);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+body.dark-mode .student-program {
+  color: var(--text-muted-dark);
+}
+
+/* COMPACT ATTENDANCE CONTROLS */
 .attendance-controls {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  padding: 0.2rem;
   flex-shrink: 0;
+}
+
+body.dark-mode .attendance-controls {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.attendance-controls label {
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  min-width: 60px;
+  height: 32px;
+  cursor: pointer;
+  line-height: 1;
+  border: 2px solid transparent;
 }
 
 /* QR SECTION */
@@ -566,6 +617,27 @@ body.dark-mode .stats-card.bg-warning {
 body.dark-mode .stats-summary {
   background: linear-gradient(135deg, rgba(0, 255, 200, 0.1), rgba(0, 212, 170, 0.05));
   border-color: var(--accent-dark);
+}
+
+/* MOBILE STATS SUMMARY */
+.stats-summary-mobile {
+  background: var(--border-light);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+body.dark-mode .stats-summary-mobile {
+  background: var(--border-dark);
+}
+
+.stat-item {
+  padding: 0.5rem;
+}
+
+.stat-item .stats-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: block;
 }
 
 /* FIXED POSITIONING FOR UPDATE SECTIONS - CRITICAL FIX */
@@ -1236,41 +1308,113 @@ body.dark-mode .table-responsive::-webkit-scrollbar-thumb:hover {
   }
 }
 
-@media (max-width: 576px) {
-  .attendance-controls {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-  
-  .btn-outline-success,
-  .btn-outline-danger,
-  .btn-outline-warning {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-  }
-  
+/* TABLET AND MOBILE OPTIMIZATIONS */
+@media (max-width: 768px) {
   .student-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
+    padding: 0.5rem 0.7rem;
+    min-height: 44px;
+    gap: 0.8rem;
   }
-  
-  .student-info {
-    order: 1;
+
+  .student-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.7rem;
   }
-  
+
+  .student-name {
+    font-size: 0.85rem;
+  }
+
+  .student-program {
+    font-size: 0.7rem;
+  }
+
   .attendance-controls {
-    order: 2;
-    width: 100%;
-    flex-direction: row;
-    justify-content: center;
+    gap: 0.3rem;
+    padding: 0.15rem;
   }
-  
-  .table {
-    width: 100%;
-    min-width: 500px;
+
+  .attendance-controls label {
+    min-width: 50px;
+    height: 28px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
   }
 }
+
+@media (max-width: 576px) {
+  .student-row {
+    padding: 0.4rem 0.6rem;
+    min-height: 40px;
+    gap: 0.6rem;
+  }
+
+  .student-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.65rem;
+  }
+
+  .student-details {
+    max-width: 150px;
+  }
+
+  .student-name {
+    font-size: 0.8rem;
+  }
+
+  .student-program {
+    font-size: 0.65rem;
+  }
+
+  .attendance-controls {
+    gap: 0.2rem;
+    padding: 0.1rem;
+  }
+
+  .attendance-controls label {
+    min-width: 45px;
+    height: 26px;
+    padding: 0.25rem 0.4rem;
+    font-size: 0.7rem;
+  }
+  
+  /* Show abbreviated text on small screens */
+  .attendance-controls label .btn-text {
+    display: none;
+  }
+
+  .attendance-controls label::after {
+    content: attr(data-short);
+    font-weight: 700;
+  }
+}
+
+/* VERY SMALL SCREENS */
+@media (max-width: 400px) {
+  .student-details {
+    max-width: 120px;
+  }
+  
+  .student-name {
+    font-size: 0.75rem;
+  }
+  
+  .attendance-controls label {
+    min-width: 40px;
+    height: 24px;
+    padding: 0.2rem 0.3rem;
+    font-size: 0.65rem;
+  }
+  
+  .student-avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 0.6rem;
+  }
+}
+
 @media (max-width: 767.98px) {
   .sidebar {
     width: 200px;
@@ -1291,4 +1435,3 @@ body.dark-mode .table-responsive::-webkit-scrollbar-thumb:hover {
     height: calc(100% - 56px);
   }
 }
-
