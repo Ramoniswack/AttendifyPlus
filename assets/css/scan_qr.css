@@ -1,0 +1,507 @@
+/* QR Scanner Specific Styles */
+
+/* Student Info Card */
+.student-info-card {
+  background: var(--card-light);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px var(--shadow-light);
+  border: none;
+  margin-bottom: 1.5rem;
+}
+
+body.dark-mode .student-info-card {
+  background: var(--card-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+.student-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-light) 0%, #0056b3 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+body.dark-mode .student-avatar {
+  background: linear-gradient(135deg, var(--accent-dark) 0%, #00b894 100%);
+  color: black;
+}
+
+/* Scanner Card */
+.scanner-card {
+  background: var(--card-light);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px var(--shadow-light);
+  border: none;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+body.dark-mode .scanner-card {
+  background: var(--card-dark);
+  box-shadow: 0 8px 25px var(--shadow-dark);
+}
+
+/* Scanner Status */
+.scanner-status {
+  margin-bottom: 2rem;
+}
+
+.status-indicator {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.status-indicator.ready {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.status-indicator.scanning {
+  background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.error {
+  background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Scanner Container */
+.scanner-container {
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto 2rem;
+  border-radius: 15px;
+  overflow: hidden;
+  background: #000;
+  display: none;
+}
+
+.scanner-container.active {
+  display: block;
+}
+
+.qr-reader {
+  width: 100% !important;
+  border: none !important;
+  border-radius: 15px;
+}
+
+.qr-reader video {
+  border-radius: 15px;
+  object-fit: cover;
+}
+
+/* Scanner Overlay */
+.scanner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scanner-frame {
+  position: relative;
+  width: 250px;
+  height: 250px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #00ffc8;
+  background: transparent;
+}
+
+.corner.top-left {
+  top: -3px;
+  left: -3px;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 15px;
+}
+
+.corner.top-right {
+  top: -3px;
+  right: -3px;
+  border-left: none;
+  border-bottom: none;
+  border-top-right-radius: 15px;
+}
+
+.corner.bottom-left {
+  bottom: -3px;
+  left: -3px;
+  border-right: none;
+  border-top: none;
+  border-bottom-left-radius: 15px;
+}
+
+.corner.bottom-right {
+  bottom: -3px;
+  right: -3px;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 15px;
+}
+
+.scanner-line {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ffc8, transparent);
+  animation: scanLine 2s linear infinite;
+}
+
+@keyframes scanLine {
+  0% {
+    transform: translateY(-125px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(125px);
+    opacity: 0;
+  }
+}
+
+.scanner-text {
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Scanner Controls */
+.scanner-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.scanner-controls .btn {
+  min-width: 150px;
+  border-radius: 10px;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.scanner-controls .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Manual Input Section */
+.manual-input-section {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+body.dark-mode .manual-input-section {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.manual-input-section h6 {
+  color: var(--accent-light);
+  margin-bottom: 0.5rem;
+}
+
+body.dark-mode .manual-input-section h6 {
+  color: var(--accent-dark);
+}
+
+.manual-input-section .input-group {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.manual-input-section .form-control {
+  border-radius: 8px 0 0 8px;
+  border: 1px solid #dee2e6;
+  padding: 0.75rem 1rem;
+  font-family: "Courier New", monospace;
+  letter-spacing: 1px;
+}
+
+body.dark-mode .manual-input-section .form-control {
+  background: var(--card-dark);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-dark);
+}
+
+.manual-input-section .btn {
+  border-radius: 0 8px 8px 0;
+  padding: 0.75rem 1rem;
+}
+
+/* Instructions Card */
+.instructions-card {
+  background: var(--card-light);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px var(--shadow-light);
+  border: none;
+}
+
+body.dark-mode .instructions-card {
+  background: var(--card-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+.instructions-card h6 {
+  color: var(--accent-light);
+  margin-bottom: 1rem;
+}
+
+body.dark-mode .instructions-card h6 {
+  color: var(--accent-dark);
+}
+
+.instruction-step {
+  text-align: center;
+  padding: 1rem;
+}
+
+.step-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-light) 0%, #0056b3 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .step-icon {
+  background: linear-gradient(135deg, var(--accent-dark) 0%, #00b894 100%);
+  color: black;
+}
+
+.instruction-step:hover .step-icon {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.instruction-step h6 {
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+body.dark-mode .instruction-step h6 {
+  color: var(--text-dark);
+}
+
+/* Recent Scans Card */
+.recent-scans-card {
+  background: var(--card-light);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px var(--shadow-light);
+  border: none;
+}
+
+body.dark-mode .recent-scans-card {
+  background: var(--card-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+.recent-scans-card h6 {
+  color: var(--accent-light);
+  margin-bottom: 1rem;
+}
+
+body.dark-mode .recent-scans-card h6 {
+  color: var(--accent-dark);
+}
+
+.scan-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body.dark-mode .scan-item {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.scan-item:last-child {
+  border-bottom: none;
+}
+
+.scan-icon {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.scan-icon.success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.scan-icon.error {
+  background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .scanner-card {
+    padding: 1.5rem;
+    margin: 0 1rem;
+  }
+
+  .scanner-frame {
+    width: 200px;
+    height: 200px;
+  }
+
+  .scanner-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .scanner-controls .btn {
+    min-width: 200px;
+  }
+
+  .instruction-step {
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .scanner-frame {
+    width: 180px;
+    height: 180px;
+  }
+
+  .student-info-card {
+    padding: 1rem;
+    margin: 0 0.5rem 1rem;
+  }
+
+  .instructions-card,
+  .recent-scans-card {
+    margin: 0 0.5rem;
+    padding: 1rem;
+  }
+}
+
+/* Camera Permission Styles */
+.permission-prompt {
+  background: var(--card-light);
+  border-radius: 15px;
+  padding: 2rem;
+  text-align: center;
+  border: 2px dashed #007bff;
+  margin: 2rem 0;
+}
+
+body.dark-mode .permission-prompt {
+  background: var(--card-dark);
+  border-color: var(--accent-dark);
+}
+
+.permission-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: white;
+}
+
+/* Success Animation */
+.success-animation {
+  animation: successPulse 0.6s ease-in-out;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Error Animation */
+.error-animation {
+  animation: errorShake 0.6s ease-in-out;
+}
+
+@keyframes errorShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
