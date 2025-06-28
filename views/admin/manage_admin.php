@@ -1,12 +1,13 @@
 <?php
 
+
 session_start();
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
-    header("Location: login.php");
+    header("Location: ../auth/login.php");
     exit();
 }
 
-include '../config/db_config.php';
+include '../../config/db_config.php';
 
 $successMsg = '';
 $errorMsg = '';
@@ -83,19 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $errors['ConfirmPassword'] = "Passwords do not match.";
     }
 
-
-    // // Basic validation
-    // if (empty($FullName) || empty($Email) || empty($Password)) {
-    //     $errorMsg = "Please fill in all required fields.";
-    // } elseif ($Password !== $ConfirmPassword) {
-    //     $errorMsg = "Passwords do not match.";
-    // } elseif (strlen($Password) < 6) {
-    //     $errorMsg = "Password must be at least 6 characters long.";
-    // }
-
     // Photo upload
     if (isset($_FILES['PhotoFile']) && $_FILES['PhotoFile']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = '../uploads/admins/';
+        $uploadDir = '../../uploads/admins/';
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
         $fileType = $_FILES['PhotoFile']['type'];
 
@@ -121,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     // Only proceed if no error so far
-    if ((empty($errors)) && (empty($errors))) {
+    if ((empty($errors)) && (empty($errorMsg))) {
         // Check if email already exists
         $emailCheck = $conn->prepare("SELECT LoginID FROM login_tbl WHERE Email = ?");
         $emailCheck->bind_param("s", $Email);
@@ -232,17 +223,19 @@ foreach ($statsQueries as $key => $query) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manage Admins | Attendify+</title>
-    <link rel="stylesheet" href="../assets/css/manage_admin.css" />
+    <link rel="stylesheet" href="../../assets/css/manage_admin.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <script src="../assets/js/lucide.min.js"></script>
-    <script src="../assets/js/manage_teacher.js" defer></script>
+    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="../../assets/js/manage_teacher.js" defer></script>
 </head>
 
 <body>
     <!-- Include sidebar and navbar -->
-    <?php include 'sidebar_admin_dashboard.php'; ?>
-    <?php include 'navbar_admin.php'; ?> <!-- Main content -->
+    <?php include '../components/sidebar_admin_dashboard.php'; ?>
+    <?php include '../components/navbar_admin.php'; ?>
+    
+    <!-- Main content -->
     <div class="container-fluid dashboard-container">
         <!-- Page Header -->
         <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
@@ -333,7 +326,9 @@ foreach ($statsQueries as $key => $query) {
                 <?= htmlspecialchars($errorMsg) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        <?php endif; ?> <!-- Search and Filter Section -->
+        <?php endif; ?>
+        
+        <!-- Search and Filter Section -->
         <div class="card mb-4">
             <div class="card-body">
                 <h6 class="card-title">
@@ -371,7 +366,9 @@ foreach ($statsQueries as $key => $query) {
                     <small id="resultsCount" class="text-muted"></small>
                 </div>
             </div>
-        </div> <!-- Administrators Table -->
+        </div>
+        
+        <!-- Administrators Table -->
         <div class="card shadow-sm">
             <div class="card-header">
                 <h6 class="card-title mb-0">
@@ -603,7 +600,8 @@ foreach ($statsQueries as $key => $query) {
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address</label>
-                                <textarea name="Address" class="form-control" rows="2" placeholder="Enter full address"></textarea>
+                                <textarea name="Address" class="form-control" rows="2" placeholder="Enter full address"><?php echo htmlspecialchars($_POST['Address'] ?? ''); ?></textarea>
+                                <span class="error text-danger"><?php echo $errors['Address'] ?? ''; ?></span>
                             </div>
 
                             <!-- Account Information -->
@@ -632,7 +630,8 @@ foreach ($statsQueries as $key => $query) {
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i data-lucide="x" class="me-1"></i>
                             Cancel
-                        </button> <button type="submit" class="btn btn-primary">
+                        </button>
+                        <button type="submit" class="btn btn-primary">
                             <i data-lucide="save"></i>
                             Create Administrator
                         </button>

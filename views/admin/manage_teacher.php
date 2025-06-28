@@ -2,11 +2,11 @@
 
 session_start();
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
-  header("Location: login.php");
+  header("Location: ../auth/login.php");
   exit();
 }
 
-include '../config/db_config.php';
+include '../../config/db_config.php';
 
 $successMsg = '';
 $errorMsg = '';
@@ -27,90 +27,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   $SubjectID = $_POST['SubjectID'] ?? '';
   $Address = trim($_POST['Address'] ?? '');
   $PhotoURL = '';
-    
- function isValidFormattedName($Fullname) {
-        $Fullname = trim($Fullname);
-        if (!preg_match('/^[A-Za-z. ]+$/', $Fullname)) return false;
-        if (preg_match('/[.]{2,}|[ ]{2,}/', $Fullname)) return false;
-        if (!preg_match('/^[A-Z]/', $Fullname)) return false;
 
-        $words = explode(' ', $Fullname);
-        foreach ($words as $word) {
-            if ($word === '') continue;
-            $parts = explode('.', $word);
-            foreach ($parts as $part) {
-                if ($part === '') continue;
-                if (!preg_match('/^[A-Z][a-z]*$/', $part)) return false;
-            }
-        }
-        return true;
+  function isValidFormattedName($Fullname)
+  {
+    $Fullname = trim($Fullname);
+    if (!preg_match('/^[A-Za-z. ]+$/', $Fullname)) return false;
+    if (preg_match('/[.]{2,}|[ ]{2,}/', $Fullname)) return false;
+    if (!preg_match('/^[A-Z]/', $Fullname)) return false;
+
+    $words = explode(' ', $Fullname);
+    foreach ($words as $word) {
+      if ($word === '') continue;
+      $parts = explode('.', $word);
+      foreach ($parts as $part) {
+        if ($part === '') continue;
+        if (!preg_match('/^[A-Z][a-z]*$/', $part)) return false;
+      }
     }
+    return true;
+  }
 
-    function validateEmail($Email) {
-      $Email = trim($Email);
-      if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
+  function validateEmail($Email)
+  {
+    $Email = trim($Email);
+    if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
 
-      return true;
-    }
+    return true;
+  }
 
 
-    // Assigned subjects should be treated as an array
-    $assignedSubjects = is_array($SubjectID) ? $SubjectID : [$SubjectID];
+  // Assigned subjects should be treated as an array
+  $assignedSubjects = is_array($SubjectID) ? $SubjectID : [$SubjectID];
 
-    // VALIDATION
-   if (empty($FullName)) {
-        $errors['FullName'] = "Full name is required.";
-    } elseif (!isValidFormattedName($FullName)) {
-        $errors['FullName'] = "Only letters, spaces, and dots allowed. Each part must start with a capital letter.";
-    }
+  // VALIDATION
+  if (empty($FullName)) {
+    $errors['FullName'] = "Full name is required.";
+  } elseif (!isValidFormattedName($FullName)) {
+    $errors['FullName'] = "Only letters, spaces, and dots allowed. Each part must start with a capital letter.";
+  }
 
-    if (empty($Email)) {
-        $errors['Email'] = "Email is required.";
-    } elseif (!validateEmail($Email)) {
-        $errors['Email'] = "Invalid email format. Example: example1@lagrandee.com";
-    }
+  if (empty($Email)) {
+    $errors['Email'] = "Email is required.";
+  } elseif (!validateEmail($Email)) {
+    $errors['Email'] = "Invalid email format. Example: example1@lagrandee.com";
+  }
 
-    if (empty($Contact)) {
-        $errors['Contact'] = "Contact number is required.";
-    } elseif (!preg_match('/^\d{10}$/', $Contact)) {
-        $errors['Contact'] = "Contact number must be exactly 10 digits.";
-    }
+  if (empty($Contact)) {
+    $errors['Contact'] = "Contact number is required.";
+  } elseif (!preg_match('/^\d{10}$/', $Contact)) {
+    $errors['Contact'] = "Contact number must be exactly 10 digits.";
+  }
 
-    if (empty($Type)) {
-        $errors['Type'] = "Please select employment type.";
-    }
+  if (empty($Type)) {
+    $errors['Type'] = "Please select employment type.";
+  }
 
-    if (empty($DepartmentID)) {
-        $errors['DepartmentID'] = "Please select a department.";
-    }
+  if (empty($DepartmentID)) {
+    $errors['DepartmentID'] = "Please select a department.";
+  }
 
-    if (empty($SemesterID)) {
-        $errors['SemesterID'] = "Please select a semester.";
-    }
+  if (empty($SemesterID)) {
+    $errors['SemesterID'] = "Please select a semester.";
+  }
 
-    if (empty($assignedSubjects) || !is_array($assignedSubjects) || empty($assignedSubjects[0])) {
-        $errors['SubjectID'] = "Please assign at least one subject.";
-    }
+  if (empty($assignedSubjects) || !is_array($assignedSubjects) || empty($assignedSubjects[0])) {
+    $errors['SubjectID'] = "Please assign at least one subject.";
+  }
 
-    if (empty($Address)) {
-        $errors['Address'] = "Address is required.";
-    }
+  if (empty($Address)) {
+    $errors['Address'] = "Address is required.";
+  }
 
-    if (empty($Password)) {
-        $errors['Password'] = "Password is required.";
-    } elseif (!preg_match('/^(?=.*[0-9])(?=.*[!@#\$%\^&\*\-_])[A-Za-z0-9!@#\$%\^&\*\-_]{6,}$/', $Password)) {
-        $errors['Password'] = "Password must be at least 6 characters long, with a number and a special character.";
-    }
+  if (empty($Password)) {
+    $errors['Password'] = "Password is required.";
+  } elseif (!preg_match('/^(?=.*[0-9])(?=.*[!@#\$%\^&\*\-_])[A-Za-z0-9!@#\$%\^&\*\-_]{6,}$/', $Password)) {
+    $errors['Password'] = "Password must be at least 6 characters long, with a number and a special character.";
+  }
 
-    if (empty($ConfirmPassword)) {
-        $errors['ConfirmPassword'] = "Please confirm your password.";
-    } elseif ($Password !== $ConfirmPassword) {
-        $errors['ConfirmPassword'] = "Passwords do not match.";
-    }
+  if (empty($ConfirmPassword)) {
+    $errors['ConfirmPassword'] = "Please confirm your password.";
+  } elseif ($Password !== $ConfirmPassword) {
+    $errors['ConfirmPassword'] = "Passwords do not match.";
+  }
 
-// Photo upload
+  // Photo upload
   if (isset($_FILES['PhotoFile']) && $_FILES['PhotoFile']['error'] === UPLOAD_ERR_OK) {
-    $uploadDir = '../uploads/teachers/';
+    $uploadDir = '../../uploads/teachers/';
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
     $fileType = $_FILES['PhotoFile']['type'];
 
@@ -184,8 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       if (isset($stmt2)) $stmt2->close();
     }
     $emailCheck->close();
-  }else{
-
+  } else {
   }
 }
 
@@ -293,17 +294,17 @@ foreach ($statsQueries as $key => $query) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manage Teachers | Attendify+</title>
-  <link rel="stylesheet" href="../assets/css/manage_teacher.css" />
+  <link rel="stylesheet" href="../../assets/css/manage_teacher.css" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="../assets/js/lucide.min.js"></script>
-  <script src="../assets/js/manage_teacher.js" defer></script>
+  <script src="../../assets/js/lucide.min.js"></script>
+  <script src="../../assets/js/manage_teacher.js" defer></script>
 </head>
 
 <body>
   <!-- Include sidebar and navbar -->
-  <?php include 'sidebar_admin_dashboard.php'; ?>
-  <?php include 'navbar_admin.php'; ?>
+  <?php include '../components/sidebar_admin_dashboard.php'; ?>
+  <?php include '../components/navbar_admin.php'; ?>
 
   <!-- Main content -->
   <div class="container-fluid dashboard-container">
@@ -661,7 +662,7 @@ foreach ($statsQueries as $key => $query) {
     <!-- Add Teacher Modal -->
     <div class="modal fade" id="addTeacherModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
       <div class="modal-dialog modal-lg modal-dialog-centered">
-        <form class="modal-content" id="teacherform" method="POST"  enctype="multipart/form-data">
+        <form class="modal-content" id="teacherform" method="POST" enctype="multipart/form-data">
           <input type="hidden" name="action" value="add_teacher">
           <div class="modal-header">
             <h5 class="modal-title">
@@ -681,26 +682,26 @@ foreach ($statsQueries as $key => $query) {
                 <label class="form-label">
                   Full Name <span class="required-field">*</span>
                 </label>
-                  <input name="FullName" type="text" class="form-control" required placeholder="Enter full name"
-                          value="<?php echo htmlspecialchars($_POST['FullName'] ?? ''); ?>" />
-                  <span class="error text-danger"><?php echo $errors['FullName'] ?? ''; ?></span>
+                <input name="FullName" type="text" class="form-control" required placeholder="Enter full name"
+                  value="<?php echo htmlspecialchars($_POST['FullName'] ?? ''); ?>" />
+                <span class="error text-danger"><?php echo $errors['FullName'] ?? ''; ?></span>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label">
                   Email Address <span class="required-field">*</span>
                 </label>
-                  <input name="Email" type="email" class="form-control" required placeholder="teacher@example.com"
-                        value="<?php echo htmlspecialchars($_POST['Email'] ?? ''); ?>" />
-                  <span class="error text-danger"><?php echo $errors['Email'] ?? ''; ?></span>
+                <input name="Email" type="email" class="form-control" required placeholder="teacher@example.com"
+                  value="<?php echo htmlspecialchars($_POST['Email'] ?? ''); ?>" />
+                <span class="error text-danger"><?php echo $errors['Email'] ?? ''; ?></span>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label">Contact Number</label>
-                  <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx"
-                        value="<?php echo htmlspecialchars($_POST['Contact'] ?? ''); ?>" />
-                  <span class="error text-danger"><?php echo $errors['Contact'] ?? ''; ?></span>
-                  
+                <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx"
+                  value="<?php echo htmlspecialchars($_POST['Contact'] ?? ''); ?>" />
+                <span class="error text-danger"><?php echo $errors['Contact'] ?? ''; ?></span>
+
               </div>
 
               <div class="col-md-6">
@@ -715,7 +716,7 @@ foreach ($statsQueries as $key => $query) {
 
               <div class="col-12">
                 <label class="form-label">Address</label>
-                <textarea name="Address" class="form-control" rows="2" placeholder="Enter full address" ></textarea>
+                <textarea name="Address" class="form-control" rows="2" placeholder="Enter full address"></textarea>
                 <span class="error text-danger"><?php echo $errors['Address'] ?? ''; ?></span>
               </div>
 
@@ -759,7 +760,7 @@ foreach ($statsQueries as $key => $query) {
                 </select>
                 <span class="error text-danger"><?php echo $errors['SubjectID'] ?? ''; ?></span>
                 <small class="form-text text-muted"><br>
-                You can assign additional subjects later</small>
+                  You can assign additional subjects later</small>
               </div>
 
               <!-- Account Information -->
@@ -770,15 +771,15 @@ foreach ($statsQueries as $key => $query) {
                 <label class="form-label">
                   Password <span class="required-field">*</span>
                 </label>
-                  <input name="Password" type="password" class="form-control" required />
-                  <span class="error text-danger"><?php echo $errors['Password'] ?? ''; ?></span>
+                <input name="Password" type="password" class="form-control" required />
+                <span class="error text-danger"><?php echo $errors['Password'] ?? ''; ?></span>
               </div>
               <div class="col-md-6">
                 <label class="form-label">
                   Confirm Password <span class="required-field">*</span>
                 </label>
-                  <input name="ConfirmPassword" type="password" class="form-control" required />
-                  <span class="error text-danger"><?php echo $errors['ConfirmPassword'] ?? ''; ?></span>
+                <input name="ConfirmPassword" type="password" class="form-control" required />
+                <span class="error text-danger"><?php echo $errors['ConfirmPassword'] ?? ''; ?></span>
               </div>
             </div>
           </div>
@@ -905,7 +906,7 @@ foreach ($statsQueries as $key => $query) {
 
     // Reset add teacher modal on close
     const addTeacherModal = document.getElementById('addTeacherModal');
-    
+
     addTeacherModal.addEventListener('hidden.bs.modal', () => {
       console.log('Here');
       document.getElementById('teacherform').reset();
@@ -944,10 +945,10 @@ foreach ($statsQueries as $key => $query) {
 </html>
 
 <?php if (!empty($errors)): ?>
-<script>
-  var myModal = new bootstrap.Modal(document.getElementById('addTeacherModal'));
-  window.addEventListener('load', () => {
-    myModal.show();
-  });
-</script>
+  <script>
+    var myModal = new bootstrap.Modal(document.getElementById('addTeacherModal'));
+    window.addEventListener('load', () => {
+      myModal.show();
+    });
+  </script>
 <?php endif; ?>

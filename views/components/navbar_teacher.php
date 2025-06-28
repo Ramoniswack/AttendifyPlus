@@ -1,5 +1,5 @@
 <?php
-// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\navbar_teacher.php
+// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\components\navbar_teacher.php
 include 'sidebar_teacher_dashboard.php';
 ?>
 
@@ -13,7 +13,7 @@ include 'sidebar_teacher_dashboard.php';
             </button>
 
             <!-- Brand - Always on Left -->
-            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard_teacher.php">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="../teacher/dashboard_teacher.php">
                 <div class="brand-text">
                     <span class="brand-main">Attendify+</span>
                     <span class="brand-sub">Teacher Panel</span>
@@ -212,7 +212,7 @@ include 'sidebar_teacher_dashboard.php';
                         <hr class="dropdown-divider">
                     </li>
                     <li>
-                        <a class="dropdown-item text-danger" href="../logout.php">
+                        <a class="dropdown-item text-danger" href="../../logout.php">
                             <i data-lucide="log-out"></i> Logout
                         </a>
                     </li>
@@ -222,4 +222,4 @@ include 'sidebar_teacher_dashboard.php';
     </div>
 </nav>
 
-<link rel="stylesheet" href="../assets/css/navbar_admin.css">
+<link rel="stylesheet" href="../../assets/css/navbar_admin.css">

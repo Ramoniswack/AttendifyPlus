@@ -1,6 +1,6 @@
 <?php
-// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\navbar_student.php
-include 'sidebar_student_dashboard.php';
+// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\components\navbar_admin.php
+include 'sidebar_admin_dashboard.php';
 ?>
 
 <nav class="navbar navbar-expand-lg navbar-dark admin-navbar">
@@ -13,10 +13,10 @@ include 'sidebar_student_dashboard.php';
             </button>
 
             <!-- Brand - Always on Left -->
-            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard_student.php">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="../admin/dashboard_admin.php">
                 <div class="brand-text">
                     <span class="brand-main">Attendify+</span>
-                    <span class="brand-sub">Student Portal</span>
+                    <span class="brand-sub">Admin Panel</span>
                 </div>
             </a>
         </div>
@@ -36,17 +36,11 @@ include 'sidebar_student_dashboard.php';
                 <span class="btn-text d-none d-xxl-inline">Theme</span>
             </button>
 
-            <!-- Quick QR Scanner -->
-            <a href="scan_qr.php" class="btn navbar-btn" title="Quick QR Scanner">
-                <i data-lucide="qr-code"></i>
-                <span class="btn-text d-none d-xxl-inline">Scan QR</span>
-            </a>
-
             <!-- Notifications -->
             <div class="dropdown notification-dropdown-wrapper">
                 <button class="btn navbar-btn notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                     <i data-lucide="bell"></i>
-                    <span class="notification-badge">2</span>
+                    <span class="notification-badge">3</span>
                     <span class="btn-text d-none d-xxl-inline">Alerts</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
@@ -59,12 +53,12 @@ include 'sidebar_student_dashboard.php';
                     <li>
                         <a class="dropdown-item" href="#">
                             <div class="notification-item">
-                                <div class="notification-icon bg-info">
-                                    <i data-lucide="file-plus"></i>
+                                <div class="notification-icon bg-warning">
+                                    <i data-lucide="alert-triangle"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <span class="notification-title">New Assignment Posted</span>
-                                    <span class="notification-time">10 minutes ago</span>
+                                    <span class="notification-title">System Alert</span>
+                                    <span class="notification-time">5 minutes ago</span>
                                 </div>
                             </div>
                         </a>
@@ -72,12 +66,12 @@ include 'sidebar_student_dashboard.php';
                     <li>
                         <a class="dropdown-item" href="#">
                             <div class="notification-item">
-                                <div class="notification-icon bg-warning">
-                                    <i data-lucide="clock"></i>
+                                <div class="notification-icon bg-info">
+                                    <i data-lucide="user-plus"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <span class="notification-title">Assignment Due Tomorrow</span>
-                                    <span class="notification-time">2 hours ago</span>
+                                    <span class="notification-title">New Teacher Registered</span>
+                                    <span class="notification-time">15 minutes ago</span>
                                 </div>
                             </div>
                         </a>
@@ -86,11 +80,11 @@ include 'sidebar_student_dashboard.php';
                         <a class="dropdown-item" href="#">
                             <div class="notification-item">
                                 <div class="notification-icon bg-success">
-                                    <i data-lucide="check-circle"></i>
+                                    <i data-lucide="database"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <span class="notification-title">Attendance Marked</span>
-                                    <span class="notification-time">1 day ago</span>
+                                    <span class="notification-title">Database Backup Complete</span>
+                                    <span class="notification-time">1 hour ago</span>
                                 </div>
                             </div>
                         </a>
@@ -106,7 +100,7 @@ include 'sidebar_student_dashboard.php';
             <div class="dropdown profile-dropdown-wrapper">
                 <button class="btn navbar-btn profile-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile Menu">
                     <div class="profile-avatar">
-                        <i data-lucide="user"></i>
+                        <i data-lucide="shield"></i>
                     </div>
                     <span class="btn-text d-none d-xxl-inline"><?= htmlspecialchars($_SESSION['Username']) ?></span>
                     <i data-lucide="chevron-down" class="dropdown-arrow d-none d-xxl-inline"></i>
@@ -115,11 +109,11 @@ include 'sidebar_student_dashboard.php';
                     <li class="dropdown-header">
                         <div class="profile-info">
                             <div class="profile-avatar-large">
-                                <i data-lucide="graduation-cap"></i>
+                                <i data-lucide="shield-check"></i>
                             </div>
                             <div class="profile-details">
                                 <span class="profile-name"><?= htmlspecialchars($_SESSION['Username']) ?></span>
-                                <span class="profile-role">Student</span>
+                                <span class="profile-role">Administrator</span>
                             </div>
                         </div>
                     </li>
@@ -127,30 +121,30 @@ include 'sidebar_student_dashboard.php';
                         <hr class="dropdown-divider">
                     </li>
                     <li>
-                        <a class="dropdown-item" href="profile_student.php">
+                        <a class="dropdown-item" href="profile_admin.php">
                             <i data-lucide="user"></i> My Profile
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="attendance_history.php">
-                            <i data-lucide="calendar-check"></i> My Attendance
+                        <a class="dropdown-item" href="system_settings.php">
+                            <i data-lucide="settings"></i> System Settings
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="my_subjects_student.php">
-                            <i data-lucide="book-open"></i> My Subjects
+                        <a class="dropdown-item" href="admin_logs.php">
+                            <i data-lucide="file-text"></i> Admin Logs
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="view_assignments.php">
-                            <i data-lucide="clipboard-list"></i> My Assignments
+                        <a class="dropdown-item" href="backup_restore.php">
+                            <i data-lucide="database"></i> Backup & Restore
                         </a>
                     </li>
                     <li>
                         <hr class="dropdown-divider">
                     </li>
                     <li>
-                        <a class="dropdown-item text-danger" href="../logout.php">
+                        <a class="dropdown-item text-danger" href="../../logout.php">
                             <i data-lucide="log-out"></i> Logout
                         </a>
                     </li>
@@ -160,11 +154,6 @@ include 'sidebar_student_dashboard.php';
 
         <!-- Right Section: Mobile Controls -->
         <div class="d-flex d-lg-none align-items-center gap-1 ms-auto">
-            <!-- Quick QR Scanner (Mobile) -->
-            <a href="scan_qr.php" class="btn navbar-btn-mobile" title="Scan QR">
-                <i data-lucide="qr-code"></i>
-            </a>
-
             <!-- Theme Toggle -->
             <button class="btn navbar-btn-mobile theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
                 <i data-lucide="sun" class="theme-icon light-icon"></i>
@@ -175,7 +164,7 @@ include 'sidebar_student_dashboard.php';
             <div class="dropdown">
                 <button class="btn navbar-btn-mobile notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                     <i data-lucide="bell"></i>
-                    <span class="mobile-notification-badge">2</span>
+                    <span class="mobile-notification-badge">3</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end notification-dropdown mobile-dropdown">
                     <li class="dropdown-header">
@@ -187,12 +176,12 @@ include 'sidebar_student_dashboard.php';
                     <li>
                         <a class="dropdown-item" href="#">
                             <div class="notification-item">
-                                <div class="notification-icon bg-info">
-                                    <i data-lucide="file-plus"></i>
+                                <div class="notification-icon bg-warning">
+                                    <i data-lucide="alert-triangle"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <span class="notification-title">New Assignment</span>
-                                    <span class="notification-time">10 mins ago</span>
+                                    <span class="notification-title">System Alert</span>
+                                    <span class="notification-time">5 mins ago</span>
                                 </div>
                             </div>
                         </a>
@@ -200,12 +189,12 @@ include 'sidebar_student_dashboard.php';
                     <li>
                         <a class="dropdown-item" href="#">
                             <div class="notification-item">
-                                <div class="notification-icon bg-warning">
-                                    <i data-lucide="clock"></i>
+                                <div class="notification-icon bg-info">
+                                    <i data-lucide="user-plus"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <span class="notification-title">Assignment Due</span>
-                                    <span class="notification-time">2 hours ago</span>
+                                    <span class="notification-title">New Teacher</span>
+                                    <span class="notification-time">15 mins ago</span>
                                 </div>
                             </div>
                         </a>
@@ -217,18 +206,18 @@ include 'sidebar_student_dashboard.php';
             <div class="dropdown">
                 <button class="btn navbar-btn-mobile profile-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile">
                     <div class="profile-avatar-small">
-                        <i data-lucide="user"></i>
+                        <i data-lucide="shield"></i>
                     </div>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end profile-dropdown mobile-dropdown">
                     <li class="dropdown-header">
                         <div class="profile-info-mobile">
                             <div class="profile-avatar-medium">
-                                <i data-lucide="graduation-cap"></i>
+                                <i data-lucide="shield-check"></i>
                             </div>
                             <div class="profile-details">
                                 <span class="profile-name"><?= htmlspecialchars($_SESSION['Username']) ?></span>
-                                <span class="profile-role">Student</span>
+                                <span class="profile-role">Administrator</span>
                             </div>
                         </div>
                     </li>
@@ -236,30 +225,30 @@ include 'sidebar_student_dashboard.php';
                         <hr class="dropdown-divider">
                     </li>
                     <li>
-                        <a class="dropdown-item" href="profile_student.php">
-                            <i data-lucide="user"></i> Profile
+                        <a class="dropdown-item" href="profile_admin.php">
+                            <i data-lucide="user"></i> My Profile
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="attendance_history.php">
-                            <i data-lucide="calendar-check"></i> Attendance
+                        <a class="dropdown-item" href="system_settings.php">
+                            <i data-lucide="settings"></i> Settings
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="my_subjects_student.php">
-                            <i data-lucide="book-open"></i> Subjects
+                        <a class="dropdown-item" href="admin_logs.php">
+                            <i data-lucide="file-text"></i> Logs
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="view_assignments.php">
-                            <i data-lucide="clipboard-list"></i> Assignments
+                        <a class="dropdown-item" href="backup_restore.php">
+                            <i data-lucide="database"></i> Backup & Restore
                         </a>
                     </li>
                     <li>
                         <hr class="dropdown-divider">
                     </li>
                     <li>
-                        <a class="dropdown-item text-danger" href="../logout.php">
+                        <a class="dropdown-item text-danger" href="../../logout.php">
                             <i data-lucide="log-out"></i> Logout
                         </a>
                     </li>
@@ -269,4 +258,4 @@ include 'sidebar_student_dashboard.php';
     </div>
 </nav>
 
-<link rel="stylesheet" href="../assets/css/navbar_admin.css">
+<link rel="stylesheet" href="../../assets/css/navbar_admin.css">

@@ -1,11 +1,11 @@
 <?php
 
 session_start();
-require_once(__DIR__ . '/../config/db_config.php');
+require_once(__DIR__ . '/../../config/db_config.php');
 
 // Check session
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') {
-    header("Location: /attendifyplus/views/login.php");
+    header("Location: ../auth/login.php");
     exit();
 }
 
@@ -19,7 +19,7 @@ $teacherRes = $teacherStmt->get_result();
 $teacherRow = $teacherRes->fetch_assoc();
 
 if (!$teacherRow) {
-    header("Location: ../logout.php");
+    header("Location: ../../logout.php");
     exit();
 }
 
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_material'])) {
             $_SESSION['upload_error'] = "File too large. Maximum size is 100MB.";
         } else {
             // Create upload directory
-            $uploadDir = __DIR__ . '/../uploads/materials/';
+            $uploadDir = __DIR__ . '/../../uploads/materials/';
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
@@ -185,7 +185,7 @@ if (isset($_SESSION['upload_error'])) {
     <title>Upload Materials | Attendify+</title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="../assets/css/dashboard_teacher.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard_teacher.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -708,8 +708,8 @@ if (isset($_SESSION['upload_error'])) {
     </style>
 
     <!-- JS Libraries -->
-    <script src="../assets/js/lucide.min.js"></script>
-    <script src="../assets/js/dashboard_teacher.js" defer></script>
+    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="../../assets/js/dashboard_teacher.js" defer></script>
 </head>
 
 <body>
@@ -717,10 +717,10 @@ if (isset($_SESSION['upload_error'])) {
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Sidebar -->
-    <?php include 'sidebar_teacher_dashboard.php'; ?>
+    <?php include '../components/sidebar_teacher_dashboard.php'; ?>
 
     <!-- Navbar -->
-    <?php include 'navbar_teacher.php'; ?>
+    <?php include '../components/navbar_teacher.php'; ?>
 
     <!-- Main Content -->
     <div class="container-fluid dashboard-container">
@@ -793,8 +793,8 @@ if (isset($_SESSION['upload_error'])) {
                                     <i data-lucide="edit"></i>
                                     Title <span style="color: #dc3545;">*</span>
                                 </label>
-                                <input type="text" class="form-control" id="title" name="title" required 
-                                       placeholder="e.g., Lecture 5: Database Design">
+                                <input type="text" class="form-control" id="title" name="title" required
+                                    placeholder="e.g., Lecture 5: Database Design">
                                 <small class="form-text text-muted">Must be unique within the selected subject (case-insensitive)</small>
                             </div>
 
@@ -803,8 +803,8 @@ if (isset($_SESSION['upload_error'])) {
                                     <i data-lucide="file-text"></i>
                                     Description
                                 </label>
-                                <textarea class="form-control" id="description" name="description" rows="2" 
-                                          placeholder="Brief description of the material content..."></textarea>
+                                <textarea class="form-control" id="description" name="description" rows="2"
+                                    placeholder="Brief description of the material content..."></textarea>
                             </div>
 
                             <div class="col-12">
@@ -812,8 +812,8 @@ if (isset($_SESSION['upload_error'])) {
                                     <i data-lucide="tag"></i>
                                     Tags (Optional)
                                 </label>
-                                <input type="text" class="form-control" id="tags" name="tags" 
-                                       placeholder="e.g., database, sql, design">
+                                <input type="text" class="form-control" id="tags" name="tags"
+                                    placeholder="e.g., database, sql, design">
                                 <small class="form-text text-muted">Comma-separated keywords</small>
                             </div>
 
@@ -822,8 +822,8 @@ if (isset($_SESSION['upload_error'])) {
                                     <i data-lucide="paperclip"></i>
                                     File <span style="color: #dc3545;">*</span>
                                 </label>
-                                <input type="file" class="form-control" id="material_file" name="material_file" 
-                                       accept=".pdf,.ppt,.pptx,.doc,.docx,.txt" required>
+                                <input type="file" class="form-control" id="material_file" name="material_file"
+                                    accept=".pdf,.ppt,.pptx,.doc,.docx,.txt" required>
                                 <small class="form-text text-muted">PDF, PPT, DOC, TXT (Max 100MB)</small>
                             </div>
 
@@ -861,9 +861,9 @@ if (isset($_SESSION['upload_error'])) {
                         <!-- Minimal Search Bar Inside Materials Section -->
                         <div class="materials-search-bar">
                             <div class="search-input-group">
-                                <input id="materialSearch" type="text" class="search-input" 
-                                       placeholder="Search your materials..." 
-                                       value="<?= htmlspecialchars($searchTerm) ?>" />
+                                <input id="materialSearch" type="text" class="search-input"
+                                    placeholder="Search your materials..."
+                                    value="<?= htmlspecialchars($searchTerm) ?>" />
                                 <button type="button" class="search-btn-minimal">
                                     <i data-lucide="search" style="width: 14px; height: 14px;"></i>
                                 </button>
@@ -871,11 +871,11 @@ if (isset($_SESSION['upload_error'])) {
                             <div class="filter-row">
                                 <select id="filterSubject" class="filter-select-mini">
                                     <option value="">All Subjects</option>
-                                    <?php 
+                                    <?php
                                     $subjectsResult->data_seek(0);
                                     while ($subject = $subjectsResult->fetch_assoc()): ?>
-                                        <option value="<?= htmlspecialchars($subject['SubjectID']) ?>" 
-                                                <?= $subjectFilter == $subject['SubjectID'] ? 'selected' : '' ?>>
+                                        <option value="<?= htmlspecialchars($subject['SubjectID']) ?>"
+                                            <?= $subjectFilter == $subject['SubjectID'] ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($subject['SubjectCode']) ?>
                                         </option>
                                     <?php endwhile; ?>
@@ -900,11 +900,11 @@ if (isset($_SESSION['upload_error'])) {
                             <?php if ($materialsResult->num_rows > 0): ?>
                                 <?php while ($material = $materialsResult->fetch_assoc()): ?>
                                     <div class="material-card p-3 material-item"
-                                         data-title="<?= strtolower(htmlspecialchars($material['Title'])) ?>"
-                                         data-description="<?= strtolower(htmlspecialchars($material['Description'])) ?>"
-                                         data-tags="<?= strtolower(htmlspecialchars($material['Tags'])) ?>"
-                                         data-subject="<?= htmlspecialchars($material['SubjectID']) ?>"
-                                         data-filetype="<?= strtolower($material['FileType']) ?>">
+                                        data-title="<?= strtolower(htmlspecialchars($material['Title'])) ?>"
+                                        data-description="<?= strtolower(htmlspecialchars($material['Description'])) ?>"
+                                        data-tags="<?= strtolower(htmlspecialchars($material['Tags'])) ?>"
+                                        data-subject="<?= htmlspecialchars($material['SubjectID']) ?>"
+                                        data-filetype="<?= strtolower($material['FileType']) ?>">
                                         <div class="d-flex align-items-start gap-3">
                                             <div class="file-type-icon file-type-<?= strtolower($material['FileType']) ?>">
                                                 <?= strtoupper($material['FileType']) ?>
@@ -936,11 +936,11 @@ if (isset($_SESSION['upload_error'])) {
                                                         </button>
                                                         <ul class="dropdown-menu dropdown-menu-end">
                                                             <li><a class="dropdown-item" href="download_material.php?id=<?= $material['MaterialID'] ?>">
-                                                                <i data-lucide="download" class="me-2" style="width: 14px; height: 14px;"></i>Download
-                                                            </a></li>
+                                                                    <i data-lucide="download" class="me-2" style="width: 14px; height: 14px;"></i>Download
+                                                                </a></li>
                                                             <li><a class="dropdown-item text-danger" href="delete_material.php?id=<?= $material['MaterialID'] ?>">
-                                                                <i data-lucide="trash-2" class="me-2" style="width: 14px; height: 14px;"></i>Delete
-                                                            </a></li>
+                                                                    <i data-lucide="trash-2" class="me-2" style="width: 14px; height: 14px;"></i>Delete
+                                                                </a></li>
                                                         </ul>
                                                     </div>
                                                 </div>

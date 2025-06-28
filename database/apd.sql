@@ -113,26 +113,6 @@ CREATE TABLE teacher_department_map (
 );
 
 
--- 1. Add Method column to attendance_records (THIS IS REQUIRED)
-ALTER TABLE `attendance_records` 
-ADD COLUMN `Method` ENUM('manual', 'qr') DEFAULT 'manual' AFTER `Status`;
-
--- 2. Create QR sessions table (THIS IS REQUIRED)
-CREATE TABLE `qr_attendance_sessions` (
-  `SessionID` int(11) NOT NULL AUTO_INCREMENT,
-  `TeacherID` int(11) NOT NULL,
-  `SubjectID` int(11) NOT NULL,
-  `Date` date NOT NULL,
-  `QRToken` varchar(255) NOT NULL,
-  `ExpiresAt` datetime NOT NULL,
-  `IsActive` tinyint(1) DEFAULT 1,
-  `CreatedAt` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`SessionID`),
-  KEY `TeacherID` (`TeacherID`),
-  KEY `SubjectID` (`SubjectID`),
-  CONSTRAINT `qr_attendance_sessions_ibfk_1` FOREIGN KEY (`TeacherID`) REFERENCES `teachers` (`TeacherID`),
-  CONSTRAINT `qr_attendance_sessions_ibfk_2` FOREIGN KEY (`SubjectID`) REFERENCES `subjects` (`SubjectID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 -- Add these tables to your existing database
@@ -179,68 +159,319 @@ CREATE TABLE `material_access_logs` (
 );
 
 
+-- 1. Add Method column to attendance_records (THIS IS REQUIRED)
+ALTER TABLE `attendance_records` 
+ADD COLUMN `Method` ENUM('manual', 'qr') DEFAULT 'manual' AFTER `Status`;
+
+-- 2. Create QR sessions table (THIS IS REQUIRED)
+CREATE TABLE `qr_attendance_sessions` (
+  `SessionID` int(11) NOT NULL AUTO_INCREMENT,
+  `TeacherID` int(11) NOT NULL,
+  `SubjectID` int(11) NOT NULL,
+  `Date` date NOT NULL,
+  `QRToken` varchar(255) NOT NULL,
+  `ExpiresAt` datetime NOT NULL,
+  `IsActive` tinyint(1) DEFAULT 1,
+  `CreatedAt` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`SessionID`),
+  KEY `TeacherID` (`TeacherID`),
+  KEY `SubjectID` (`SubjectID`),
+  CONSTRAINT `qr_attendance_sessions_ibfk_1` FOREIGN KEY (`TeacherID`) REFERENCES `teachers` (`TeacherID`),
+  CONSTRAINT `qr_attendance_sessions_ibfk_2` FOREIGN KEY (`SubjectID`) REFERENCES `subjects` (`SubjectID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+
+-- Add these tables to your database
+CREATE TABLE device_registration_tokens (
+    TokenID INT AUTO_INCREMENT PRIMARY KEY,
+    StudentID INT NOT NULL,
+    Token VARCHAR(64) NOT NULL,
+    ExpiresAt DATETIME NOT NULL,
+    Used BOOLEAN DEFAULT FALSE,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (StudentID) REFERENCES students(StudentID) ON DELETE CASCADE,
+    INDEX idx_token (Token),
+    INDEX idx_expires (ExpiresAt)
+);
+
+CREATE TABLE student_devices (
+    DeviceID INT AUTO_INCREMENT PRIMARY KEY,
+    StudentID INT NOT NULL,
+    DeviceFingerprint VARCHAR(255) NOT NULL,
+    DeviceName VARCHAR(100),
+    DeviceInfo TEXT,
+    IsActive BOOLEAN DEFAULT TRUE,
+    RegisteredAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    LastUsed DATETIME,
+    FOREIGN KEY (StudentID) REFERENCES students(StudentID) ON DELETE CASCADE,
+    UNIQUE KEY unique_device_student (DeviceFingerprint, StudentID)
+);
+
+-- Add this column to students table
+ALTER TABLE students ADD COLUMN DeviceRegistered BOOLEAN DEFAULT FALSE AFTER ProgramCode;
+
+
+
 
 
 
 
 
 -- ========== Dummy Data Starts Here ==========
+-- Complete database reset with BCA and BBA departments only
 
--- Insert Departments
-INSERT INTO departments (DepartmentName) VALUES
-('BCA'), ('BBA');
+-- Disable foreign key checks
+SET FOREIGN_KEY_CHECKS = 0;
 
--- Insert Semesters (1 to 8)
+-- Clear all data
+DELETE FROM qr_attendance_sessions;
+DELETE FROM device_registration_tokens;
+DELETE FROM student_devices;
+DELETE FROM material_access_logs;
+DELETE FROM materials;
+DELETE FROM attendance_records;
+DELETE FROM teacher_subject_map;
+DELETE FROM teacher_department_map;
+DELETE FROM students;
+DELETE FROM teachers;
+DELETE FROM admins;
+DELETE FROM subjects;
+DELETE FROM semesters;
+DELETE FROM departments;
+DELETE FROM login_tbl;
+
+-- Reset auto-increment counters
+ALTER TABLE qr_attendance_sessions AUTO_INCREMENT = 1;
+ALTER TABLE device_registration_tokens AUTO_INCREMENT = 1;
+ALTER TABLE student_devices AUTO_INCREMENT = 1;
+ALTER TABLE material_access_logs AUTO_INCREMENT = 1;
+ALTER TABLE materials AUTO_INCREMENT = 1;
+ALTER TABLE attendance_records AUTO_INCREMENT = 1;
+ALTER TABLE teacher_subject_map AUTO_INCREMENT = 1;
+ALTER TABLE teacher_department_map AUTO_INCREMENT = 1;
+ALTER TABLE students AUTO_INCREMENT = 1;
+ALTER TABLE teachers AUTO_INCREMENT = 1;
+ALTER TABLE admins AUTO_INCREMENT = 1;
+ALTER TABLE subjects AUTO_INCREMENT = 1;
+ALTER TABLE semesters AUTO_INCREMENT = 1;
+ALTER TABLE departments AUTO_INCREMENT = 1;
+ALTER TABLE login_tbl AUTO_INCREMENT = 1;
+
+-- Re-enable foreign key checks
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ========== INSERT FRESH DATA ==========
+
+-- 1. Insert Departments - ONLY BCA and BBA
+INSERT INTO departments (DepartmentName, DepartmentCode) VALUES
+('Bachelor of Computer Application', 'BCA'),
+('Bachelor of Business Administration', 'BBA');
+
+-- 2. Insert Semesters (1 to 8)
 INSERT INTO semesters (SemesterNumber) VALUES
 (1), (2), (3), (4), (5), (6), (7), (8);
 
--- Insert Login Data
+-- 3. Insert Login Data with unique emails (password = "password")
 INSERT INTO login_tbl (Email, Password, Role, Status, CreatedDate) VALUES
-('admin@college.com', 'admin123', 'admin', 'active', NOW()),
-('teacher1@bca.com', 'teach123', 'teacher', 'active', NOW()),
-('teacher2@bba.com', 'teach456', 'teacher', 'active', NOW()),
-('student1@bca.com', 'stud123', 'student', 'active', NOW()),
-('student2@bca.com', 'stud456', 'student', 'active', NOW()),
-('student3@bba.com', 'stud789', 'student', 'active', NOW());
+('admin@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'active', NOW()),
+('teacher.bca1@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'teacher', 'active', NOW()),
+('teacher.bca2@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'teacher', 'active', NOW()),
+('teacher.bba1@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'teacher', 'active', NOW()),
+('teacher.bba2@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'teacher', 'active', NOW()),
+('student.ram@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'active', NOW()),
+('student.sita@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'active', NOW()),
+('student.hari@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'active', NOW()),
+('student.gita@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'active', NOW()),
+('student.rita@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'active', NOW()),
+('student.maya@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'active', NOW()),
+('student.kiran@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'active', NOW()),
+('student.deepak@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'active', NOW()),
+('student.binita@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'active', NOW()),
+('student.suresh@lagrandee.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'active', NOW());
 
--- Insert Admin
+-- 4. Insert Admin
 INSERT INTO admins (FullName, Contact, Address, PhotoURL, LoginID) VALUES
-('Admin User', '9800000001', 'Admin Address', NULL, 1);
+('System Administrator', '9800000001', 'Pokhara, Nepal', NULL, 1);
 
--- Insert Teachers
-INSERT INTO teachers (FullName, Contact, Address, PhotoURL, DepartmentID, LoginID) VALUES
-('BCA Teacher', '9800000002', 'Pokhara', NULL, 1, 2),
-('BBA Teacher', '9800000003', 'Kathmandu', NULL, 2, 3);
+-- 5. Insert Teachers - BCA and BBA Teachers only
+INSERT INTO teachers (FullName, Contact, Address, PhotoURL, LoginID) VALUES
+('Dr. Rajesh Kumar Sharma', '9801234567', 'Pokhara-8, Kaski', NULL, 2),  -- BCA Teacher 1
+('Prof. Anjali Thapa', '9802345678', 'Kathmandu-7, Bagmati', NULL, 3),   -- BCA Teacher 2
+('Er. Bikash Adhikari', '9803456789', 'Butwal-11, Rupandehi', NULL, 4),  -- BBA Teacher 1
+('Dr. Sunita Poudel', '9804567890', 'Chitwan-5, Bharatpur', NULL, 5);    -- BBA Teacher 2
 
--- Insert Students (3 classes from BCA/BBA)
-INSERT INTO students (FullName, Contact, Address, PhotoURL, DepartmentID, SemesterID, LoginID, ProgramCode) VALUES
-('Ram BC', '9801111111', 'Butwal', NULL, 1, 1, 4, 'BCA-BATCH-2025'),
-('Sita KC', '9802222222', 'Pokhara', NULL, 1, 2, 5, 'BCA-BATCH-2025'),
-('Hari Lal', '9803333333', 'Lalitpur', NULL, 2, 3, 6, 'BBA-BATCH-2025');
-
--- Insert Subjects (3 per semester per department = 48)
-INSERT INTO subjects (SubjectCode, SubjectName, CreditHour, LectureHour, DepartmentID, SemesterID) VALUES
+-- 6. Insert Subjects - BCA and BBA subjects only (based on apd.sql pattern)
+INSERT INTO subjects (SubjectCode, SubjectName, CreditHour, LectureHour, IsElective, DepartmentID, SemesterID) VALUES
 -- BCA Semester 1
-('BCA101', 'Fundamentals of IT', 3, 48, 1, 1),
-('BCA102', 'Mathematics I', 3, 48, 1, 1),
-('BCA103', 'Digital Logic', 3, 48, 1, 1),
+('BCA101', 'Fundamentals of Information Technology', 3, 48, FALSE, 1, 1),
+('BCA102', 'Mathematics I (Calculus & Algebra)', 3, 48, FALSE, 1, 1),
+('BCA103', 'Digital Logic and Computer Organization', 3, 48, FALSE, 1, 1),
+('BCA104', 'English Communication', 3, 48, FALSE, 1, 1),
+('BCA105', 'Physics for Computing', 3, 48, FALSE, 1, 1),
+
 -- BCA Semester 2
-('BCA201', 'C Programming', 3, 48, 1, 2),
-('BCA202', 'Discrete Structure', 3, 48, 1, 2),
-('BCA203', 'Microprocessor', 3, 48, 1, 2),
+('BCA201', 'C Programming Language', 4, 64, FALSE, 1, 2),
+('BCA202', 'Mathematics II (Statistics & Probability)', 3, 48, FALSE, 1, 2),
+('BCA203', 'Microprocessor and Assembly Language', 3, 48, FALSE, 1, 2),
+('BCA204', 'Discrete Mathematical Structures', 3, 48, FALSE, 1, 2),
+('BCA205', 'Financial Accounting', 3, 48, FALSE, 1, 2),
+
 -- BCA Semester 3
-('BCA301', 'Data Structures', 3, 48, 1, 3),
-('BCA302', 'OOP in Java', 3, 48, 1, 3),
-('BCA303', 'Web Technology', 3, 48, 1, 3),
+('BCA301', 'Data Structures and Algorithms', 4, 64, FALSE, 1, 3),
+('BCA302', 'Object Oriented Programming (Java)', 4, 64, FALSE, 1, 3),
+('BCA303', 'Computer Graphics and Animation', 3, 48, FALSE, 1, 3),
+('BCA304', 'Web Technology I (HTML, CSS, JS)', 3, 48, FALSE, 1, 3),
+('BCA305', 'Mathematics III (Numerical Methods)', 3, 48, FALSE, 1, 3),
+
+-- BCA Semester 4
+('BCA401', 'Database Management System', 4, 64, FALSE, 1, 4),
+('BCA402', 'Operating Systems', 3, 48, FALSE, 1, 4),
+('BCA403', 'Web Technology II (PHP, MySQL)', 4, 64, FALSE, 1, 4),
+('BCA404', 'Software Engineering', 3, 48, FALSE, 1, 4),
+('BCA405', 'Computer Networks', 3, 48, FALSE, 1, 4),
+
+-- BCA Semester 5
+('BCA501', 'Mobile Application Development', 4, 64, FALSE, 1, 5),
+('BCA502', 'System Analysis and Design', 3, 48, FALSE, 1, 5),
+('BCA503', 'Advanced Java Programming', 4, 64, FALSE, 1, 5),
+('BCA504', 'E-commerce and Digital Marketing', 3, 48, TRUE, 1, 5),
+('BCA505', 'Project Management', 3, 48, FALSE, 1, 5),
+
+-- BCA Semester 6
+('BCA601', 'Artificial Intelligence', 3, 48, FALSE, 1, 6),
+('BCA602', 'Cyber Security and Ethical Hacking', 3, 48, FALSE, 1, 6),
+('BCA603', 'Cloud Computing', 3, 48, FALSE, 1, 6),
+('BCA604', 'Final Year Project I', 6, 96, FALSE, 1, 6),
+
+-- BBA Semester 1
+('BBA101', 'Principles of Management', 3, 48, FALSE, 2, 1),
+('BBA102', 'Business Mathematics', 3, 48, FALSE, 2, 1),
+('BBA103', 'Microeconomics', 3, 48, FALSE, 2, 1),
+('BBA104', 'Business English', 3, 48, FALSE, 2, 1),
+('BBA105', 'Computer Applications in Business', 3, 48, FALSE, 2, 1),
+
+-- BBA Semester 2
+('BBA201', 'Macroeconomics', 3, 48, FALSE, 2, 2),
+('BBA202', 'Financial Accounting', 3, 48, FALSE, 2, 2),
+('BBA203', 'Business Statistics', 3, 48, FALSE, 2, 2),
+('BBA204', 'Organizational Behavior', 3, 48, FALSE, 2, 2),
+('BBA205', 'Business Communication', 3, 48, FALSE, 2, 2),
 
 -- BBA Semester 3
-('BBA301', 'Marketing Management', 3, 48, 2, 3),
-('BBA302', 'HRM', 3, 48, 2, 3),
-('BBA303', 'Organizational Behavior', 3, 48, 2, 3);
+('BBA301', 'Marketing Management', 3, 48, FALSE, 2, 3),
+('BBA302', 'Human Resource Management', 3, 48, FALSE, 2, 3),
+('BBA303', 'Business Law', 3, 48, FALSE, 2, 3),
+('BBA304', 'Cost and Management Accounting', 3, 48, FALSE, 2, 3),
+('BBA305', 'Research Methodology', 3, 48, FALSE, 2, 3),
 
--- Insert Teacher-Subject Mappings
+-- BBA Semester 4
+('BBA401', 'Financial Management', 3, 48, FALSE, 2, 4),
+('BBA402', 'Operations Management', 3, 48, FALSE, 2, 4),
+('BBA403', 'International Business', 3, 48, FALSE, 2, 4),
+('BBA404', 'Entrepreneurship Development', 3, 48, FALSE, 2, 4),
+('BBA405', 'Business Ethics', 3, 48, FALSE, 2, 4),
+
+-- BBA Semester 5
+('BBA501', 'Strategic Management', 3, 48, FALSE, 2, 5),
+('BBA502', 'Investment and Portfolio Management', 3, 48, FALSE, 2, 5),
+('BBA503', 'Digital Marketing', 3, 48, FALSE, 2, 5),
+('BBA504', 'Supply Chain Management', 3, 48, FALSE, 2, 5),
+('BBA505', 'Business Analytics', 3, 48, TRUE, 2, 5),
+
+-- BBA Semester 6
+('BBA601', 'Corporate Governance', 3, 48, FALSE, 2, 6),
+('BBA602', 'Risk Management', 3, 48, FALSE, 2, 6),
+('BBA603', 'Final Year Project I', 6, 96, FALSE, 2, 6);
+
+-- 7. Insert Students from BCA and BBA departments (based on apd.sql style)
+INSERT INTO students (FullName, Contact, Address, PhotoURL, DepartmentID, SemesterID, JoinYear, ProgramCode, LoginID, DeviceRegistered) VALUES
+-- BCA Students
+('Ram Bahadur Thapa', '9801111111', 'Pokhara-15, Kaski', NULL, 1, 1, 2024, 'BCA-2024', 6, TRUE),
+('Sita Kumari Poudel', '9802222222', 'Kathmandu-10, Bagmati', NULL, 1, 2, 2024, 'BCA-2024', 7, FALSE),
+('Gita Devi Acharya', '9804444444', 'Chitwan-2, Bharatpur', NULL, 1, 3, 2024, 'BCA-2024', 9, TRUE),
+('Maya Laxmi Shrestha', '9807777777', 'Lalitpur-3, Bagmati', NULL, 1, 4, 2023, 'BCA-2023', 11, FALSE),
+('Kiran Bahadur Magar', '9808888888', 'Pokhara-17, Kaski', NULL, 1, 5, 2023, 'BCA-2023', 12, TRUE),
+('Deepak Gurung', '9809999999', 'Butwal-5, Rupandehi', NULL, 1, 6, 2022, 'BCA-2022', 13, FALSE),
+
+-- BBA Students  
+('Hari Prasad Sharma', '9803333333', 'Butwal-8, Rupandehi', NULL, 2, 1, 2024, 'BBA-2024', 8, FALSE),
+('Rita Kumari Gurung', '9805555555', 'Pokhara-12, Kaski', NULL, 2, 2, 2024, 'BBA-2024', 10, FALSE),
+('Binita Rai', '9806666666', 'Dharan-5, Sunsari', NULL, 2, 3, 2024, 'BBA-2024', 14, TRUE),
+('Suresh Tamang', '9800111222', 'Kathmandu-5, Bagmati', NULL, 2, 4, 2023, 'BBA-2023', 15, TRUE);
+
+-- 8. Insert Teacher-Subject Mappings (based on apd.sql pattern)
 INSERT INTO teacher_subject_map (TeacherID, SubjectID) VALUES
--- BCA Teacher handles Sem 1
-(1, 1), (1, 2), (1, 3),
--- BBA Teacher handles Sem 3
-(2, 10), (2, 11), (2, 12);
+-- Dr. Rajesh Kumar Sharma (BCA Teacher 1) - handles BCA Sem 1, 2, 3
+(1, 1), (1, 2), (1, 3), (1, 6), (1, 7), (1, 11), (1, 12), (1, 15),
+-- Prof. Anjali Thapa (BCA Teacher 2) - handles BCA Sem 4, 5, 6  
+(2, 16), (2, 17), (2, 18), (2, 21), (2, 22), (2, 23), (2, 26), (2, 27), (2, 28),
+-- Er. Bikash Adhikari (BBA Teacher 1) - handles BBA Sem 1, 2, 3
+(3, 29), (3, 30), (3, 31), (3, 34), (3, 35), (3, 36), (3, 39), (3, 40), (3, 41),
+-- Dr. Sunita Poudel (BBA Teacher 2) - handles BBA Sem 4, 5, 6
+(4, 44), (4, 45), (4, 46), (4, 49), (4, 50), (4, 51), (4, 54), (4, 55), (4, 56);
+
+-- 9. Insert Teacher-Department Mappings
+INSERT INTO teacher_department_map (TeacherID, DepartmentID) VALUES
+(1, 1), -- Dr. Rajesh -> BCA Department
+(2, 1), -- Prof. Anjali -> BCA Department
+(3, 2), -- Er. Bikash -> BBA Department
+(4, 2); -- Dr. Sunita -> BBA Department
+
+-- 10. Insert sample attendance records (based on apd.sql style)
+INSERT INTO attendance_records (StudentID, SubjectID, TeacherID, DateTime, Status, Method) VALUES
+-- BCA Students attendance
+(1, 1, 1, '2024-12-20 09:00:00', 'present', 'manual'),
+(1, 2, 1, '2024-12-20 10:00:00', 'present', 'qr'),
+(1, 3, 1, '2024-12-20 11:00:00', 'late', 'manual'),
+(2, 6, 1, '2024-12-20 09:00:00', 'present', 'qr'),
+(2, 7, 1, '2024-12-20 10:00:00', 'absent', 'manual'),
+(3, 11, 1, '2024-12-20 09:00:00', 'present', 'qr'),
+(4, 16, 2, '2024-12-20 10:00:00', 'present', 'manual'),
+(5, 21, 2, '2024-12-20 11:00:00', 'late', 'qr'),
+-- BBA Students attendance
+(7, 29, 3, '2024-12-20 09:00:00', 'present', 'qr'),
+(7, 30, 3, '2024-12-20 10:00:00', 'present', 'manual'),
+(8, 34, 3, '2024-12-20 11:00:00', 'late', 'manual'),
+(9, 39, 3, '2024-12-20 09:00:00', 'present', 'qr'),
+(10, 44, 4, '2024-12-20 10:00:00', 'present', 'qr');
+
+-- 11. Insert device registration tokens for testing
+INSERT INTO device_registration_tokens (StudentID, Token, ExpiresAt, Used) VALUES
+(2, 'abc123def456token789', DATE_ADD(NOW(), INTERVAL 10 MINUTE), FALSE),
+(7, 'xyz987uvw654token321', DATE_ADD(NOW(), INTERVAL 15 MINUTE), FALSE),
+(8, 'token456def789abc123', DATE_ADD(NOW(), INTERVAL 5 MINUTE), FALSE),
+(4, 'used123token456def789', DATE_SUB(NOW(), INTERVAL 5 MINUTE), TRUE);
+
+-- 12. Insert sample materials
+INSERT INTO materials (TeacherID, SubjectID, Title, Description, FileName, OriginalFileName, FileSize, FileType, FilePath, Tags) VALUES
+(1, 1, 'Introduction to IT - Chapter 1', 'Basic concepts of Information Technology', 'it_chapter1_20241220.pdf', 'IT_Chapter1.pdf', 2048576, 'application/pdf', '/uploads/materials/it_chapter1_20241220.pdf', 'IT,Fundamentals,Chapter1'),
+(1, 6, 'C Programming Basics', 'Getting started with C programming language', 'c_programming_basics.pdf', 'C_Programming_Basics.pdf', 1536000, 'application/pdf', '/uploads/materials/c_programming_basics.pdf', 'C,Programming,Basics'),
+(3, 39, 'Marketing Mix - 4Ps', 'Understanding Product, Price, Place, Promotion', 'marketing_mix_4ps.pptx', 'Marketing_Mix_4Ps.pptx', 3072000, 'application/vnd.openxmlformats-officedocument.presentationml.presentation', '/uploads/materials/marketing_mix_4ps.pptx', 'Marketing,4Ps,Mix'),
+(4, 44, 'Financial Management Notes', 'Introduction to Financial Management principles', 'financial_mgmt_notes.pdf', 'Financial_Management_Notes.pdf', 1024000, 'application/pdf', '/uploads/materials/financial_mgmt_notes.pdf', 'Finance,Management,BBA');
+
+-- Check the final state
+SELECT 'Departments' as TableName, COUNT(*) as RecordCount FROM departments
+UNION ALL
+SELECT 'Semesters', COUNT(*) FROM semesters
+UNION ALL
+SELECT 'Login Accounts', COUNT(*) FROM login_tbl
+UNION ALL
+SELECT 'Admins', COUNT(*) FROM admins
+UNION ALL
+SELECT 'Teachers', COUNT(*) FROM teachers
+UNION ALL
+SELECT 'Students', COUNT(*) FROM students
+UNION ALL
+SELECT 'Subjects', COUNT(*) FROM subjects
+UNION ALL
+SELECT 'Teacher-Subject Maps', COUNT(*) FROM teacher_subject_map
+UNION ALL
+SELECT 'Teacher-Department Maps', COUNT(*) FROM teacher_department_map
+UNION ALL
+SELECT 'Attendance Records', COUNT(*) FROM attendance_records
+UNION ALL
+SELECT 'Device Tokens', COUNT(*) FROM device_registration_tokens
+UNION ALL
+SELECT 'Materials', COUNT(*) FROM materials;

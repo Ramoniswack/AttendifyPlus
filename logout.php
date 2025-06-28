@@ -9,5 +9,5 @@ if (ini_get("session.use_cookies")) {
 }
 
 // Redirect to login page
-header("Location: views/login.php");
+header("Location: views/auth/login.php");
 exit();

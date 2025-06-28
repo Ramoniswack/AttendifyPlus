@@ -1,11 +1,11 @@
 <?php
 
 session_start();
-require_once(__DIR__ . '/../config/db_config.php');
+require_once(__DIR__ . '/../../config/db_config.php');
 
 // Check session
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') {
-  header("Location: /attendifyplus/views/login.php");
+  header("Location: ../auth/login.php");
   exit();
 }
 
@@ -96,7 +96,7 @@ $errorMsg = $_GET['error'] ?? '';
   <title>My Subjects | Attendify+</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="../assets/css/dashboard_teacher.css">
+  <link rel="stylesheet" href="../../assets/css/dashboard_teacher.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -517,8 +517,8 @@ $errorMsg = $_GET['error'] ?? '';
   </style>
 
   <!-- JS Libraries -->
-  <script src="../assets/js/lucide.min.js"></script>
-  <script src="../assets/js/dashboard_teacher.js" defer></script>
+  <script src="../../assets/js/lucide.min.js"></script>
+  <script src="../../assets/js/dashboard_teacher.js" defer></script>
 </head>
 
 <body>
@@ -526,10 +526,10 @@ $errorMsg = $_GET['error'] ?? '';
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <!-- Sidebar -->
-  <?php include 'sidebar_teacher_dashboard.php'; ?>
+  <?php include '../components/sidebar_teacher_dashboard.php'; ?>
 
   <!-- Navbar -->
-  <?php include 'navbar_teacher.php'; ?>
+  <?php include '../components/navbar_teacher.php'; ?>
 
   <!-- Main Content -->
   <div class="container-fluid dashboard-container">
