@@ -174,8 +174,7 @@ AttendifyPlus/
 ## 📊 System Architecture
 
 ```mermaid
-graph TB
-  erDiagram
+erDiagram
     login_tbl {
         INT LoginID PK
         VARCHAR Email UK
