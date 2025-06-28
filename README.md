@@ -20,21 +20,25 @@ AttendifyPlus revolutionizes traditional attendance systems with **QR code techn
 ## ✨ Key Features
 
 ### 🔐 **Multi-Role Authentication**
+
 - **Admin Panel**: Complete system oversight and user management
-- **Teacher Dashboard**: Class management and attendance tracking  
+- **Teacher Dashboard**: Class management and attendance tracking
 - **Student Portal**: QR scanning and attendance history
 
 ### 📱 **QR Code Technology**
+
 - Dynamic QR generation for each session
 - Secure token-based attendance marking
 - Real-time validation and processing
 
 ### 📊 **Analytics & Reporting**
+
 - Attendance percentage calculations
 - Subject-wise performance metrics
 - Comprehensive reporting tools
 
 ### 🎯 **Smart Features**
+
 - Material upload/download system
 - Assignment submission portal
 - Responsive UI with dark/light themes
@@ -43,6 +47,7 @@ AttendifyPlus revolutionizes traditional attendance systems with **QR code techn
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - PHP 8.0+
 - MySQL 5.7+
 - Web server (Apache/Nginx)
@@ -51,18 +56,21 @@ AttendifyPlus revolutionizes traditional attendance systems with **QR code techn
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-username/attendifyplus.git
    cd attendifyplus
    ```
 
 2. **Database Setup**
+
    ```bash
    # Import the database schema
    mysql -u your_username -p < database/attendifyplus_fainal.sql
    ```
 
 3. **Configure Database**
+
    ```php
    // config/db_config.php
    $host = 'localhost';
@@ -72,6 +80,7 @@ AttendifyPlus revolutionizes traditional attendance systems with **QR code techn
    ```
 
 4. **Set Permissions**
+
    ```bash
    chmod 755 uploads/
    chmod 755 uploads/materials/
@@ -112,13 +121,13 @@ AttendifyPlus/
 <table align="center">
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/100x100" width="100px;" alt="Ramohan"/><br />
+      <img src="../AttendifyPlus/assets/img/team/Ramohan.png" width="100px;" alt="Ramohan"/><br />
       <sub><b>🚀 Ramohan</b></sub><br />
       <sub>Project Lead & Full-Stack Developer</sub><br />
       <small>Integration • QR Logic • Analytics • Critical Tasks</small>
     </td>
     <td align="center">
-      <img src="https://via.placeholder.com/100x100" width="100px;" alt="Subash"/><br />
+      <img src="../AttendifyPlus/assets/img/team/subash.png" width="100px;" alt="Subash"/><br />
       <sub><b>⚙️ Subash</b></sub><br />
       <sub>Backend Developer</sub><br />
       <small>PHP Logic • Attendance System • Backend Processing</small>
@@ -126,13 +135,13 @@ AttendifyPlus/
   </tr>
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/100x100" width="100px;" alt="Namrata"/><br />
+      <img src="../AttendifyPlus/assets/img/team/namrata.png" width="100px;" alt="Namrata"/><br />
       <sub><b>🎨 Namrata</b></sub><br />
       <sub>Frontend Developer</sub><br />
       <small>UI/UX Design • Material Upload • Analytics Interface</small>
     </td>
     <td align="center">
-      <img src="https://via.placeholder.com/100x100" width="100px;" alt="Rikita"/><br />
+      <img src="../AttendifyPlus/assets/img/team/Rikita.png" width="100px;" alt="Rikita"/><br />
       <sub><b>🔍 Rikita</b></sub><br />
       <sub>QA Engineer & Developer</sub><br />
       <small>Testing • Validation • Profile Management</small>
@@ -143,17 +152,20 @@ AttendifyPlus/
 ## 🛠️ Technology Stack
 
 ### **Backend**
+
 - **PHP 8.0+** - Server-side logic
 - **MySQL** - Database management
 - **RESTful APIs** - Data communication
 
 ### **Frontend**
+
 - **HTML5/CSS3** - Structure & styling
 - **Bootstrap 5.3** - Responsive framework
 - **JavaScript (ES6+)** - Dynamic interactions
 - **Lucide Icons** - Modern iconography
 
 ### **Features**
+
 - **QR Code Generation** - Dynamic attendance tokens
 - **File Upload System** - Material & assignment handling
 - **Real-time Validation** - Instant feedback
@@ -163,23 +175,118 @@ AttendifyPlus/
 
 ```mermaid
 graph TB
-    A[Students] --> B[QR Scanner]
-    C[Teachers] --> D[QR Generator]
-    D --> E[Dynamic Tokens]
-    B --> F[Attendance API]
-    F --> G[Database]
-    H[Admin] --> I[Management Panel]
-    I --> G
-    G --> J[Analytics Engine]
-    J --> K[Reports & Insights]
+  erDiagram
+    login_tbl {
+        INT LoginID PK
+        VARCHAR Email UK
+        VARCHAR Password
+        ENUM Role
+        ENUM Status
+        DATETIME CreatedDate
+    }
+
+    departments {
+        INT DepartmentID PK
+        VARCHAR DepartmentName UK
+        VARCHAR DepartmentCode UK
+    }
+
+    semesters {
+        INT SemesterID PK
+        INT SemesterNumber
+    }
+
+    admins {
+        INT AdminID PK
+        VARCHAR FullName
+        VARCHAR Contact
+        VARCHAR Address
+        VARCHAR PhotoURL
+        INT LoginID FK,UK
+    }
+
+    teachers {
+        INT TeacherID PK
+        VARCHAR FullName
+        VARCHAR Contact
+        VARCHAR Address
+        VARCHAR PhotoURL
+        INT LoginID FK,UK
+    }
+
+    students {
+        INT StudentID PK
+        VARCHAR FullName
+        VARCHAR Contact
+        VARCHAR Address
+        VARCHAR PhotoURL
+        INT DepartmentID FK
+        INT SemesterID FK
+        YEAR JoinYear
+        VARCHAR ProgramCode
+        INT LoginID FK,UK
+    }
+
+    subjects {
+        INT SubjectID PK
+        VARCHAR SubjectCode
+        VARCHAR SubjectName
+        INT CreditHour
+        INT LectureHour
+        BOOLEAN IsElective
+        INT DepartmentID FK
+        INT SemesterID FK
+    }
+
+    teacher_subject_map {
+        INT MapID PK
+        INT TeacherID FK
+        INT SubjectID FK
+    }
+
+    teacher_department_map {
+        INT MapID PK
+        INT TeacherID FK
+        INT DepartmentID FK
+    }
+
+    attendance_records {
+        INT AttendanceID PK
+        INT StudentID FK
+        INT SubjectID FK
+        INT TeacherID FK
+        DATETIME DateTime
+        ENUM Status
+    }
+
+    %% Relationships
+    login_tbl ||--|| admins : "authenticates"
+    login_tbl ||--|| teachers : "authenticates"
+    login_tbl ||--|| students : "authenticates"
+
+    departments ||--o{ students : "belongs to"
+    departments ||--o{ subjects : "offers"
+    departments ||--o{ teacher_department_map : "has"
+
+    semesters ||--o{ students : "enrolled in"
+    semesters ||--o{ subjects : "taught in"
+
+    teachers ||--o{ teacher_subject_map : "teaches"
+    teachers ||--o{ teacher_department_map : "assigned to"
+    teachers ||--o{ attendance_records : "records"
+
+    subjects ||--o{ teacher_subject_map : "taught by"
+    subjects ||--o{ attendance_records : "attendance for"
+
+    students ||--o{ attendance_records : "has"
 ```
 
 ## 🔗 API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/generate_qr_image.php` | POST | Generate QR for attendance |
-| `/api/process_qr_attendance.php` | POST | Process QR scan & mark attendance |
+| Endpoint                         | Method | Description                       |
+| -------------------------------- | ------ | --------------------------------- |
+| `/api/generate_qr_image.php`     | POST   | Generate QR for attendance        |
+| `/api/process_qr_attendance.php` | POST   | Process QR scan & mark attendance |
 
 ## 📈 Usage Statistics
 
