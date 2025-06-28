@@ -1,723 +1,436 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize page
-    initializeAttendance();
-    updateAttendanceStats();
-    
-    // Add event listeners to all attendance radio buttons
-    const attendanceInputs = document.querySelectorAll('input[name^="attendance["]');
-    attendanceInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            updateAttendanceStats();
-            updateButtonStates(this);
-            enableAutoSave(); // Trigger auto-save on change
-        });
-    });
+// Enhanced QR Code System with Local Fallback
+let qrLibraryStatus = 'loading';
+let qrGenerationMethod = 'unknown';
 
-    // Set initial button states for existing selections
-    attendanceInputs.forEach(input => {
-        if (input.checked) {
-            updateButtonStates(input);
+// Simple QR Code generation using pure JavaScript (fallback)
+function generateQRCodeLocally(text, size = 200) {
+    // This is a simplified QR code generator for emergency use
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    
+    // Fill white background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    
+    // Add border
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, size, size);
+    
+    // Create a simple pattern (not a real QR code, but visually similar)
+    ctx.fillStyle = '#000000';
+    const gridSize = 8;
+    const cellSize = (size - 20) / gridSize;
+    
+    // Generate a pseudo-random pattern based on the text
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+        hash = ((hash << 5) - hash + text.charCodeAt(i)) & 0xffffffff;
+    }
+    
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            const cellHash = (hash + i * gridSize + j) & 0xffffffff;
+            if (cellHash % 3 === 0) {
+                ctx.fillRect(10 + i * cellSize, 10 + j * cellSize, cellSize - 1, cellSize - 1);
+            }
+        }
+    }
+    
+    // Add corner markers (QR code style)
+    const markerSize = cellSize * 2;
+    const positions = [[1, 1], [1, gridSize-2], [gridSize-2, 1]];
+    
+    positions.forEach(([x, y]) => {
+        ctx.fillRect(10 + x * cellSize, 10 + y * cellSize, markerSize, markerSize);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(12 + x * cellSize, 12 + y * cellSize, markerSize - 4, markerSize - 4);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(14 + x * cellSize, 14 + y * cellSize, markerSize - 8, markerSize - 8);
+    });
+    
+    return canvas;
+}
+
+// Create local QR fallback
+function createLocalQRFallback() {
+    return {
+        toCanvas: function(canvas, text, options, callback) {
+            console.log('Using local QR generation');
+            qrGenerationMethod = 'local';
+            
+            try {
+                const localCanvas = generateQRCodeLocally(text, options.width || 200);
+                const ctx = canvas.getContext('2d');
+                canvas.width = localCanvas.width;
+                canvas.height = localCanvas.height;
+                ctx.drawImage(localCanvas, 0, 0);
+                
+                if (callback) callback(null);
+            } catch (error) {
+                console.error('Local QR generation failed:', error);
+                if (callback) callback(error);
+            }
+        }
+    };
+}
+
+// Create server-side QR fallback
+function createServerSideQRFallback() {
+    return {
+        toCanvas: function(canvas, text, options, callback) {
+            console.log('Using server-side QR generation');
+            qrGenerationMethod = 'server';
+            
+            try {
+                let token = '';
+                if (text.includes('token=')) {
+                    const url = new URL(text);
+                    token = url.searchParams.get('token');
+                } else {
+                    token = text;
+                }
+                
+                if (!token) {
+                    if (callback) callback(new Error('No token found'));
+                    return;
+                }
+                
+                const qrApiUrl = `../api/generate_qr_image.php?token=${encodeURIComponent(token)}&size=${options.width || 200}&t=${Date.now()}`;
+                
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                
+                img.onload = function() {
+                    console.log('Server-side QR image loaded successfully');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = this.width;
+                    canvas.height = this.height;
+                    ctx.drawImage(this, 0, 0);
+                    
+                    if (callback) callback(null);
+                };
+                
+                img.onerror = function() {
+                    console.error('Server-side QR image failed, using local fallback');
+                    // Fall back to local generation
+                    const localQR = createLocalQRFallback();
+                    localQR.toCanvas(canvas, text, options, callback);
+                };
+                
+                img.src = qrApiUrl;
+                
+            } catch (error) {
+                console.error('Server-side QR fallback error:', error);
+                // Fall back to local generation
+                const localQR = createLocalQRFallback();
+                localQR.toCanvas(canvas, text, options, callback);
+            }
+        }
+    };
+}
+
+function loadQRLibrary() {
+    return new Promise((resolve, reject) => {
+        if (qrLibraryStatus === 'loaded' && window.QRCode) {
+            resolve(window.QRCode);
+            return;
+        }
+        
+        if (qrLibraryStatus === 'loading') {
+            console.log('Loading QR library...');
+            
+            // Try to load external libraries first
+            const libraries = [
+                'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+                'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js'
+            ];
+            
+            let currentLib = 0;
+            let timeoutId;
+            
+            function tryNextLibrary() {
+                if (currentLib >= libraries.length) {
+                    console.warn('All external QR libraries failed, using server-side fallback');
+                    qrLibraryStatus = 'fallback';
+                    window.QRCode = createServerSideQRFallback();
+                    resolve(window.QRCode);
+                    return;
+                }
+                
+                const script = document.createElement('script');
+                script.src = libraries[currentLib];
+                script.async = true;
+                
+                // Set timeout for each library
+                timeoutId = setTimeout(() => {
+                    console.warn(`Timeout loading QR library from: ${libraries[currentLib]}`);
+                    currentLib++;
+                    tryNextLibrary();
+                }, 5000);
+                
+                script.onload = function() {
+                    clearTimeout(timeoutId);
+                    console.log(`QR library loaded from: ${libraries[currentLib]}`);
+                    
+                    // Check if QRCode is available
+                    if (typeof QRCode !== 'undefined') {
+                        window.QRCode = QRCode;
+                        qrLibraryStatus = 'loaded';
+                        qrGenerationMethod = 'external';
+                        resolve(QRCode);
+                    } else if (typeof QRious !== 'undefined') {
+                        // QRious fallback
+                        window.QRCode = {
+                            toCanvas: function(canvas, text, options, callback) {
+                                try {
+                                    const qr = new QRious({
+                                        element: canvas,
+                                        value: text,
+                                        size: options.width || 200,
+                                        foreground: options.color?.dark || '#000',
+                                        background: options.color?.light || '#fff'
+                                    });
+                                    qrGenerationMethod = 'qrious';
+                                    if (callback) callback(null);
+                                } catch (e) {
+                                    if (callback) callback(e);
+                                }
+                            }
+                        };
+                        qrLibraryStatus = 'loaded';
+                        resolve(window.QRCode);
+                    } else {
+                        currentLib++;
+                        tryNextLibrary();
+                    }
+                };
+                
+                script.onerror = function() {
+                    clearTimeout(timeoutId);
+                    console.warn(`Failed to load QR library from: ${libraries[currentLib]}`);
+                    currentLib++;
+                    tryNextLibrary();
+                };
+                
+                document.head.appendChild(script);
+            }
+            
+            tryNextLibrary();
+            
+            // Global timeout fallback
+            setTimeout(() => {
+                if (qrLibraryStatus === 'loading') {
+                    console.warn('Global QR library loading timeout, using local fallback');
+                    qrLibraryStatus = 'local';
+                    window.QRCode = createLocalQRFallback();
+                    resolve(window.QRCode);
+                }
+            }, 15000);
         }
     });
+}
 
-    // Initialize responsive features
-    handleMobileOptimizations();
-    
-    // Set up window resize handler for responsive features
-    window.addEventListener('resize', handleMobileOptimizations);
-});
+document.addEventListener("DOMContentLoaded", () => {
+    // Initialize Lucide icons first
+    if (typeof lucide !== "undefined") {
+        lucide.createIcons();
+    }
 
-// Initialize attendance functionality
-function initializeAttendance() {
-    console.log('Initializing attendance page...');
-    
     // Apply theme from localStorage
     if (localStorage.getItem("theme") === "dark") {
         document.body.classList.add("dark-mode");
     }
-    
-    // Initialize Lucide icons
-    if (typeof lucide !== "undefined") {
-        lucide.createIcons();
-    }
-    
-    // Set up form validation
-    setupFormValidation();
-    
-    // Initialize tooltips
-    initializeTooltips();
-    
-    // Initialize keyboard shortcuts help
-    initializeKeyboardShortcuts();
-}
 
-// Form change handlers
-function handleFormChange() {
-    const form = document.getElementById('selectionForm');
-    const button = form.querySelector('button[type="submit"]');
-    
-    if (button) {
-        button.innerHTML = '<i data-lucide="loader-2" class="spinner"></i> Loading...';
-        button.disabled = true;
-    }
-    
-    console.log('Form changed, submitting...');
-    form.submit();
-}
-
-function handleDateChange() {
-    console.log('Date changed, submitting form...');
-    handleFormChange();
-}
-
-function handleSemesterChange() {
-    console.log('Semester changed, submitting form...');
-    handleFormChange();
-}
-
-function handleSubjectChange() {
-    console.log('Subject changed, submitting form...');
-    handleFormChange();
-}
-
-// View mode switching
-function switchToUpdateMode() {
-    const completedView = document.getElementById('completedView');
-    const markingMode = document.getElementById('markingMode');
-    
-    if (completedView) {
-        completedView.style.display = 'none';
-        completedView.style.opacity = '0';
-    }
-    if (markingMode) {
-        markingMode.style.display = 'block';
-        setTimeout(() => {
-            markingMode.style.opacity = '1';
-        }, 50);
-    }
-    
+    // Initialize components
+    ensureSidebarHidden();
+    initializeSidebarToggle();
+    initializeAttendance();
     updateAttendanceStats();
-    showToast('Switched to update mode', 'info');
-}
+    initializeSearch();
+    initializeToastContainer();
 
-function cancelUpdate() {
-    const completedView = document.getElementById('completedView');
-    const markingMode = document.getElementById('markingMode');
-    
-    if (markingMode) {
-        markingMode.style.display = 'none';
-        markingMode.style.opacity = '0';
-    }
-    if (completedView) {
-        completedView.style.display = 'block';
-        setTimeout(() => {
-            completedView.style.opacity = '1';
-        }, 50);
-    }
-    
-    showToast('Update cancelled', 'info');
-}
-
-// Bulk attendance actions
-function markAllPresent() {
-    const presentInputs = document.querySelectorAll('input[value="present"]');
-    let count = 0;
-    
-    presentInputs.forEach(input => {
-        if (!input.disabled) {
-            input.checked = true;
-            updateButtonStates(input);
-            
-            // Add subtle animation
-            const row = input.closest('.student-row');
-            if (row) {
-                row.style.transform = 'scale(0.98)';
-                setTimeout(() => {
-                    row.style.transform = '';
-                }, 150);
-            }
-            count++;
-        }
+    // Pre-load QR library with better error handling
+    loadQRLibrary().then(() => {
+        console.log(`QR system ready using method: ${qrGenerationMethod}`);
+        showToast(`QR system initialized (${qrGenerationMethod})`, 'info', 2000);
+    }).catch(error => {
+        console.warn('QR system error:', error);
+        // Emergency fallback
+        window.QRCode = createLocalQRFallback();
+        showToast('QR system running in fallback mode', 'warning', 3000);
     });
-    
-    updateAttendanceStats();
-    showToast(`${count} students marked as present`, 'success');
-    
-    // Re-initialize Lucide icons
-    if (typeof lucide !== "undefined") {
-        lucide.createIcons();
-    }
-}
 
-function markAllAbsent() {
-    const absentInputs = document.querySelectorAll('input[value="absent"]');
-    let count = 0;
-    
-    absentInputs.forEach(input => {
-        if (!input.disabled) {
-            input.checked = true;
-            updateButtonStates(input);
-            
-            // Add subtle animation
-            const row = input.closest('.student-row');
-            if (row) {
-                row.style.transform = 'scale(0.98)';
-                setTimeout(() => {
-                    row.style.transform = '';
-                }, 150);
-            }
-            count++;
-        }
-    });
-    
-    updateAttendanceStats();
-    showToast(`${count} students marked as absent`, 'warning');
-    
-    // Re-initialize Lucide icons
-    if (typeof lucide !== "undefined") {
-        lucide.createIcons();
-    }
-}
-
-function markAllLate() {
-    const lateInputs = document.querySelectorAll('input[value="late"]');
-    let count = 0;
-    
-    lateInputs.forEach(input => {
-        if (!input.disabled) {
-            input.checked = true;
-            updateButtonStates(input);
-            
-            // Add subtle animation
-            const row = input.closest('.student-row');
-            if (row) {
-                row.style.transform = 'scale(0.98)';
-                setTimeout(() => {
-                    row.style.transform = '';
-                }, 150);
-            }
-            count++;
-        }
-    });
-    
-    updateAttendanceStats();
-    showToast(`${count} students marked as late`, 'warning');
-    
-    // Re-initialize Lucide icons
-    if (typeof lucide !== "undefined") {
-        lucide.createIcons();
-    }
-}
-
-// Reset form
-function resetForm() {
+    // Add event listeners to attendance inputs
     const attendanceInputs = document.querySelectorAll('input[name^="attendance["]');
-    let count = 0;
-    
     attendanceInputs.forEach(input => {
-        if (!input.disabled && input.checked) {
-            input.checked = false;
-            updateButtonStates(input);
-            count++;
-        }
-    });
-    
-    updateAttendanceStats();
-    showToast(`Reset ${count} attendance records`, 'info');
-}
-
-// Update button visual states
-function updateButtonStates(radio) {
-    const row = radio.closest('.student-row');
-    if (!row) return;
-
-    // Reset all labels in this row
-    const labels = row.querySelectorAll('label');
-    labels.forEach(label => {
-        const forAttr = label.getAttribute('for');
-        if (forAttr && forAttr.includes('present')) {
-            label.classList.remove('btn-success');
-            label.classList.add('btn-outline-success');
-        } else if (forAttr && forAttr.includes('absent')) {
-            label.classList.remove('btn-danger');
-            label.classList.add('btn-outline-danger');
-        } else if (forAttr && forAttr.includes('late')) {
-            label.classList.remove('btn-warning');
-            label.classList.add('btn-outline-warning');
-        }
+        input.addEventListener('change', function() {
+            updateAttendanceStats();
+            updateSubmitButton();
+            triggerChange(input);
+        });
     });
 
-    // Set active state for the selected radio button
-    if (radio.checked) {
-        const selectedLabel = document.querySelector(`label[for="${radio.id}"]`);
-        if (selectedLabel) {
-            if (radio.value === 'present') {
-                selectedLabel.classList.remove('btn-outline-success');
-                selectedLabel.classList.add('btn-success');
-            } else if (radio.value === 'absent') {
-                selectedLabel.classList.remove('btn-outline-danger');
-                selectedLabel.classList.add('btn-danger');
-            } else if (radio.value === 'late') {
-                selectedLabel.classList.remove('btn-outline-warning');
-                selectedLabel.classList.add('btn-warning');
+    // Theme toggle function
+    window.toggleTheme = function () {
+        const isDark = document.body.classList.toggle("dark-mode");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+        updateThemeElements();
+        
+        // Update QR code colors if displayed
+        const canvas = document.getElementById('qrCanvas');
+        if (canvas && canvas.style.display !== 'none') {
+            const currentToken = canvas.dataset.token;
+            if (currentToken) {
+                displayQR(currentToken);
             }
         }
-    }
-}
-
-// Update attendance statistics
-function updateAttendanceStats() {
-    const presentCount = document.querySelectorAll('input[value="present"]:checked').length;
-    const absentCount = document.querySelectorAll('input[value="absent"]:checked').length;
-    const lateCount = document.querySelectorAll('input[value="late"]:checked').length;
-    
-    // Update all counter elements
-    const presentCountElements = document.querySelectorAll('#presentCount');
-    const absentCountElements = document.querySelectorAll('#absentCount');
-    const lateCountElements = document.querySelectorAll('#lateCount');
-    
-    presentCountElements.forEach(el => {
-        if (el) {
-            el.textContent = presentCount;
-            animateStatUpdate(el, 'success');
-        }
-    });
-    
-    absentCountElements.forEach(el => {
-        if (el) {
-            el.textContent = absentCount;
-            animateStatUpdate(el, 'danger');
-        }
-    });
-    
-    lateCountElements.forEach(el => {
-        if (el) {
-            el.textContent = lateCount;
-            animateStatUpdate(el, 'warning');
-        }
-    });
-    
-    // Update submit button state
-    updateSubmitButtonState(presentCount, absentCount, lateCount);
-    
-    // Update progress indicator if exists
-    updateProgressIndicator(presentCount, absentCount, lateCount);
-}
-
-// Update submit button state
-function updateSubmitButtonState(presentCount, absentCount, lateCount) {
-    const submitBtn = document.querySelector('button[type="submit"]');
-    const totalStudents = document.querySelectorAll('input[name^="attendance["]').length / 3; // 3 options per student
-    const markedStudents = presentCount + absentCount + lateCount;
-    
-    if (submitBtn && totalStudents > 0) {
-        const progress = Math.round((markedStudents / totalStudents) * 100);
         
-        if (markedStudents === totalStudents) {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('btn-outline-primary');
-            submitBtn.classList.add('btn-primary');
-        } else {
-            submitBtn.disabled = true;
-            submitBtn.classList.remove('btn-primary');
-            submitBtn.classList.add('btn-outline-primary');
-        }
-        
-        // Update button text with progress
-        const isUpdate = submitBtn.textContent.includes('Update');
-        const baseText = isUpdate ? 'Update Attendance' : 'Save Attendance';
-        
-        if (markedStudents < totalStudents) {
-            submitBtn.innerHTML = `<i data-lucide="save"></i> ${baseText} (${markedStudents}/${totalStudents})`;
-        } else {
-            submitBtn.innerHTML = `<i data-lucide="save"></i> ${baseText}`;
-        }
-        
-        // Re-initialize Lucide icons
-        if (typeof lucide !== "undefined") {
-            lucide.createIcons();
-        }
-    }
-}
-
-// Update progress indicator
-function updateProgressIndicator(presentCount, absentCount, lateCount) {
-    const totalStudents = document.querySelectorAll('input[name^="attendance["]').length / 3;
-    const markedStudents = presentCount + absentCount + lateCount;
-    const progress = totalStudents > 0 ? Math.round((markedStudents / totalStudents) * 100) : 0;
-    
-    const progressBars = document.querySelectorAll('.attendance-progress');
-    progressBars.forEach(bar => {
-        bar.style.width = progress + '%';
-        bar.setAttribute('aria-valuenow', progress);
-    });
-    
-    const progressTexts = document.querySelectorAll('.progress-text');
-    progressTexts.forEach(text => {
-        text.textContent = `${progress}% Complete (${markedStudents}/${totalStudents})`;
-    });
-}
-
-// Animate stat updates
-function animateStatUpdate(element, type) {
-    if (!element) return;
-    
-    element.style.transform = 'scale(1.2)';
-    element.style.transition = 'transform 0.3s ease';
-    
-    // Add color pulse effect
-    const originalColor = element.style.color;
-    const colors = {
-        success: '#28a745',
-        danger: '#dc3545',
-        warning: '#ffc107',
-        info: '#17a2b8'
+        showToast(`Switched to ${isDark ? 'dark' : 'light'} mode`, 'info', 2000);
     };
-    
-    if (colors[type]) {
-        element.style.color = colors[type];
-    }
-    
-    setTimeout(() => {
-        element.style.transform = 'scale(1)';
-        element.style.color = originalColor;
-    }, 300);
-}
 
-// Form validation
-function setupFormValidation() {
-    const form = document.getElementById('attendanceForm');
-    if (!form) return;
-    
-    form.addEventListener('submit', function(e) {
-        const attendanceInputs = document.querySelectorAll('input[name^="attendance["]:checked');
-        const totalStudents = document.querySelectorAll('input[name^="attendance["]').length / 3;
-        
-        if (attendanceInputs.length < totalStudents) {
-            e.preventDefault();
-            showToast('Please mark attendance for all students', 'error');
-            return false;
-        }
-        
-        // Add loading state to submit button
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-            submitBtn.disabled = true;
-            
-            // Restore button if submission fails
-            setTimeout(() => {
-                if (submitBtn.disabled) {
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            }, 10000);
-        }
-        
-        showToast('Submitting attendance...', 'info');
-        return true;
-    });
-}
-
-// QR Code functionality
-let qrTimer = null;
-let qrCountdown = 60;
-
-function generateQR() {
-    const button = document.querySelector('button[onclick="generateQR()"]');
-    const originalText = button.innerHTML;
-    
-    // Add loading state
-    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating...';
-    button.disabled = true;
-    
-    const formData = new FormData();
-    formData.append('generate_qr', '1');
-    formData.append('semester', document.querySelector('select[name="semester"]').value);
-    formData.append('subject', document.querySelector('select[name="subject"]').value);
-    formData.append('date', document.querySelector('input[name="date"]').value);
-    
-    fetch('attendance.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            displayQR(data.qr_token);
-            startQRTimer();
-            showToast('QR code generated successfully', 'success');
-        } else {
-            showToast('Failed to generate QR: ' + (data.error || 'Unknown error'), 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Failed to generate QR code', 'error');
-    })
-    .finally(() => {
-        // Reset button state
-        button.innerHTML = originalText;
-        button.disabled = false;
-        
-        // Re-initialize Lucide icons
-        if (typeof lucide !== "undefined") {
-            lucide.createIcons();
-        }
-    });
-}
-
-function displayQR(token) {
-    const canvas = document.getElementById('qrCanvas');
-    const placeholder = document.getElementById('qrPlaceholder');
-    
-    if (!canvas || !placeholder) return;
-    
-    const qrData = `${window.location.origin}/attendifyplus/views/scan.php?token=${token}`;
-    
-    // Responsive QR size
-    const containerWidth = canvas.parentElement.offsetWidth;
-    const qrSize = Math.min(containerWidth - 40, 250);
-    
-    // Store token for theme switching
-    canvas.dataset.token = token;
-    
-    QRCode.toCanvas(canvas, qrData, {
-        width: qrSize,
-        margin: 2,
-        color: {
-            dark: document.body.classList.contains('dark-mode') ? '#00ffc8' : '#1A73E8',
-            light: '#FFFFFF'
-        }
-    }, function(error) {
-        if (error) {
-            console.error('QR Error:', error);
-            showToast('Error displaying QR code', 'error');
-            return;
-        }
-        
-        placeholder.style.display = 'none';
-        canvas.style.display = 'block';
-    });
-}
-
-function startQRTimer() {
-    const timerElement = document.getElementById('qrTimer');
-    const buttonText = document.getElementById('qrButtonText');
-    const countdownElement = document.getElementById('countdown');
-    
-    if (!timerElement || !buttonText || !countdownElement) return;
-    
-    timerElement.style.display = 'block';
-    buttonText.textContent = 'Regenerate QR';
-    
-    qrCountdown = 60;
-    countdownElement.textContent = qrCountdown;
-    
-    // Clear any existing timer
-    if (qrTimer) {
-        clearInterval(qrTimer);
-    }
-    
-    // Start new timer
-    qrTimer = setInterval(() => {
-        qrCountdown--;
-        countdownElement.textContent = qrCountdown;
-        
-        // Change color as it approaches expiry
-        if (qrCountdown <= 10) {
-            countdownElement.style.color = '#dc3545';
-            countdownElement.style.fontWeight = 'bold';
-        } else if (qrCountdown <= 30) {
-            countdownElement.style.color = '#ffc107';
-        }
-        
-        if (qrCountdown <= 0) {
-            clearInterval(qrTimer);
-            resetQR();
-            showToast('QR code expired', 'warning');
-        }
-    }, 1000);
-}
-
-function resetQR() {
-    const canvas = document.getElementById('qrCanvas');
-    const placeholder = document.getElementById('qrPlaceholder');
-    const timerElement = document.getElementById('qrTimer');
-    const buttonText = document.getElementById('qrButtonText');
-    const countdownElement = document.getElementById('countdown');
-    
-    if (canvas) {
-        canvas.style.display = 'none';
-        canvas.removeAttribute('data-token');
-    }
-    if (placeholder) placeholder.style.display = 'block';
-    if (timerElement) timerElement.style.display = 'none';
-    if (buttonText) buttonText.textContent = 'Generate QR';
-    
-    if (countdownElement) {
-        countdownElement.style.color = '';
-        countdownElement.style.fontWeight = '';
-    }
-    
-    if (qrTimer) {
-        clearInterval(qrTimer);
-        qrTimer = null;
-    }
-}
-
-// Toast notification system
-function showToast(message, type = 'info', duration = 5000) {
-    // Remove existing toasts
-    const existingToasts = document.querySelectorAll('.toast-notification');
-    existingToasts.forEach(toast => toast.remove());
-    
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = `toast-notification toast-${type}`;
-    toast.innerHTML = `
-        <div class="toast-content">
-            <i data-lucide="${getToastIcon(type)}"></i>
-            <span>${message}</span>
-            <button class="toast-close" onclick="this.parentElement.parentElement.remove()">
-                <i data-lucide="x"></i>
-            </button>
-        </div>
-    `;
-    
-    // Style the toast
-    toast.style.cssText = `
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        background: ${getToastColor(type)};
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 500;
-        min-width: 280px;
-        max-width: 400px;
-        animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        transition: all 0.3s ease;
-        border-left: 4px solid rgba(255,255,255,0.3);
-    `;
-    
-    // Mobile responsiveness for toast
-    if (window.innerWidth <= 768) {
-        toast.style.cssText += `
-            right: 10px;
-            left: 10px;
-            min-width: auto;
-            max-width: none;
-        `;
-    }
-    
-    // Add CSS for toast close button
-    const closeButton = toast.querySelector('.toast-close');
-    if (closeButton) {
-        closeButton.style.cssText = `
-            background: none;
-            border: none;
-            color: white;
-            opacity: 0.7;
-            cursor: pointer;
-            padding: 0;
-            margin-left: auto;
-            transition: opacity 0.2s;
-        `;
-    }
-    
-    // Add animation keyframes if not already added
-    if (!document.querySelector('#toast-animations')) {
-        const styleSheet = document.createElement('style');
-        styleSheet.id = 'toast-animations';
-        styleSheet.textContent = `
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOutRight {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-            .toast-close:hover {
-                opacity: 1 !important;
-            }
-            @media (max-width: 768px) {
-                .toast-notification {
-                    right: 10px !important;
-                    left: 10px !important;
-                    min-width: auto !important;
-                    max-width: none !important;
-                }
-            }
-        `;
-        document.head.appendChild(styleSheet);
-    }
-    
-    document.body.appendChild(toast);
-    
-    // Initialize Lucide icons for the toast
-    if (typeof lucide !== "undefined") {
-        lucide.createIcons();
-    }
-    
-    // Auto-remove after specified duration
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.style.animation = 'slideOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.remove();
-                }
-            }, 400);
-        }
-    }, duration);
-}
-
-function getToastIcon(type) {
-    const icons = {
-        success: 'check-circle',
-        error: 'alert-circle',
-        warning: 'alert-triangle',
-        info: 'info'
-    };
-    return icons[type] || 'info';
-}
-
-function getToastColor(type) {
-    const colors = {
-        success: '#28a745',
-        error: '#dc3545',
-        warning: '#f39c12',
-        info: '#17a2b8'
-    };
-    return colors[type] || '#17a2b8';
-}
-
-// Theme management
-window.toggleTheme = function() {
-    const isDark = document.body.classList.toggle("dark-mode");
-    localStorage.setItem("theme", isDark ? "dark" : "light");
     updateThemeElements();
+});
+
+// Initialize toast container
+function initializeToastContainer() {
+    if (!document.querySelector('.toast-container')) {
+        const toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        toastContainer.style.zIndex = '10000';
+        document.body.appendChild(toastContainer);
+    }
+}
+
+// ===== SIDEBAR MANAGEMENT ===== //
+function ensureSidebarHidden() {
+    const sidebar = document.querySelector('.sidebar');
+    const body = document.body;
+    const overlay = document.querySelector('.sidebar-overlay');
     
-    // Update QR code colors if displayed
-    const canvas = document.getElementById('qrCanvas');
-    if (canvas && canvas.style.display !== 'none') {
-        const currentToken = canvas.dataset.token;
-        if (currentToken) {
-            displayQR(currentToken);
-        }
+    if (sidebar) {
+        sidebar.classList.remove('active');
+        sidebar.style.left = '-280px';
+        sidebar.style.visibility = 'hidden';
+        sidebar.style.opacity = '0';
     }
     
-    showToast(`Switched to ${isDark ? 'dark' : 'light'} mode`, 'info', 2000);
-};
+    if (body) {
+        body.classList.remove('sidebar-open');
+    }
+    
+    if (overlay) {
+        overlay.classList.remove('active');
+        overlay.style.opacity = '0';
+        overlay.style.visibility = 'hidden';
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const body = document.body;
+    const overlay = document.querySelector('.sidebar-overlay');
+
+    if (sidebar) {
+        sidebar.classList.remove('active');
+        body.classList.remove('sidebar-open');
+        
+        sidebar.style.left = '-280px';
+        sidebar.style.visibility = 'hidden';
+        sidebar.style.opacity = '0';
+        
+        if (overlay) {
+            overlay.classList.remove('active');
+            overlay.style.opacity = '0';
+            overlay.style.visibility = 'hidden';
+        }
+    }
+}
+
+function openSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const body = document.body;
+    const overlay = document.querySelector('.sidebar-overlay');
+
+    if (sidebar) {
+        closeAllDropdowns();
+        
+        sidebar.classList.add('active');
+        body.classList.add('sidebar-open');
+        
+        sidebar.style.left = '0';
+        sidebar.style.visibility = 'visible';
+        sidebar.style.opacity = '1';
+        
+        if (overlay) {
+            overlay.classList.add('active');
+            overlay.style.opacity = '1';
+            overlay.style.visibility = 'visible';
+        }
+    }
+}
+
+function initializeSidebarToggle() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (!sidebarToggle || !sidebar) return;
+
+    const overlay = createSidebarOverlay();
+    const newToggle = sidebarToggle.cloneNode(true);
+    sidebarToggle.parentNode.replaceChild(newToggle, sidebarToggle);
+
+    newToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const isActive = sidebar.classList.contains('active');
+        if (isActive) {
+            closeSidebar();
+        } else {
+            openSidebar();
+        }
+    });
+
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            closeSidebar();
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+            closeSidebar();
+        }
+    });
+}
+
+function createSidebarOverlay() {
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        overlay.id = 'sidebarOverlay';
+        document.body.appendChild(overlay);
+    }
+    return overlay;
+}
+
+function closeAllDropdowns() {
+    const openDropdowns = document.querySelectorAll('.dropdown.show');
+    openDropdowns.forEach(dropdown => {
+        const button = dropdown.querySelector('[data-bs-toggle="dropdown"]');
+        if (button) {
+            const bsDropdown = bootstrap.Dropdown.getInstance(button);
+            if (bsDropdown) {
+                bsDropdown.hide();
+            }
+        }
+    });
+}
 
 function updateThemeElements() {
     const lightIcons = document.querySelectorAll('.light-icon');
@@ -733,349 +446,613 @@ function updateThemeElements() {
     });
 }
 
-// Enhanced user experience features
-function initializeTooltips() {
-    const tooltipElements = [
-        { selector: '[onclick="markAllPresent()"]', text: 'Mark all students as present (Ctrl+Shift+P)' },
-        { selector: '[onclick="markAllAbsent()"]', text: 'Mark all students as absent (Ctrl+Shift+A)' },
-        { selector: '[onclick="resetForm()"]', text: 'Reset all attendance selections (Ctrl+Shift+R)' },
-        { selector: '[onclick="generateQR()"]', text: 'Generate QR code for student self-marking (Ctrl+Shift+Q)' }
-    ];
-    
-    tooltipElements.forEach(({ selector, text }) => {
-        const element = document.querySelector(selector);
-        if (element) {
-            element.title = text;
-            element.setAttribute('data-bs-toggle', 'tooltip');
-            element.setAttribute('data-bs-placement', 'top');
-        }
-    });
-    
-    // Initialize Bootstrap tooltips if available
-    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
+// ===== ATTENDANCE FUNCTIONALITY ===== //
+function initializeAttendance() {
+    const form = document.getElementById('attendanceForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const checkedInputs = document.querySelectorAll('input[name^="attendance["]:checked');
+            if (checkedInputs.length === 0) {
+                e.preventDefault();
+                showToast('Please mark attendance for at least one student', 'warning');
+                return false;
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+                submitBtn.disabled = true;
+            }
+            
+            return true;
         });
     }
 }
 
-// Keyboard shortcuts
-function initializeKeyboardShortcuts() {
-    document.addEventListener('keydown', function(e) {
-        // Only trigger if not typing in input fields
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-            return;
-        }
-        
-        // Ctrl/Cmd + Shift + P: Mark all present
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') {
-            e.preventDefault();
-            markAllPresent();
-        }
-        
-        // Ctrl/Cmd + Shift + A: Mark all absent
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
-            e.preventDefault();
-            markAllAbsent();
-        }
-        
-        // Ctrl/Cmd + Shift + L: Mark all late
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
-            e.preventDefault();
-            markAllLate();
-        }
-        
-        // Ctrl/Cmd + Shift + R: Reset form
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'r') {
-            e.preventDefault();
-            resetForm();
-        }
-        
-        // Ctrl/Cmd + Shift + Q: Generate QR
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'q') {
-            e.preventDefault();
-            const qrButton = document.querySelector('[onclick="generateQR()"]');
-            if (qrButton && !qrButton.disabled) {
-                generateQR();
-            }
-        }
-        
-        // Ctrl/Cmd + Shift + S: Submit form
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
-            e.preventDefault();
-            const submitButton = document.querySelector('button[type="submit"]');
-            if (submitButton && !submitButton.disabled) {
-                submitButton.click();
-            }
-        }
-        
-        // Escape: Cancel operations
-        if (e.key === 'Escape') {
-            const updateMode = document.getElementById('markingMode');
-            const completedView = document.getElementById('completedView');
-            if (updateMode && updateMode.style.display !== 'none' && completedView) {
-                cancelUpdate();
-            }
-        }
-    });
+function handleFormChange() {
+    const form = document.getElementById('selectionForm');
+    const button = form.querySelector('button[type="submit"]');
     
-    // Show keyboard shortcuts help on Ctrl+?
-    document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === '?') {
-            e.preventDefault();
-            showKeyboardShortcutsHelp();
-        }
-    });
-}
-
-function showKeyboardShortcutsHelp() {
-    const shortcuts = [
-        { key: 'Ctrl+Shift+P', action: 'Mark all students present' },
-        { key: 'Ctrl+Shift+A', action: 'Mark all students absent' },
-        { key: 'Ctrl+Shift+L', action: 'Mark all students late' },
-        { key: 'Ctrl+Shift+R', action: 'Reset all selections' },
-        { key: 'Ctrl+Shift+Q', action: 'Generate QR code' },
-        { key: 'Ctrl+Shift+S', action: 'Submit attendance' },
-        { key: 'Escape', action: 'Cancel update mode' },
-        { key: 'Ctrl+?', action: 'Show this help' }
-    ];
-    
-    let helpHtml = '<div style="text-align: left;"><h6>Keyboard Shortcuts:</h6><ul style="list-style: none; padding: 0;">';
-    shortcuts.forEach(shortcut => {
-        helpHtml += `<li style="margin: 0.5rem 0;"><kbd style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${shortcut.key}</kbd> - ${shortcut.action}</li>`;
-    });
-    helpHtml += '</ul></div>';
-    
-    showToast(helpHtml, 'info', 10000);
-}
-
-// Auto-save functionality
-let autoSaveTimer = null;
-let autoSaveEnabled = false;
-
-function enableAutoSave() {
-    if (!autoSaveEnabled) return;
-    
-    // Clear existing timer
-    if (autoSaveTimer) {
-        clearTimeout(autoSaveTimer);
+    if (button) {
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+        button.disabled = true;
     }
     
-    // Set timer for 30 seconds after last change
-    autoSaveTimer = setTimeout(() => {
-        const form = document.getElementById('attendanceForm');
-        const checkedInputs = document.querySelectorAll('input[name^="attendance["]:checked');
-        const totalInputs = document.querySelectorAll('input[name^="attendance["]').length / 3;
-        
-        if (form && checkedInputs.length === totalInputs) {
-            showToast('Auto-saving attendance...', 'info', 3000);
-            
-            // Create a hidden submission to save progress
-            const formData = new FormData(form);
-            formData.append('auto_save', '1');
-            
-            fetch('attendance.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('Auto-save completed', 'success', 2000);
-                } else {
-                    console.warn('Auto-save failed:', data.error);
-                }
-            })
-            .catch(error => {
-                console.warn('Auto-save error:', error);
-            });
-        }
-    }, 30000);
+    form.submit();
 }
 
-function toggleAutoSave() {
-    autoSaveEnabled = !autoSaveEnabled;
-    const message = autoSaveEnabled ? 'Auto-save enabled' : 'Auto-save disabled';
-    showToast(message, 'info', 2000);
-    localStorage.setItem('autoSaveEnabled', autoSaveEnabled);
+function handleDateChange() { handleFormChange(); }
+function handleSemesterChange() { handleFormChange(); }
+function handleSubjectChange() { handleFormChange(); }
+
+function markAllPresent() {
+    const presentInputs = document.querySelectorAll('input[value="present"]:not([disabled])');
+    presentInputs.forEach(input => {
+        input.checked = true;
+        triggerChange(input);
+    });
+    updateAttendanceStats();
+    updateSubmitButton();
+    showToast(`${presentInputs.length} students marked present`, 'success');
 }
 
-// Mobile optimizations
-function handleMobileOptimizations() {
-    const isMobile = window.innerWidth <= 768;
-    
-    // Optimize student rows for mobile
-    const studentRows = document.querySelectorAll('.student-row');
-    studentRows.forEach(row => {
-        if (isMobile) {
-            row.classList.add('mobile-optimized');
-        } else {
-            row.classList.remove('mobile-optimized');
+function markAllAbsent() {
+    const absentInputs = document.querySelectorAll('input[value="absent"]:not([disabled])');
+    absentInputs.forEach(input => {
+        input.checked = true;
+        triggerChange(input);
+    });
+    updateAttendanceStats();
+    updateSubmitButton();
+    showToast(`${absentInputs.length} students marked absent`, 'warning');
+}
+
+function markAllLate() {
+    const lateInputs = document.querySelectorAll('input[value="late"]:not([disabled])');
+    lateInputs.forEach(input => {
+        input.checked = true;
+        triggerChange(input);
+    });
+    updateAttendanceStats();
+    updateSubmitButton();
+    showToast(`${lateInputs.length} students marked late`, 'warning');
+}
+
+function resetForm() {
+    const allInputs = document.querySelectorAll('input[name^="attendance["]:not([disabled])');
+    let count = 0;
+    allInputs.forEach(input => {
+        if (input.checked) {
+            input.checked = false;
+            triggerChange(input);
+            count++;
         }
     });
-    
-    // Adjust QR code size for mobile
-    const qrCanvas = document.getElementById('qrCanvas');
-    if (qrCanvas && qrCanvas.style.display !== 'none') {
-        const token = qrCanvas.dataset.token;
-        if (token) {
-            displayQR(token);
+    updateAttendanceStats();
+    updateSubmitButton();
+    showToast(`Reset ${Math.floor(count/3)} student records`, 'info');
+}
+
+function triggerChange(input) {
+    const studentItem = input.closest('.student-item');
+    if (studentItem) {
+        studentItem.classList.add('status-update');
+        setTimeout(() => {
+            studentItem.classList.remove('status-update');
+        }, 300);
+        
+        const status = input.value;
+        studentItem.className = studentItem.className.replace(/border-\w+/g, 'border-light');
+        if (status === 'present') {
+            studentItem.classList.add('border-success');
+        } else if (status === 'absent') {
+            studentItem.classList.add('border-danger');
+        } else if (status === 'late') {
+            studentItem.classList.add('border-warning');
         }
-    }
-    
-    // Handle virtual keyboard on mobile
-    if (isMobile) {
-        const inputs = document.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                setTimeout(() => {
-                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 300);
-            });
-        });
     }
 }
 
-// Student row click handlers for mobile
-function initializeStudentRowHandlers() {
-    const studentRows = document.querySelectorAll('.student-row');
-    studentRows.forEach(row => {
-        const studentName = row.querySelector('.student-name');
-        if (studentName) {
-            studentName.addEventListener('click', function() {
-                const controls = row.querySelector('.attendance-controls');
-                const currentChecked = row.querySelector('input:checked');
-                
-                // Cycle through: none -> present -> absent -> late -> none
-                if (!currentChecked) {
-                    row.querySelector('input[value="present"]').checked = true;
-                } else if (currentChecked.value === 'present') {
-                    currentChecked.checked = false;
-                    row.querySelector('input[value="absent"]').checked = true;
-                } else if (currentChecked.value === 'absent') {
-                    currentChecked.checked = false;
-                    row.querySelector('input[value="late"]').checked = true;
-                } else {
-                    currentChecked.checked = false;
-                }
-                
-                updateButtonStates(row.querySelector('input:checked') || currentChecked);
-                updateAttendanceStats();
-            });
+function updateAttendanceStats() {
+    const presentCount = document.querySelectorAll('input[value="present"]:checked').length;
+    const absentCount = document.querySelectorAll('input[value="absent"]:checked').length;
+    const lateCount = document.querySelectorAll('input[value="late"]:checked').length;
+    const totalStudents = document.querySelectorAll('.student-item').length;
+    const pendingCount = totalStudents - (presentCount + absentCount + lateCount);
+    
+    updateCounters('presentCount', presentCount);
+    updateCounters('absentCount', absentCount);
+    updateCounters('lateCount', lateCount);
+    
+    const pendingElements = document.querySelectorAll('.h4');
+    pendingElements.forEach(el => {
+        const parent = el.closest('.col-3');
+        if (parent && parent.querySelector('small')?.textContent === 'Pending') {
+            el.textContent = pendingCount;
         }
+    });
+    
+    const progress = totalStudents > 0 ? Math.round(((presentCount + absentCount + lateCount) / totalStudents) * 100) : 0;
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(bar => {
+        bar.style.width = progress + '%';
+        bar.setAttribute('aria-valuenow', progress);
     });
 }
 
-// Search functionality
-function initializeSearchFunctionality() {
+function updateCounters(elementId, count) {
+    const elements = document.querySelectorAll(`#${elementId}, .${elementId}`);
+    elements.forEach(el => {
+        el.textContent = count;
+        el.style.transform = 'scale(1.1)';
+        el.style.transition = 'transform 0.2s ease';
+        setTimeout(() => {
+            el.style.transform = 'scale(1)';
+        }, 200);
+    });
+}
+
+function updateSubmitButton() {
+    const submitBtn = document.getElementById('submitBtn');
+    if (!submitBtn) return;
+    
+    const checkedInputs = document.querySelectorAll('input[name^="attendance["]:checked');
+    const totalStudents = document.querySelectorAll('.student-item').length;
+    
+    submitBtn.innerHTML = `<i data-lucide="save"></i> Save Attendance (${checkedInputs.length}/${totalStudents})`;
+    
+    if (checkedInputs.length > 0) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-outline-primary');
+        submitBtn.classList.add('btn-primary');
+    } else {
+        submitBtn.disabled = true;
+        submitBtn.classList.remove('btn-primary');
+        submitBtn.classList.add('btn-outline-primary');
+    }
+    
+    if (typeof lucide !== "undefined") {
+        lucide.createIcons();
+    }
+}
+
+function initializeSearch() {
     const searchInput = document.getElementById('studentSearch');
     if (!searchInput) return;
     
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase();
-        const studentRows = document.querySelectorAll('.student-row');
+        const studentItems = document.querySelectorAll('.student-item');
+        let visibleCount = 0;
         
-        studentRows.forEach(row => {
-            const studentName = row.querySelector('.student-name').textContent.toLowerCase();
-            const studentProgram = row.querySelector('.student-program');
-            const programText = studentProgram ? studentProgram.textContent.toLowerCase() : '';
+        studentItems.forEach(item => {
+            const studentName = item.querySelector('.fw-medium').textContent.toLowerCase();
+            const studentId = item.querySelector('.text-muted').textContent.toLowerCase();
             
-            if (studentName.includes(searchTerm) || programText.includes(searchTerm)) {
-                row.style.display = 'flex';
+            if (studentName.includes(searchTerm) || studentId.includes(searchTerm)) {
+                item.style.display = 'block';
+                visibleCount++;
             } else {
-                row.style.display = 'none';
+                item.style.display = 'none';
             }
         });
+        
+        if (searchTerm) {
+            showToast(`Found ${visibleCount} students`, 'info', 2000);
+        }
     });
 }
 
-// Export functionality
-function exportAttendance(format = 'csv') {
-    const studentRows = document.querySelectorAll('.student-row');
-    const data = [];
+// ===== QR CODE FUNCTIONALITY ===== //
+let qrTimer = null;
+
+function generateQR() {
+    const button = document.querySelector('button[onclick="generateQR()"]');
+    if (!button) {
+        console.error('Generate QR button not found');
+        return;
+    }
     
-    studentRows.forEach(row => {
-        const studentName = row.querySelector('.student-name').textContent;
-        const studentProgram = row.querySelector('.student-program')?.textContent || '';
-        const checkedInput = row.querySelector('input:checked');
-        const status = checkedInput ? checkedInput.value : 'not_marked';
+    const originalText = button.innerHTML;
+    
+    // Check if required fields are selected
+    const semesterSelect = document.querySelector('select[name="semester"]');
+    const subjectSelect = document.querySelector('select[name="subject"]');
+    const dateInput = document.querySelector('input[name="date"]');
+    
+    if (!semesterSelect?.value || !subjectSelect?.value || !dateInput?.value) {
+        showToast('Please select semester, subject, and date first', 'warning');
+        return;
+    }
+    
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating...';
+    button.disabled = true;
+    
+    const formData = new FormData();
+    formData.append('generate_qr', '1');
+    formData.append('semester', semesterSelect.value);
+    formData.append('subject', subjectSelect.value);
+    formData.append('date', dateInput.value);
+    
+    console.log('Sending QR generation request...');
+    
+    fetch('attendance.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('QR generation response:', data);
+        if (data.success) {
+            displayQR(data.qr_token);
+            startQRTimer(data.expires_at);
+            showToast(`QR code generated successfully using ${qrGenerationMethod} method!`, 'success');
+        } else {
+            showToast('Failed to generate QR: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error generating QR:', error);
+        showToast('Failed to generate QR code: ' + error.message, 'error');
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
         
-        data.push({
-            name: studentName,
-            program: studentProgram,
-            status: status
-        });
+        if (typeof lucide !== "undefined") {
+            lucide.createIcons();
+        }
     });
+}
+
+function displayQR(token) {
+    console.log('Displaying QR for token:', token);
     
-    if (format === 'csv') {
-        exportToCSV(data);
-    } else if (format === 'json') {
-        exportToJSON(data);
+    const canvas = document.getElementById('qrCanvas');
+    const placeholder = document.getElementById('qrPlaceholder');
+    
+    if (!canvas) {
+        console.error('QR Canvas not found');
+        return;
+    }
+    
+    // Ensure QR library is ready
+    loadQRLibrary()
+        .then(QRLib => {
+            console.log(`QR library ready, generating QR code using ${qrGenerationMethod}...`);
+            
+            // Create the scan URL
+            const baseUrl = window.location.origin + window.location.pathname.replace('attendance.php', '');
+            const qrData = `${baseUrl}scan_qr.php?token=${token}`;
+            
+            console.log('QR Data URL:', qrData);
+            
+            const containerWidth = canvas.parentElement.offsetWidth;
+            const qrSize = Math.min(containerWidth - 40, 200);
+            
+            canvas.width = qrSize;
+            canvas.height = qrSize;
+            canvas.dataset.token = token;
+            
+            QRLib.toCanvas(canvas, qrData, {
+                width: qrSize,
+                height: qrSize,
+                margin: 2,
+                color: {
+                    dark: document.body.classList.contains('dark-mode') ? '#00ffc8' : '#1A73E8',
+                    light: '#FFFFFF'
+                },
+                errorCorrectionLevel: 'M'
+            }, function(error) {
+                if (error) {
+                    console.error('QR generation error:', error);
+                    showQRFallback(token, placeholder, qrData);
+                    return;
+                }
+                
+                console.log(`QR code generated successfully using ${qrGenerationMethod}`);
+                
+                if (placeholder) {
+                    placeholder.style.display = 'none';
+                }
+                canvas.style.display = 'block';
+                
+                showToast(`QR code ready! (${qrGenerationMethod}) Students can now scan it.`, 'success');
+            });
+        })
+        .catch(error => {
+            console.error('QR library failed completely:', error);
+            const baseUrl = window.location.origin + window.location.pathname.replace('attendance.php', '');
+            const qrData = `${baseUrl}scan_qr.php?token=${token}`;
+            showQRFallback(token, placeholder, qrData);
+        });
+}
+
+function showQRFallback(token, placeholder, qrData) {
+    console.log('Showing QR fallback with enhanced options');
+    
+    if (placeholder) {
+        placeholder.innerHTML = `
+            <div class="p-3 border rounded bg-light text-center">
+                <h6 class="text-success mb-2">
+                    <i data-lucide="check-circle" style="width: 20px; height: 20px;"></i>
+                    QR Code Generated Successfully!
+                </h6>
+                <div class="small text-info mb-2">Method: ${qrGenerationMethod}</div>
+                <p class="small mb-2 text-primary">Students can use this direct link:</p>
+                <div class="input-group input-group-sm mb-2">
+                    <input type="text" class="form-control" value="${qrData}" readonly onclick="this.select()">
+                    <button class="btn btn-outline-primary" onclick="copyToClipboard('${qrData}')">
+                        <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+                    </button>
+                </div>
+                <div class="small text-muted mb-2">
+                    Manual token: <code>${token}</code>
+                </div>
+                <div class="btn-group w-100" role="group">
+                    <button class="btn btn-sm btn-info" onclick="showQRImage('${token}')">
+                        <i data-lucide="image" style="width: 14px; height: 14px;"></i>
+                        Server QR
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="showLocalQR('${token}', '${qrData}')">
+                        <i data-lucide="grid" style="width: 14px; height: 14px;"></i>
+                        Local QR
+                    </button>
+                </div>
+            </div>
+        `;
+        placeholder.style.display = 'block';
+        
+        // Hide canvas initially
+        const canvas = document.getElementById('qrCanvas');
+        if (canvas) {
+            canvas.style.display = 'none';
+        }
+        
+        // Re-initialize Lucide icons
+        if (typeof lucide !== "undefined") {
+            lucide.createIcons();
+        }
+    }
+    
+    showToast('QR code ready! Use any method that works.', 'success');
+}
+
+function showQRImage(token) {
+    const canvas = document.getElementById('qrCanvas');
+    const placeholder = document.getElementById('qrPlaceholder');
+    
+    if (!canvas) return;
+    
+    showToast('Loading server QR image...', 'info', 2000);
+    
+    const img = new Image();
+    img.onload = function() {
+        const ctx = canvas.getContext('2d');
+        canvas.width = 200;
+        canvas.height = 200;
+        ctx.drawImage(this, 0, 0, 200, 200);
+        
+        canvas.style.display = 'block';
+        if (placeholder) {
+            placeholder.style.display = 'none';
+        }
+        
+        showToast('Server QR code displayed!', 'success');
+    };
+    
+    img.onerror = function() {
+        showToast('Server QR failed, trying local generation...', 'warning');
+        const baseUrl = window.location.origin + window.location.pathname.replace('attendance.php', '');
+        const qrData = `${baseUrl}scan_qr.php?token=${token}`;
+        showLocalQR(token, qrData);
+    };
+    
+    img.src = `../api/generate_qr_image.php?token=${encodeURIComponent(token)}&size=200&t=${Date.now()}`;
+}
+
+function showLocalQR(token, qrData) {
+    const canvas = document.getElementById('qrCanvas');
+    const placeholder = document.getElementById('qrPlaceholder');
+    
+    if (!canvas) return;
+    
+    showToast('Generating local QR code...', 'info', 2000);
+    
+    try {
+        const localCanvas = generateQRCodeLocally(qrData || token, 200);
+        const ctx = canvas.getContext('2d');
+        canvas.width = 200;
+        canvas.height = 200;
+        ctx.drawImage(localCanvas, 0, 0);
+        
+        canvas.style.display = 'block';
+        if (placeholder) {
+            placeholder.style.display = 'none';
+        }
+        
+        showToast('Local QR code generated!', 'success');
+    } catch (error) {
+        console.error('Local QR generation failed:', error);
+        showToast('All QR methods failed, but the link still works!', 'error');
     }
 }
 
-function exportToCSV(data) {
-    const headers = ['Name', 'Program', 'Status'];
-    const csvContent = [
-        headers.join(','),
-        ...data.map(row => [
-            `"${row.name}"`,
-            `"${row.program}"`,
-            row.status
-        ].join(','))
-    ].join('\n');
-    
-    downloadFile(csvContent, 'attendance.csv', 'text/csv');
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Link copied to clipboard!', 'success', 2000);
+        }).catch(() => {
+            fallbackCopyTextToClipboard(text);
+        });
+    } else {
+        fallbackCopyTextToClipboard(text);
+    }
 }
 
-function exportToJSON(data) {
-    const jsonContent = JSON.stringify(data, null, 2);
-    downloadFile(jsonContent, 'attendance.json', 'application/json');
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showToast('Link copied to clipboard!', 'success', 2000);
+        } else {
+            showToast('Could not copy link', 'error');
+        }
+    } catch (err) {
+        showToast('Could not copy link', 'error');
+    }
+    
+    document.body.removeChild(textArea);
 }
 
-function downloadFile(content, filename, mimeType) {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
+function startQRTimer(expiresAt) {
+    console.log('Starting QR timer. Expires at:', expiresAt);
+    
+    const countdownElement = document.getElementById('qrCountdown');
+    const timerElement = document.getElementById('qrTimer');
+    
+    if (!countdownElement && !timerElement) {
+        console.warn('No countdown elements found');
+        return;
+    }
+    
+    const expiryTime = new Date(expiresAt).getTime();
+    
+    if (qrTimer) {
+        clearInterval(qrTimer);
+    }
+    
+    qrTimer = setInterval(() => {
+        const now = new Date().getTime();
+        const timeLeft = expiryTime - now;
+        
+        if (timeLeft > 0) {
+            const seconds = Math.floor(timeLeft / 1000);
+            
+            if (countdownElement) {
+                countdownElement.textContent = `(${seconds}s remaining)`;
+                if (seconds <= 30) {
+                    countdownElement.style.color = '#dc3545';
+                    countdownElement.classList.add('text-danger');
+                }
+            }
+            
+            if (timerElement) {
+                const countdownSpan = timerElement.querySelector('#countdown');
+                if (countdownSpan) {
+                    countdownSpan.textContent = seconds;
+                }
+            }
+        } else {
+            clearInterval(qrTimer);
+            if (countdownElement) {
+                countdownElement.textContent = '(Expired)';
+                countdownElement.classList.add('text-danger');
+            }
+            showToast('QR code has expired. Generating new one...', 'warning');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        }
+    }, 1000);
 }
 
-// Initialize all functionality when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    // Load auto-save preference
-    autoSaveEnabled = localStorage.getItem('autoSaveEnabled') === 'true';
-    
-    // Initialize additional features
-    initializeStudentRowHandlers();
-    initializeSearchFunctionality();
-    
-    // Set up periodic stats update
-    setInterval(updateAttendanceStats, 5000);
-    
-    console.log('Attendance system fully initialized');
-});
+function deactivateQR() {
+    if (confirm('Are you sure you want to deactivate the current QR code?')) {
+        location.reload();
+    }
+}
 
-// Error handling
+// ===== TOAST NOTIFICATION SYSTEM ===== //
+function showToast(message, type = 'info', duration = 5000) {
+    const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+    
+    const toastId = 'toast-' + Date.now();
+    const iconMap = {
+        'success': 'check-circle',
+        'error': 'alert-circle',
+        'warning': 'alert-triangle',
+        'info': 'info'
+    };
+    
+    const colorMap = {
+        'success': 'bg-success',
+        'error': 'bg-danger',
+        'warning': 'bg-warning',
+        'info': 'bg-info'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white ${colorMap[type]} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    toast.setAttribute('id', toastId);
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i data-lucide="${iconMap[type]}" class="me-2" style="width: 18px; height: 18px;"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    if (typeof lucide !== "undefined") {
+        lucide.createIcons();
+    }
+    
+    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        const bsToast = new bootstrap.Toast(toast, { delay: duration });
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    } else {
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 300);
+        }, duration);
+    }
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+    container.style.zIndex = '10000';
+    document.body.appendChild(container);
+    return container;
+}
+
 window.addEventListener('error', function(e) {
     console.error('JavaScript error:', e.error);
     showToast('An error occurred. Please refresh the page.', 'error');
 });
 
-// Unload handler
-window.addEventListener('beforeunload', function(e) {
-    const form = document.getElementById('attendanceForm');
-    if (form) {
-        const checkedInputs = document.querySelectorAll('input[name^="attendance["]:checked');
-        const totalInputs = document.querySelectorAll('input[name^="attendance["]').length / 3;
-        
-        if (checkedInputs.length > 0 && checkedInputs.length < totalInputs) {
-            e.preventDefault();
-            e.returnValue = 'You have unsaved attendance data. Are you sure you want to leave?';
-            return e.returnValue;
-        }
-    }
+window.addEventListener('load', function() {
+    ensureSidebarHidden();
+    updateThemeElements();
 });

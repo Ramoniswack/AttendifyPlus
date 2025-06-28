@@ -1,10 +1,11 @@
 <?php
+// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\admin\manage_student.php
 session_start();
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
-    header("Location: login.php");
+    header("Location: ../auth/login.php");
     exit();
 }
-include '../config/db_config.php';
+include '../../config/db_config.php';
 
 $successMsg = '';
 $errorMsg = '';
@@ -24,10 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $Password = $_POST['Password'] ?? '';
     $ConfirmPassword = $_POST['ConfirmPassword'] ?? '';
     $PhotoURL = '';
+    $AutoGenerateToken = isset($_POST['AutoGenerateToken']);
 
-
-
-    function isValidFormattedName($Fullname) {
+    function isValidFormattedName($Fullname)
+    {
         $Fullname = trim($Fullname);
         if (!preg_match('/^[A-Za-z. ]+$/', $Fullname)) return false;
         if (preg_match('/[.]{2,}|[ ]{2,}/', $Fullname)) return false;
@@ -45,15 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         return true;
     }
 
-    function validateEmail($Email) {
-      $Email = trim($Email);
-      if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
-
-      return true;
+    function validateEmail($Email)
+    {
+        $Email = trim($Email);
+        if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
+        return true;
     }
 
-    //Rikita
-
+    // Validation
     if (empty($FullName)) {
         $errors['FullName'] = "Full name is required.";
     } elseif (!isValidFormattedName($FullName)) {
@@ -96,8 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $errors['ConfirmPassword'] = "Passwords do not match.";
     }
 
+    // Handle photo upload
     if (isset($_FILES['PhotoFile']) && $_FILES['PhotoFile']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = '../uploads/students/';
+        $uploadDir = '../../uploads/students/';
 
         // Create directory if it doesn't exist
         if (!is_dir($uploadDir)) {
@@ -126,15 +127,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 
-    if ((empty($errors)) && (empty($errorMsg))){
-        // Check if email already exists
+    if ((empty($errors)) && (empty($errorMsg))) {
+        // FIXED: Check if email already exists in login_tbl (where emails are actually stored)
         $emailCheck = $conn->prepare("SELECT LoginID FROM login_tbl WHERE Email = ?");
         $emailCheck->bind_param("s", $Email);
         $emailCheck->execute();
         $emailCheck->store_result();
 
         if ($emailCheck->num_rows > 0) {
-            $errorMsg = "This email is already registered.";
+            $errorMsg = "This email is already registered in the system.";
         } else {
             // Generate ProgramCode
             $deptQuery = $conn->prepare("SELECT DepartmentName FROM departments WHERE DepartmentID = ?");
@@ -148,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $conn->begin_transaction();
 
             try {
-                // Insert into login_tbl
+                // Insert into login_tbl first
                 $stmt1 = $conn->prepare("INSERT INTO login_tbl (Email, Password, Role, Status, CreatedDate) VALUES (?, ?, 'student', ?, NOW())");
                 $hashedPass = password_hash($Password, PASSWORD_BCRYPT);
                 $stmt1->bind_param("sss", $Email, $hashedPass, $Status);
@@ -159,19 +160,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                 $loginID = $conn->insert_id;
 
-                // Insert into students table
-                $stmt2 = $conn->prepare("INSERT INTO students (FullName, Contact, Address, PhotoURL, DepartmentID, SemesterID, JoinYear, ProgramCode, LoginID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                // Insert into students table (without Email column since it's in login_tbl)
+                $stmt2 = $conn->prepare("INSERT INTO students (FullName, Contact, Address, PhotoURL, DepartmentID, SemesterID, JoinYear, ProgramCode, LoginID, DeviceRegistered) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE)");
                 $stmt2->bind_param("ssssiissi", $FullName, $Contact, $Address, $PhotoURL, $DepartmentID, $SemesterID, $JoinYear, $ProgramCode, $loginID);
 
                 if (!$stmt2->execute()) {
                     throw new Exception("Failed to create student record.");
                 }
 
+                $studentID = $conn->insert_id;
+
+                // Auto-generate device registration token if requested
+                if ($AutoGenerateToken) {
+                    $token = bin2hex(random_bytes(32));
+                    $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes')); // 10 minutes for immediate registration
+
+                    $tokenStmt = $conn->prepare("INSERT INTO device_registration_tokens (StudentID, Token, ExpiresAt) VALUES (?, ?, ?)");
+                    $tokenStmt->bind_param("iss", $studentID, $token, $expiresAt);
+
+                    if (!$tokenStmt->execute()) {
+                        throw new Exception("Failed to generate device registration token.");
+                    }
+
+                    $tokenStmt->close();
+                }
+
                 // Commit transaction
                 $conn->commit();
 
                 // Success: Store success message in session and redirect
-                $_SESSION['success_message'] = "Student added successfully.";
+                if ($AutoGenerateToken) {
+                    $_SESSION['success_message'] = "Student added successfully with device registration token generated! Token expires in 10 minutes.";
+                } else {
+                    $_SESSION['success_message'] = "Student added successfully.";
+                }
                 header("Location: " . $_SERVER['PHP_SELF']);
                 exit();
             } catch (Exception $e) {
@@ -211,6 +233,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit();
 }
 
+// Handle device token generation for existing students
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'generate_device_token') {
+    $studentID = $_POST['student_id'] ?? '';
+
+    if (!empty($studentID)) {
+        // Check if student already has a device registered
+        $deviceCheckStmt = $conn->prepare("SELECT DeviceRegistered FROM students WHERE StudentID = ?");
+        $deviceCheckStmt->bind_param("i", $studentID);
+        $deviceCheckStmt->execute();
+        $deviceResult = $deviceCheckStmt->get_result();
+        $student = $deviceResult->fetch_assoc();
+
+        if ($student && !$student['DeviceRegistered']) {
+            // Check for existing pending token
+            $existingTokenStmt = $conn->prepare("SELECT TokenID FROM device_registration_tokens WHERE StudentID = ? AND Used = FALSE AND ExpiresAt > NOW()");
+            $existingTokenStmt->bind_param("i", $studentID);
+            $existingTokenStmt->execute();
+            $existingResult = $existingTokenStmt->get_result();
+
+            if ($existingResult->num_rows == 0) {
+                // Generate new token
+                $token = bin2hex(random_bytes(32));
+                $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+
+                $tokenStmt = $conn->prepare("INSERT INTO device_registration_tokens (StudentID, Token, ExpiresAt) VALUES (?, ?, ?)");
+                $tokenStmt->bind_param("iss", $studentID, $token, $expiresAt);
+
+                if ($tokenStmt->execute()) {
+                    $_SESSION['success_message'] = "Device registration token generated successfully! Valid for 10 minutes.";
+                } else {
+                    $_SESSION['error_message'] = "Failed to generate device registration token.";
+                }
+                $tokenStmt->close();
+            } else {
+                $_SESSION['error_message'] = "Student already has a pending device registration token.";
+            }
+            $existingTokenStmt->close();
+        } else {
+            $_SESSION['error_message'] = "Student device is already registered.";
+        }
+        $deviceCheckStmt->close();
+    }
+
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
 // Check for messages from session (after redirect)
 if (isset($_SESSION['success_message'])) {
     $successMsg = $_SESSION['success_message'];
@@ -221,17 +290,26 @@ if (isset($_SESSION['error_message'])) {
     unset($_SESSION['error_message']);
 }
 
-// Fetch all students with their details
+// FIXED: Fetch all students with their details - Get email from login_tbl
 $students = [];
 $sql = "SELECT s.StudentID, s.FullName, s.Contact, s.Address, s.PhotoURL, 
-               s.JoinYear, s.ProgramCode,
+               s.JoinYear, s.ProgramCode, s.DeviceRegistered,
                d.DepartmentName, d.DepartmentID,
                sem.SemesterNumber, sem.SemesterID,
-               l.Email, l.Status, l.CreatedDate
+               l.Email, l.Status, l.CreatedDate,
+               COUNT(drt.TokenID) as pending_tokens,
+               MAX(drt.ExpiresAt) as latest_token_expires
         FROM students s
         JOIN departments d ON s.DepartmentID = d.DepartmentID
         JOIN semesters sem ON s.SemesterID = sem.SemesterID
         JOIN login_tbl l ON s.LoginID = l.LoginID
+        LEFT JOIN device_registration_tokens drt ON s.StudentID = drt.StudentID 
+            AND drt.Used = FALSE AND drt.ExpiresAt > NOW()
+        GROUP BY s.StudentID, s.FullName, s.Contact, s.Address, s.PhotoURL, 
+                 s.JoinYear, s.ProgramCode, s.DeviceRegistered,
+                 d.DepartmentName, d.DepartmentID,
+                 sem.SemesterNumber, sem.SemesterID,
+                 l.Email, l.Status, l.CreatedDate
         ORDER BY l.Status ASC, s.FullName";
 
 $result = $conn->query($sql);
@@ -257,12 +335,14 @@ while ($s = $semResult->fetch_assoc()) {
     $semesters[] = $s;
 }
 
-// Get statistics - updated to match manage_admin structure
+// Get statistics
 $stats = [];
 $statsQueries = [
     'total' => "SELECT COUNT(*) as count FROM students s JOIN login_tbl l ON s.LoginID = l.LoginID",
     'active' => "SELECT COUNT(*) as count FROM students s JOIN login_tbl l ON s.LoginID = l.LoginID WHERE l.Status = 'active'",
-    'inactive' => "SELECT COUNT(*) as count FROM students s JOIN login_tbl l ON s.LoginID = l.LoginID WHERE l.Status = 'inactive'"
+    'inactive' => "SELECT COUNT(*) as count FROM students s JOIN login_tbl l ON s.LoginID = l.LoginID WHERE l.Status = 'inactive'",
+    'devices_registered' => "SELECT COUNT(*) as count FROM students WHERE DeviceRegistered = TRUE",
+    'pending_tokens' => "SELECT COUNT(DISTINCT StudentID) as count FROM device_registration_tokens WHERE Used = FALSE AND ExpiresAt > NOW()"
 ];
 
 foreach ($statsQueries as $key => $query) {
@@ -271,6 +351,7 @@ foreach ($statsQueries as $key => $query) {
 }
 ?>
 
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -278,28 +359,28 @@ foreach ($statsQueries as $key => $query) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manage Students | Attendify+</title>
-    <link rel="stylesheet" href="../assets/css/manage_student.css" />
+    <link rel="stylesheet" href="../../assets/css/manage_student.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <script src="../assets/js/lucide.min.js"></script>
-    <script src="../assets/js/manage_student.js" defer></script>
+    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="../../assets/js/manage_student.js" defer></script>
 </head>
 
 <body>
     <!-- Include sidebar and navbar -->
-    <?php include 'sidebar_admin_dashboard.php'; ?>
-    <?php include 'navbar_admin.php'; ?>
+    <?php include '../components/sidebar_admin_dashboard.php'; ?>
+    <?php include '../components/navbar_admin.php'; ?>
 
     <!-- Main content -->
     <div class="container-fluid dashboard-container">
-        <!-- Page Header - Updated to Match manage_admin.php -->
+        <!-- Page Header -->
         <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
             <div>
                 <h2 class="page-title">
                     <i data-lucide="graduation-cap"></i>
                     Student Management
                 </h2>
-                <p class="text-muted mb-0">Manage student accounts and academic records</p>
+                <p class="text-muted mb-0">Manage student accounts and device registration tokens</p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
@@ -311,9 +392,9 @@ foreach ($statsQueries as $key => $query) {
             </div>
         </div>
 
-        <!-- Statistics Cards - Updated to Match manage_admin structure -->
+        <!-- Statistics Cards -->
         <div class="row g-4 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="stat-card text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -330,7 +411,7 @@ foreach ($statsQueries as $key => $query) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="stat-card teachers text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -347,19 +428,36 @@ foreach ($statsQueries as $key => $query) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="stat-card admins text-center">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="stat-number"><?= $stats['inactive'] ?></div>
-                            <div class="stat-label">Inactive Students</div>
+                            <div class="stat-number"><?= $stats['devices_registered'] ?></div>
+                            <div class="stat-label">Devices Registered</div>
                             <div class="stat-change">
-                                <i data-lucide="user-x"></i>
-                                <span>Suspended accounts</span>
+                                <i data-lucide="smartphone"></i>
+                                <span>QR attendance ready</span>
                             </div>
                         </div>
                         <div class="stats-icon">
-                            <i data-lucide="user-x"></i>
+                            <i data-lucide="smartphone"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card activities text-center">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-number"><?= $stats['pending_tokens'] ?></div>
+                            <div class="stat-label">Pending Tokens</div>
+                            <div class="stat-change">
+                                <i data-lucide="clock"></i>
+                                <span>Awaiting registration</span>
+                            </div>
+                        </div>
+                        <div class="stats-icon">
+                            <i data-lucide="clock"></i>
                         </div>
                     </div>
                 </div>
@@ -383,7 +481,7 @@ foreach ($statsQueries as $key => $query) {
             </div>
         <?php endif; ?>
 
-        <!-- Search and Filter Section - Updated to Match manage_admin -->
+        <!-- Search and Filter Section -->
         <div class="card mb-4">
             <div class="card-body">
                 <h6 class="card-title">
@@ -391,14 +489,14 @@ foreach ($statsQueries as $key => $query) {
                     Search & Filter Students
                 </h6>
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">
                             <i data-lucide="search"></i>
                             Search Students
                         </label>
-                        <input id="studentSearch" type="text" class="form-control" placeholder="Search by name, email, or contact..." />
+                        <input id="studentSearch" type="text" class="form-control" placeholder="Search by name, email..." />
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">
                             <i data-lucide="building"></i>
                             Department
@@ -410,7 +508,7 @@ foreach ($statsQueries as $key => $query) {
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">
                             <i data-lucide="calendar"></i>
                             Join Year
@@ -418,10 +516,21 @@ foreach ($statsQueries as $key => $query) {
                         <input id="filterYear" type="number" class="form-control" placeholder="e.g. 2022" min="2000" max="<?= date('Y') ?>">
                     </div>
                     <div class="col-md-2">
+                        <label class="form-label">
+                            <i data-lucide="smartphone"></i>
+                            Device Status
+                        </label>
+                        <select id="filterDevice" class="form-select">
+                            <option value="">All Devices</option>
+                            <option value="registered">Registered</option>
+                            <option value="pending">Token Pending</option>
+                            <option value="unregistered">Not Registered</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
                         <label class="form-label">&nbsp;</label>
                         <button id="clearFilters" class="btn btn-outline-secondary d-block w-100">
                             <i data-lucide="x"></i>
-                            Clear Filters
                         </button>
                     </div>
                 </div>
@@ -431,7 +540,7 @@ foreach ($statsQueries as $key => $query) {
             </div>
         </div>
 
-        <!-- Students Table - Updated to Match manage_admin structure -->
+        <!-- Students Table -->
         <div class="card shadow-sm">
             <div class="card-header">
                 <h6 class="card-title mb-0">
@@ -447,7 +556,7 @@ foreach ($statsQueries as $key => $query) {
                             <th>Student</th>
                             <th>Contact Information</th>
                             <th>Academic Info</th>
-                            <th>Join Year</th>
+                            <th>Device Status</th>
                             <th>Account Status</th>
                             <th class="text-center">Actions</th>
                         </tr>
@@ -460,7 +569,8 @@ foreach ($statsQueries as $key => $query) {
                                 data-contact="<?= htmlspecialchars($student['Contact']) ?>"
                                 data-department="<?= htmlspecialchars($student['DepartmentID']) ?>"
                                 data-year="<?= htmlspecialchars($student['JoinYear']) ?>"
-                                data-status="<?= htmlspecialchars($student['Status']) ?>">
+                                data-status="<?= htmlspecialchars($student['Status']) ?>"
+                                data-device="<?= $student['DeviceRegistered'] ? 'registered' : ($student['pending_tokens'] > 0 ? 'pending' : 'unregistered') ?>">
                                 <td>
                                     <?php if (!empty($student['PhotoURL']) && file_exists($student['PhotoURL'])): ?>
                                         <img src="<?= htmlspecialchars($student['PhotoURL']) ?>"
@@ -499,7 +609,25 @@ foreach ($statsQueries as $key => $query) {
                                     </div>
                                 </td>
                                 <td>
-                                    <small class="text-muted"><?= htmlspecialchars($student['JoinYear']) ?></small>
+                                    <?php if ($student['DeviceRegistered']): ?>
+                                        <span class="badge bg-success">
+                                            <i data-lucide="check-circle" style="width: 12px; height: 12px;"></i>
+                                            Registered
+                                        </span>
+                                    <?php elseif ($student['pending_tokens'] > 0): ?>
+                                        <span class="badge bg-warning">
+                                            <i data-lucide="clock" style="width: 12px; height: 12px;"></i>
+                                            Token Pending
+                                        </span>
+                                        <div class="small text-muted mt-1">
+                                            Expires: <?= date('M j, g:i A', strtotime($student['latest_token_expires'])) ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="badge bg-secondary">
+                                            <i data-lucide="x-circle" style="width: 12px; height: 12px;"></i>
+                                            Not Registered
+                                        </span>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <span class="badge <?= $student['Status'] === 'active' ? 'bg-success' : 'bg-danger' ?> status-badge">
@@ -517,7 +645,7 @@ foreach ($statsQueries as $key => $query) {
                                         <div class="btn-group" role="group">
                                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
                                                 data-bs-toggle="dropdown"
-                                                title="Change Status">
+                                                title="Actions">
                                                 <i data-lucide="settings"></i>
                                             </button>
                                             <ul class="dropdown-menu">
@@ -532,6 +660,18 @@ foreach ($statsQueries as $key => $query) {
                                                         </button>
                                                     </form>
                                                 </li>
+                                                <?php if (!$student['DeviceRegistered'] && $student['pending_tokens'] == 0): ?>
+                                                    <li>
+                                                        <form method="POST" class="d-inline">
+                                                            <input type="hidden" name="action" value="generate_device_token">
+                                                            <input type="hidden" name="student_id" value="<?= $student['StudentID'] ?>">
+                                                            <button type="submit" class="dropdown-item" onclick="return confirm('Generate device registration token for this student?')">
+                                                                <i data-lucide="smartphone"></i>
+                                                                Generate Device Token
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                <?php endif; ?>
                                             </ul>
                                         </div>
                                     </div>
@@ -571,6 +711,21 @@ foreach ($statsQueries as $key => $query) {
                                     <span class="badge <?= $student['Status'] === 'active' ? 'bg-success' : 'bg-danger' ?> mb-2">
                                         <?= ucfirst($student['Status']) ?>
                                     </span>
+                                    <div class="mt-2">
+                                        <?php if ($student['DeviceRegistered']): ?>
+                                            <span class="badge bg-success">
+                                                <i data-lucide="smartphone"></i> Device Registered
+                                            </span>
+                                        <?php elseif ($student['pending_tokens'] > 0): ?>
+                                            <span class="badge bg-warning">
+                                                <i data-lucide="clock"></i> Token Pending
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-secondary">
+                                                <i data-lucide="x-circle"></i> No Device
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                                 <div class="col-md-8">
                                     <table class="table table-borderless">
@@ -647,7 +802,7 @@ foreach ($statsQueries as $key => $query) {
                                 <label class="form-label">
                                     Full Name <span class="required-field">*</span>
                                 </label>
-                                <input name="FullName" type="text" class="form-control" required placeholder="Enter full name" 
+                                <input name="FullName" type="text" class="form-control" required placeholder="Enter full name"
                                     value="<?php echo htmlspecialchars($_POST['FullName'] ?? ''); ?>" />
                                 <span class="error text-danger"><?php echo $errors['FullName'] ?? ''; ?></span>
                             </div>
@@ -655,19 +810,19 @@ foreach ($statsQueries as $key => $query) {
                                 <label class="form-label">
                                     Email Address <span class="required-field">*</span>
                                 </label>
-                                <input name="Email" type="email" class="form-control" required placeholder="student@example.com" 
+                                <input name="Email" type="email" class="form-control" required placeholder="student@lagrandee.com"
                                     value="<?php echo htmlspecialchars($_POST['Email'] ?? ''); ?>" />
                                 <span class="error text-danger"><?php echo $errors['Email'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Contact Number</label>
-                                <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx" 
+                                <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx"
                                     value="<?php echo htmlspecialchars($_POST['Contact'] ?? ''); ?>" />
                                 <span class="error text-danger"><?php echo $errors['Contact'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Address</label>
-                                <input name="Address" type="text" class="form-control" placeholder="City, District" 
+                                <input name="Address" type="text" class="form-control" placeholder="City, District"
                                     value="<?php echo htmlspecialchars($_POST['Address'] ?? ''); ?>" />
                                 <span class="error text-danger"><?php echo $errors['Address'] ?? ''; ?></span>
                             </div>
@@ -727,6 +882,21 @@ foreach ($statsQueries as $key => $query) {
                                 </select>
                             </div>
 
+                            <!-- Device Registration Option -->
+                            <div class="col-12 mt-4">
+                                <h6 class="text-primary border-bottom pb-2"><i data-lucide="smartphone"></i> Device Registration</h6>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="AutoGenerateToken" id="AutoGenerateToken" checked>
+                                    <label class="form-check-label" for="AutoGenerateToken">
+                                        <i data-lucide="smartphone" class="me-1"></i>
+                                        Auto-generate device registration token
+                                        <small class="text-muted d-block">Student can register their device immediately after account creation (10-minute validity)</small>
+                                    </label>
+                                </div>
+                            </div>
+
                             <!-- Account Information -->
                             <div class="col-12 mt-4">
                                 <h6 class="text-primary border-bottom pb-2"><i data-lucide="lock"></i> Account Information</h6>
@@ -754,7 +924,7 @@ foreach ($statsQueries as $key => $query) {
                         </button>
                         <button type="submit" class="btn btn-primary">
                             <i data-lucide="save"></i>
-                            Create Student
+                            Create Student Account
                         </button>
                     </div>
                 </form>
@@ -772,6 +942,7 @@ foreach ($statsQueries as $key => $query) {
         const searchInput = document.getElementById('studentSearch');
         const departmentFilter = document.getElementById('filterDepartment');
         const yearFilter = document.getElementById('filterYear');
+        const deviceFilter = document.getElementById('filterDevice');
         const clearFiltersBtn = document.getElementById('clearFilters');
         const resultsCount = document.getElementById('resultsCount');
         const studentRows = document.querySelectorAll('.student-row');
@@ -786,6 +957,7 @@ foreach ($statsQueries as $key => $query) {
             const searchTerm = searchInput.value.toLowerCase();
             const departmentFilterValue = departmentFilter.value;
             const yearFilterValue = yearFilter.value;
+            const deviceFilterValue = deviceFilter.value;
 
             studentRows.forEach(row => {
                 const name = row.dataset.name || '';
@@ -793,6 +965,7 @@ foreach ($statsQueries as $key => $query) {
                 const contact = row.dataset.contact || '';
                 const department = row.dataset.department || '';
                 const year = row.dataset.year || '';
+                const device = row.dataset.device || '';
 
                 let showRow = true;
 
@@ -814,6 +987,11 @@ foreach ($statsQueries as $key => $query) {
                     showRow = false;
                 }
 
+                // Device filter
+                if (deviceFilterValue && device !== deviceFilterValue) {
+                    showRow = false;
+                }
+
                 row.style.display = showRow ? '' : 'none';
             });
 
@@ -824,22 +1002,24 @@ foreach ($statsQueries as $key => $query) {
         searchInput.addEventListener('input', filterStudents);
         departmentFilter.addEventListener('change', filterStudents);
         yearFilter.addEventListener('change', filterStudents);
+        deviceFilter.addEventListener('change', filterStudents);
 
         // Clear filters
         clearFiltersBtn.addEventListener('click', () => {
             searchInput.value = '';
             departmentFilter.value = '';
             yearFilter.value = '';
+            deviceFilter.value = '';
             filterStudents();
         });
 
         // Reset add student modal on close      
         const addStudentModal = document.getElementById('addStudentModal');
         addStudentModal.addEventListener('hidden.bs.modal', () => {
-        console.log('Here');
-        document.getElementById('studentform').reset();
+            document.getElementById('studentform').reset();
+            // Reset checkbox to checked state
+            document.getElementById('AutoGenerateToken').checked = true;
         });
-
 
         // Password confirmation validation
         const passwordInput = document.querySelector('input[name="Password"]');

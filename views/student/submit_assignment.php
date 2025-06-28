@@ -1,12 +1,12 @@
 <?php
-// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\submit_assignment.php
+// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\student\submit_assignment.php
 session_start();
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'student') {
-    header("Location: login.php");
+    header("Location: ../auth/login.php");
     exit();
 }
 
-include '../config/db_config.php';
+include '../../config/db_config.php';
 
 // Get student information
 $studentQuery = "SELECT s.StudentID, s.FullName, s.DepartmentID, s.SemesterID,
@@ -123,15 +123,16 @@ $completedAssignments = [
 ];
 
 // Function to format time remaining
-function getTimeRemaining($dueDate) {
+function getTimeRemaining($dueDate)
+{
     $now = new DateTime();
     $due = new DateTime($dueDate);
     $diff = $now->diff($due);
-    
+
     if ($due < $now) {
         return 'Past due';
     }
-    
+
     if ($diff->days > 0) {
         return $diff->days . ' day' . ($diff->days > 1 ? 's' : '') . ' remaining';
     } elseif ($diff->h > 0) {
@@ -141,11 +142,12 @@ function getTimeRemaining($dueDate) {
     }
 }
 
-function getPriorityClass($dueDate) {
+function getPriorityClass($dueDate)
+{
     $now = new DateTime();
     $due = new DateTime($dueDate);
     $diff = $now->diff($due);
-    
+
     if ($due < $now) {
         return 'priority-overdue';
     } elseif ($diff->days <= 1) {
@@ -160,25 +162,26 @@ function getPriorityClass($dueDate) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assignments | Attendify+</title>
-    
+
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/dashboard_student.css">
-    <link rel="stylesheet" href="../assets/css/submit_assignment.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard_student.css">
+    <link rel="stylesheet" href="../../assets/css/submit_assignment.css">
 </head>
 
 <body>
     <!-- Sidebar -->
-    <?php include 'sidebar_student_dashboard.php'; ?>
-    
+    <?php include '../components/sidebar_student_dashboard.php'; ?>
+
     <!-- Navbar -->
-    <?php include 'navbar_student.php'; ?>
-    
+    <?php include '../components/navbar_student.php'; ?>
+
     <!-- Main Content -->
     <div class="container-fluid dashboard-container">
         <!-- Header -->
@@ -260,16 +263,16 @@ function getPriorityClass($dueDate) {
                                         </button>
                                     </div>
                                 </div>
-                                
+
                                 <div class="assignment-content">
                                     <h3 class="assignment-title"><?= htmlspecialchars($assignment['title']) ?></h3>
                                     <p class="assignment-subject"><?= htmlspecialchars($assignment['subject']) ?></p>
                                     <p class="assignment-teacher">by <?= htmlspecialchars($assignment['teacher']) ?></p>
-                                    
+
                                     <div class="assignment-description">
                                         <?= htmlspecialchars($assignment['description']) ?>
                                     </div>
-                                    
+
                                     <div class="assignment-details">
                                         <div class="due-info">
                                             <i data-lucide="calendar"></i>
@@ -281,7 +284,7 @@ function getPriorityClass($dueDate) {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="assignment-footer">
                                     <button class="btn btn-primary btn-submit" onclick="openSubmissionModal(<?= htmlspecialchars(json_encode($assignment)) ?>)">
                                         <i data-lucide="upload"></i>
@@ -313,16 +316,16 @@ function getPriorityClass($dueDate) {
                                         <span class="badge bg-danger">Past Due</span>
                                     </div>
                                 </div>
-                                
+
                                 <div class="assignment-content">
                                     <h3 class="assignment-title"><?= htmlspecialchars($assignment['title']) ?></h3>
                                     <p class="assignment-subject"><?= htmlspecialchars($assignment['subject']) ?></p>
                                     <p class="assignment-teacher">by <?= htmlspecialchars($assignment['teacher']) ?></p>
-                                    
+
                                     <div class="assignment-description">
                                         <?= htmlspecialchars($assignment['description']) ?>
                                     </div>
-                                    
+
                                     <div class="assignment-details">
                                         <div class="due-info overdue">
                                             <i data-lucide="alert-triangle"></i>
@@ -330,7 +333,7 @@ function getPriorityClass($dueDate) {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="assignment-footer">
                                     <button class="btn btn-warning btn-submit" onclick="openSubmissionModal(<?= htmlspecialchars(json_encode($assignment)) ?>)">
                                         <i data-lucide="upload"></i>
@@ -359,25 +362,25 @@ function getPriorityClass($dueDate) {
                                     <div class="assignment-meta">
                                         <span class="subject-code"><?= htmlspecialchars($assignment['subject_code']) ?></span>
                                         <span class="grade-display">
-                                            <?= $assignment['earned_points'] ?>/<?= $assignment['points'] ?> 
+                                            <?= $assignment['earned_points'] ?>/<?= $assignment['points'] ?>
                                             <span class="grade"><?= $assignment['grade'] ?></span>
                                         </span>
                                         <span class="badge bg-success">Completed</span>
                                     </div>
                                 </div>
-                                
+
                                 <div class="assignment-content">
                                     <h3 class="assignment-title"><?= htmlspecialchars($assignment['title']) ?></h3>
                                     <p class="assignment-subject"><?= htmlspecialchars($assignment['subject']) ?></p>
                                     <p class="assignment-teacher">by <?= htmlspecialchars($assignment['teacher']) ?></p>
-                                    
+
                                     <div class="assignment-details">
                                         <div class="submitted-info">
                                             <i data-lucide="check-circle"></i>
                                             <span>Submitted <?= date('M j, Y g:i A', strtotime($assignment['submitted_date'])) ?></span>
                                         </div>
                                     </div>
-                                    
+
                                     <?php if (!empty($assignment['feedback'])): ?>
                                         <div class="feedback-section">
                                             <h6><i data-lucide="message-circle"></i> Teacher Feedback</h6>
@@ -385,7 +388,7 @@ function getPriorityClass($dueDate) {
                                         </div>
                                     <?php endif; ?>
                                 </div>
-                                
+
                                 <div class="assignment-footer">
                                     <button class="btn btn-outline-primary" onclick="viewSubmission(<?= $assignment['id'] ?>)">
                                         <i data-lucide="eye"></i>
@@ -414,7 +417,7 @@ function getPriorityClass($dueDate) {
                 <div class="modal-body">
                     <form id="submissionForm" enctype="multipart/form-data">
                         <input type="hidden" id="assignmentId" name="assignment_id">
-                        
+
                         <div class="assignment-info-card">
                             <h6 id="modalAssignmentTitle"></h6>
                             <div class="d-flex gap-3 text-muted">
@@ -423,29 +426,29 @@ function getPriorityClass($dueDate) {
                                 <span id="modalPoints"></span>
                             </div>
                         </div>
-                        
+
                         <div class="mb-4">
                             <label class="form-label">Assignment Description</label>
                             <div class="description-box" id="modalDescription"></div>
                         </div>
-                        
+
                         <div class="mb-4">
                             <label for="submissionText" class="form-label">
                                 <i data-lucide="type"></i>
                                 Your Response (Optional)
                             </label>
-                            <textarea class="form-control" id="submissionText" name="submission_text" rows="4" 
-                                      placeholder="Add any comments or notes about your submission..."></textarea>
+                            <textarea class="form-control" id="submissionText" name="submission_text" rows="4"
+                                placeholder="Add any comments or notes about your submission..."></textarea>
                         </div>
-                        
+
                         <div class="mb-4">
                             <label for="fileUpload" class="form-label">
                                 <i data-lucide="paperclip"></i>
                                 Upload Files
                             </label>
                             <div class="upload-zone" onclick="document.getElementById('fileUpload').click()">
-                                <input type="file" id="fileUpload" name="files[]" multiple style="display: none;" 
-                                       accept=".pdf,.doc,.docx,.txt,.jpg,.png,.zip,.rar">
+                                <input type="file" id="fileUpload" name="files[]" multiple style="display: none;"
+                                    accept=".pdf,.doc,.docx,.txt,.jpg,.png,.zip,.rar">
                                 <div class="upload-content">
                                     <i data-lucide="upload-cloud" class="upload-icon"></i>
                                     <h6>Drop files here or click to browse</h6>
@@ -455,7 +458,7 @@ function getPriorityClass($dueDate) {
                             </div>
                             <div id="fileList" class="file-list mt-3"></div>
                         </div>
-                        
+
                         <div class="submission-checklist">
                             <h6><i data-lucide="check-square"></i> Before you submit:</h6>
                             <div class="form-check">
@@ -492,7 +495,8 @@ function getPriorityClass($dueDate) {
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../assets/js/lucide.min.js"></script>
-    <script src="../assets/js/submit_assignment.js"></script>
+    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="../../assets/js/submit_assignment.js"></script>
 </body>
+
 </html>

@@ -1,13 +1,13 @@
 <?php
-// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\dashboard_teacher.php
+// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\teacher\dashboard_teacher.php
 session_start();
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') {
-    header("Location: login.php");
+    header("Location: ../auth/login.php");
     exit();
 }
 
 // Include database configuration
-include '../config/db_config.php';
+include '../../config/db_config.php';
 
 // Get current teacher's TeacherID
 $currentTeacherQuery = "SELECT TeacherID FROM teachers WHERE LoginID = ?";
@@ -142,22 +142,22 @@ $assignmentDataJSON = json_encode($assignmentData);
     <title>Teacher Dashboard | Attendify+</title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="../assets/css/dashboard_teacher.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard_teacher.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
     <!-- JS Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="../assets/js/lucide.min.js"></script>
-    <script src="../assets/js/dashboard_teacher.js" defer></script>
+    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="../../assets/js/dashboard_teacher.js" defer></script>
 </head>
 
 <body>
     <!-- Sidebar -->
-    <?php include 'sidebar_teacher_dashboard.php'; ?>
+    <?php include '../components/sidebar_teacher_dashboard.php'; ?>
 
     <!-- Navbar -->
-    <?php include 'navbar_teacher.php'; ?>
+    <?php include '../components/navbar_teacher.php'; ?>
 
     <!-- Main Content -->
     <div class="container-fluid dashboard-container">

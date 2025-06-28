@@ -10,7 +10,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <h5 class="sidebar-title mb-3">Menu</h5>
     <nav class="nav flex-column">
       <!-- Dashboard -->
-      <a class="nav-link <?= ($currentPage == 'dashboard_teacher.php') ? 'active' : '' ?>" href="dashboard_teacher.php">
+      <a class="nav-link <?= ($currentPage == 'dashboard_teacher.php') ? 'active' : '' ?>" href="../teacher/dashboard_teacher.php">
         <i data-lucide="layout-dashboard" class="me-2"></i>Dashboard
       </a>
 
@@ -53,7 +53,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       <hr class="text-white-50 my-3">
 
       <!-- Logout -->
-      <a class="nav-link text-danger" href="../logout.php">
+      <a class="nav-link text-danger" href="../../logout.php">
         <i data-lucide="log-out" class="me-2"></i>Logout
       </a>
     </nav>

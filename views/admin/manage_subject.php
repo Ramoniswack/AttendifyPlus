@@ -1,10 +1,10 @@
 <?php
 session_start();
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
-    header("Location: login.php");
+    header("Location: ../auth/login.php");
     exit();
 }
-include '../config/db_config.php';
+include '../../config/db_config.php';
 
 $successMsg = '';
 $errorMsg = '';
@@ -188,17 +188,17 @@ foreach ($statsQueries as $key => $query) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manage Subjects | Attendify+</title>
-    <link rel="stylesheet" href="../assets/css/manage_subject.css" />
+    <link rel="stylesheet" href="../../assets/css/manage_subject.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <script src="../assets/js/lucide.min.js"></script>
-    <script src="../assets/js/manage_teacher.js" defer></script>
+    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="../../assets/js/manage_teacher.js" defer></script>
 </head>
 
 <body>
     <!-- Include sidebar and navbar -->
-    <?php include 'sidebar_admin_dashboard.php'; ?>
-    <?php include 'navbar_admin.php'; ?>
+    <?php include '../components/sidebar_admin_dashboard.php'; ?>
+    <?php include '../components/navbar_admin.php'; ?>
 
     <!-- Main content -->
     <div class="container-fluid dashboard-container">
