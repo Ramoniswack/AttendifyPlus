@@ -1,4 +1,4 @@
-# 🎓 AttendifyPlus
+# AttendifyPlus
 
 <div align="center">
   <img src="assets/img/logo-light.png" alt="AttendifyPlus Logo" width="200"/>
@@ -13,38 +13,38 @@
 
 ---
 
-## 📋 Overview
+## Overview
 
 AttendifyPlus revolutionizes traditional attendance systems with **QR code technology**, providing a seamless, contactless solution for educational institutions. Built with modern web technologies, it offers real-time attendance tracking, comprehensive analytics, and multi-role management.
 
-## ✨ Key Features
+## Key Features
 
-### 🔐 **Multi-Role Authentication**
+### Multi-Role Authentication
 
-- **Admin Panel**: Complete system oversight and user management
-- **Teacher Dashboard**: Class management and attendance tracking
-- **Student Portal**: QR scanning and attendance history
+- Admin Panel: Complete system oversight and user management
+- Teacher Dashboard: Class management and attendance tracking
+- Student Portal: QR scanning and attendance history
 
-### 📱 **QR Code Technology**
+### QR Code Technology
 
 - Dynamic QR generation for each session
 - Secure token-based attendance marking
 - Real-time validation and processing
 
-### 📊 **Analytics & Reporting**
+### Analytics & Reporting
 
 - Attendance percentage calculations
 - Subject-wise performance metrics
 - Comprehensive reporting tools
 
-### 🎯 **Smart Features**
+### Smart Features
 
 - Material upload/download system
 - Assignment submission portal
 - Responsive UI with dark/light themes
 - Real-time notifications
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -94,84 +94,84 @@ AttendifyPlus revolutionizes traditional attendance systems with **QR code techn
    http://localhost/attendifyplus/views/auth/login.php
    ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 AttendifyPlus/
-├── 📂 api/                 # REST API endpoints
-├── 📂 assets/              # Static resources
-│   ├── css/               # Stylesheets
-│   ├── js/                # JavaScript files
-│   └── img/               # Images & logos
-├── 📂 config/              # Configuration files
-├── 📂 database/            # SQL schemas & backups
-├── 📂 docs/                # Documentation & diagrams
-├── 📂 helpers/             # Utility functions
-├── 📂 uploads/             # File storage
-└── 📂 views/               # Application views
-    ├── admin/             # Admin management
-    ├── auth/              # Authentication
-    ├── components/        # Reusable components
-    ├── student/           # Student features
-    └── teacher/           # Teacher functionality
+├── api/                 # REST API endpoints
+├── assets/              # Static resources
+│   ├── css/             # Stylesheets
+│   ├── js/              # JavaScript files
+│   └── img/             # Images & logos
+├── config/              # Configuration files
+├── database/            # SQL schemas & backups
+├── docs/                # Documentation & diagrams
+├── helpers/             # Utility functions
+├── uploads/             # File storage
+└── views/               # Application views
+    ├── admin/           # Admin management
+    ├── auth/            # Authentication
+    ├── components/      # Reusable components
+    ├── student/         # Student features
+    └── teacher/         # Teacher functionality
 ```
 
-## 👥 Development Team
+## Development Team
 
 <table align="center">
   <tr>
     <td align="center">
-      <img src="../AttendifyPlus/assets/img/team/Ramohan.png" width="100px;" alt="Ramohan"/><br />
-      <sub><b>🚀 Ramohan</b></sub><br />
+      <img src="assets/img/team/Ramohan.png" width="100px;" alt="Ramohan"/><br />
+      <sub><b>Ramohan</b></sub><br />
       <sub>Project Lead & Full-Stack Developer</sub><br />
       <small>Integration • QR Logic • Analytics • Critical Tasks</small>
     </td>
     <td align="center">
-      <img src="../AttendifyPlus/assets/img/team/subash.png" width="100px;" alt="Subash"/><br />
-      <sub><b>⚙️ Subash</b></sub><br />
+      <img src="assets/img/team/subash.png" width="100px;" alt="Subash"/><br />
+      <sub><b>Subash</b></sub><br />
       <sub>Backend Developer</sub><br />
       <small>PHP Logic • Attendance System • Backend Processing</small>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="../AttendifyPlus/assets/img/team/namrata.png" width="100px;" alt="Namrata"/><br />
-      <sub><b>🎨 Namrata</b></sub><br />
+      <img src="assets/img/team/namrata.png" width="100px;" alt="Namrata"/><br />
+      <sub><b>Namrata</b></sub><br />
       <sub>Frontend Developer</sub><br />
       <small>UI/UX Design • Material Upload • Analytics Interface</small>
     </td>
     <td align="center">
-      <img src="../AttendifyPlus/assets/img/team/Rikita.png" width="100px;" alt="Rikita"/><br />
-      <sub><b>🔍 Rikita</b></sub><br />
+      <img src="assets/img/team/Rikita.png" width="100px;" alt="Rikita"/><br />
+      <sub><b>Rikita</b></sub><br />
       <sub>QA Engineer & Developer</sub><br />
       <small>Testing • Validation • Profile Management</small>
     </td>
   </tr>
 </table>
 
-## 🛠️ Technology Stack
+## Technology Stack
 
-### **Backend**
+### Backend
 
-- **PHP 8.0+** - Server-side logic
-- **MySQL** - Database management
-- **RESTful APIs** - Data communication
+- PHP 8.0+ - Server-side logic
+- MySQL - Database management
+- RESTful APIs - Data communication
 
-### **Frontend**
+### Frontend
 
-- **HTML5/CSS3** - Structure & styling
-- **Bootstrap 5.3** - Responsive framework
-- **JavaScript (ES6+)** - Dynamic interactions
-- **Lucide Icons** - Modern iconography
+- HTML5/CSS3 - Structure & styling
+- Bootstrap 5.3 - Responsive framework
+- JavaScript (ES6+) - Dynamic interactions
+- Lucide Icons - Modern iconography
 
-### **Features**
+### Features
 
-- **QR Code Generation** - Dynamic attendance tokens
-- **File Upload System** - Material & assignment handling
-- **Real-time Validation** - Instant feedback
-- **Responsive Design** - Mobile-first approach
+- QR Code Generation - Dynamic attendance tokens
+- File Upload System - Material & assignment handling
+- Real-time Validation - Instant feedback
+- Responsive Design - Mobile-first approach
 
-## 📊 System Architecture
+## System Architecture
 
 ```mermaid
 graph TB
@@ -281,21 +281,21 @@ graph TB
     students ||--o{ attendance_records : "has"
 ```
 
-## 🔗 API Endpoints
+## API Endpoints
 
 | Endpoint                         | Method | Description                       |
 | -------------------------------- | ------ | --------------------------------- |
 | `/api/generate_qr_image.php`     | POST   | Generate QR for attendance        |
 | `/api/process_qr_attendance.php` | POST   | Process QR scan & mark attendance |
 
-## 📈 Usage Statistics
+## Usage Statistics
 
-- ⚡ **QR Generation**: < 2 seconds
-- 📱 **Mobile Responsive**: 100% compatibility
-- 🔒 **Security**: Token-based validation
-- 📊 **Analytics**: Real-time insights
+- QR Generation: < 2 seconds
+- Mobile Responsive: 100% compatibility
+- Security: Token-based validation
+- Analytics: Real-time insights
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/AmazingFeature`)
@@ -303,19 +303,19 @@ graph TB
 4. Push to branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
-- **Educational Institution** support
-- **Open Source Community** contributions
-- **Bootstrap Team** for the framework
-- **Lucide** for beautiful icons
+- Educational Institution support
+- Open Source Community contributions
+- Bootstrap Team for the framework
+- Lucide for beautiful icons
 
 ---
 
 <div align="center">
-  <i>Making attendance management smarter, one QR code at a time</i>
+  <i>Making attendance management smarter</i>
 </div>
