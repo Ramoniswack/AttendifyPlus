@@ -40,17 +40,36 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
                     <li class="dropdown-header"><i data-lucide="bell"></i> Recent Notifications</li>
-                    <li><hr class="dropdown-divider"></li>
                     <li>
-                        <a class="dropdown-item" href="#"><div class="notification-item"><div class="notification-icon bg-info"><i data-lucide="file-plus"></i></div><div class="notification-content"><span class="notification-title">New Assignment Posted</span><span class="notification-time">10 minutes ago</span></div></div></a>
+                        <hr class="dropdown-divider">
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#"><div class="notification-item"><div class="notification-icon bg-warning"><i data-lucide="clock"></i></div><div class="notification-content"><span class="notification-title">Assignment Due Tomorrow</span><span class="notification-time">2 hours ago</span></div></div></a>
+                        <a class="dropdown-item" href="#">
+                            <div class="notification-item">
+                                <div class="notification-icon bg-info"><i data-lucide="file-plus"></i></div>
+                                <div class="notification-content"><span class="notification-title">New Assignment Posted</span><span class="notification-time">10 minutes ago</span></div>
+                            </div>
+                        </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#"><div class="notification-item"><div class="notification-icon bg-success"><i data-lucide="check-circle"></i></div><div class="notification-content"><span class="notification-title">Attendance Marked</span><span class="notification-time">1 day ago</span></div></div></a>
+                        <a class="dropdown-item" href="#">
+                            <div class="notification-item">
+                                <div class="notification-icon bg-warning"><i data-lucide="clock"></i></div>
+                                <div class="notification-content"><span class="notification-title">Assignment Due Tomorrow</span><span class="notification-time">2 hours ago</span></div>
+                            </div>
+                        </a>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <div class="notification-item">
+                                <div class="notification-icon bg-success"><i data-lucide="check-circle"></i></div>
+                                <div class="notification-content"><span class="notification-title">Attendance Marked</span><span class="notification-time">1 day ago</span></div>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li><a class="dropdown-item text-center" href="#">View All Notifications</a></li>
                 </ul>
             </div>
@@ -71,13 +90,17 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                             </div>
                         </div>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li><a class="dropdown-item" href="profile_student.php"><i data-lucide="user"></i> My Profile</a></li>
                     <li><a class="dropdown-item" href="attendance_history.php"><i data-lucide="calendar-check"></i> My Attendance</a></li>
                     <li><a class="dropdown-item" href="my_subjects_student.php"><i data-lucide="book-open"></i> My Subjects</a></li>
                     <li><a class="dropdown-item" href="view_assignments.php"><i data-lucide="clipboard-list"></i> My Assignments</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="../logout.php"><i data-lucide="log-out"></i> Logout</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item text-danger" href="../../logout.php"><i data-lucide="log-out"></i> Logout</a></li>
                 </ul>
             </div>
         </div>
@@ -95,12 +118,24 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end notification-dropdown mobile-dropdown">
                     <li class="dropdown-header"><i data-lucide="bell"></i> Notifications</li>
-                    <li><hr class="dropdown-divider"></li>
                     <li>
-                        <a class="dropdown-item" href="#"><div class="notification-item"><div class="notification-icon bg-info"><i data-lucide="file-plus"></i></div><div class="notification-content"><span class="notification-title">New Assignment</span><span class="notification-time">10 mins ago</span></div></div></a>
+                        <hr class="dropdown-divider">
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#"><div class="notification-item"><div class="notification-icon bg-warning"><i data-lucide="clock"></i></div><div class="notification-content"><span class="notification-title">Assignment Due</span><span class="notification-time">2 hours ago</span></div></div></a>
+                        <a class="dropdown-item" href="#">
+                            <div class="notification-item">
+                                <div class="notification-icon bg-info"><i data-lucide="file-plus"></i></div>
+                                <div class="notification-content"><span class="notification-title">New Assignment</span><span class="notification-time">10 mins ago</span></div>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <div class="notification-item">
+                                <div class="notification-icon bg-warning"><i data-lucide="clock"></i></div>
+                                <div class="notification-content"><span class="notification-title">Assignment Due</span><span class="notification-time">2 hours ago</span></div>
+                            </div>
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -118,13 +153,17 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                             </div>
                         </div>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
                     <li><a class="dropdown-item" href="profile_student.php"><i data-lucide="user"></i> Profile</a></li>
                     <li><a class="dropdown-item" href="attendance_history.php"><i data-lucide="calendar-check"></i> Attendance</a></li>
                     <li><a class="dropdown-item" href="my_subjects_student.php"><i data-lucide="book-open"></i> Subjects</a></li>
                     <li><a class="dropdown-item" href="view_assignments.php"><i data-lucide="clipboard-list"></i> Assignments</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="../logout.php"><i data-lucide="log-out"></i> Logout</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item text-danger" href="../../logout.php"><i data-lucide="log-out"></i> Logout</a></li>
                 </ul>
             </div>
         </div>

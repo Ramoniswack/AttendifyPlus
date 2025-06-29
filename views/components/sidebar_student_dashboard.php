@@ -32,7 +32,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <i data-lucide="user-cog" class="me-2"></i>Profile
       </a>
       <hr class="text-white-50 my-3">
-      <a class="nav-link text-danger" href="../logout.php">
+      <a class="nav-link text-danger" href="../../logout.php">
         <i data-lucide="log-out" class="me-2"></i>Logout
       </a>
     </nav>
