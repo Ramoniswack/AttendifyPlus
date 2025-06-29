@@ -174,7 +174,6 @@ AttendifyPlus/
 ## System Architecture
 
 ```mermaid
-graph TB
   erDiagram
     login_tbl {
         INT LoginID PK
