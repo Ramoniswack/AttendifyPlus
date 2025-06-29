@@ -1,12 +1,10 @@
 <?php
-// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\student\dashboard_student.php
 session_start();
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'student') {
     header("Location: ../auth/login.php");
     exit();
 }
 
-// Include database configuration
 include '../../config/db_config.php';
 
 // Get current student's StudentID
@@ -24,7 +22,7 @@ if (!$studentData) {
 $currentStudentID = $studentData['StudentID'];
 $currentSemesterID = $studentData['SemesterID'];
 $currentDepartmentID = $studentData['DepartmentID'];
-$student = $studentData; // For device registration section
+$student = $studentData;
 
 // Check for pending device registration token
 $tokenQuery = $conn->prepare("
@@ -182,8 +180,11 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
     <!-- Navbar -->
     <?php include '../components/navbar_student.php'; ?>
 
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Main Content -->
-    <div class="container-fluid dashboard-container">
+    <div class="container-fluid dashboard-container main-content">
         <!-- Page Header -->
         <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
             <div>
@@ -240,83 +241,95 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
             </div>
         <?php endif; ?>
 
-        <!-- Overview Cards -->
+        <!-- Statistics Cards (Colorful, Responsive) -->
         <div class="row g-4 mb-4">
-            <!-- Attendance Card -->
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-icon">
-                        <i data-lucide="calendar-check"></i>
-                    </div>
-                    <div class="metric-content">
-                        <h3><?= $stats['attendance_percentage'] ?>%</h3>
-                        <h6>Overall Attendance</h6>
-                        <p class="text-muted mb-0">Total <?= $totalAttendanceRecords ?> records</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Subjects Card -->
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-icon">
-                        <i data-lucide="book-open"></i>
-                    </div>
-                    <div class="metric-content">
-                        <h3><?= $stats['total_subjects'] ?></h3>
-                        <h6>Enrolled Subjects</h6>
-                        <p class="text-muted mb-0">Current semester</p>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card text-center">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-number"><?= $stats['attendance_percentage'] ?>%</div>
+                            <div>Overall Attendance</div>
+                            <div class="mt-1">
+                                <small class="text-white-50">
+                                    <i data-lucide="calendar-check" style="width: 14px; height: 14px;"></i>
+                                    <?= $totalAttendanceRecords ?> records
+                                </small>
+                            </div>
+                        </div>
+                        <div class="stats-icon">
+                            <i data-lucide="calendar-check"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Assignments Card -->
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-icon">
-                        <i data-lucide="clipboard-list"></i>
-                    </div>
-                    <div class="metric-content">
-                        <h3><?= $stats['pending_assignments'] ?></h3>
-                        <h6>Pending Assignments</h6>
-                        <p class="text-muted mb-0"><?= $stats['completed_assignments'] ?> completed</p>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card subjects-card text-center">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-number"><?= $stats['total_subjects'] ?></div>
+                            <div>Enrolled Subjects</div>
+                            <div class="mt-1">
+                                <small class="text-white-50">
+                                    <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
+                                    Current semester
+                                </small>
+                            </div>
+                        </div>
+                        <div class="stats-icon">
+                            <i data-lucide="book-open"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Device Registration Card -->
-            <div class="col-md-3">
-                <div class="metric-card device-registration-card">
-                    <div class="metric-icon">
-                        <i data-lucide="<?= $hasRegisteredDevice ? 'check-circle' : 'smartphone' ?>"></i>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card pending-card text-center">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-number"><?= $stats['pending_assignments'] ?></div>
+                            <div>Pending Assignments</div>
+                            <div class="mt-1">
+                                <small class="text-white-50">
+                                    <i data-lucide="clipboard-list" style="width: 14px; height: 14px;"></i>
+                                    <?= $stats['completed_assignments'] ?> completed
+                                </small>
+                            </div>
+                        </div>
+                        <div class="stats-icon">
+                            <i data-lucide="clipboard-list"></i>
+                        </div>
                     </div>
-                    <div class="metric-content">
-                        <h6>Device Status</h6>
-                        <?php if ($hasRegisteredDevice): ?>
-                            <p class="text-success mb-2">
-                                <i data-lucide="shield-check" class="me-1"></i>
-                                Device Registered
-                            </p>
-                            <small class="text-muted">Your device is registered for QR attendance</small>
-                        <?php elseif ($pendingToken): ?>
-                            <p class="text-warning mb-2">
-                                <i data-lucide="clock" class="me-1"></i>
-                                Registration Available
-                            </p>
-                            <button class="btn btn-primary btn-sm w-100" onclick="registerDevice()">
-                                <i data-lucide="smartphone" class="me-1"></i>
-                                Register This Device
-                            </button>
-                            <small class="text-muted d-block mt-2">
-                                Expires: <?= date('M j, g:i A', strtotime($pendingToken['ExpiresAt'])) ?>
-                            </small>
-                        <?php else: ?>
-                            <p class="text-muted mb-2">
-                                <i data-lucide="x-circle" class="me-1"></i>
-                                Not Registered
-                            </p>
-                            <small class="text-muted">Contact your teacher to get a registration token</small>
-                        <?php endif; ?>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card activities text-center">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-number">
+                                <i data-lucide="<?= $hasRegisteredDevice ? 'check-circle' : 'smartphone' ?>"></i>
+                            </div>
+                            <div>Device Status</div>
+                            <div class="mt-1">
+                                <?php if ($hasRegisteredDevice): ?>
+                                    <small class="text-white-50">
+                                        <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i>
+                                        Registered
+                                    </small>
+                                <?php elseif ($pendingToken): ?>
+                                    <small class="text-white-50">
+                                        <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                                        Registration Available
+                                    </small>
+                                <?php else: ?>
+                                    <small class="text-white-50">
+                                        <i data-lucide="x-circle" style="width: 14px; height: 14px;"></i>
+                                        Not Registered
+                                    </small>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="stats-icon">
+                            <i data-lucide="smartphone"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -647,7 +660,8 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
             formData.append('fingerprint', fingerprint);
             formData.append('user_agent', navigator.userAgent);
 
-            fetch('student_devices.php', {
+            // Fix the fetch URL to use correct path
+            fetch('../student/student_devices.php', {
                     method: 'POST',
                     body: formData
                 })
@@ -724,158 +738,6 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
             });
         }, 5000);
     </script>
-
-    <style>
-        .device-registration-card {
-            border-left: 4px solid #3b82f6;
-        }
-
-        .activity-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: flex-start;
-            padding: 1rem 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
-
-        .activity-icon.present {
-            background-color: #dcfce7;
-            color: #16a34a;
-        }
-
-        .activity-icon.absent {
-            background-color: #fef2f2;
-            color: #dc2626;
-        }
-
-        .activity-content {
-            flex: 1;
-        }
-
-        .activity-title {
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 0.25rem;
-        }
-
-        .activity-meta {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .status-badge {
-            padding: 0.125rem 0.5rem;
-            border-radius: 0.375rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .status-badge.present {
-            background-color: #dcfce7;
-            color: #16a34a;
-        }
-
-        .status-badge.absent {
-            background-color: #fef2f2;
-            color: #dc2626;
-        }
-
-        .method-badge {
-            padding: 0.125rem 0.5rem;
-            border-radius: 0.375rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-            background-color: #f3f4f6;
-            color: #6b7280;
-        }
-
-        .activity-time {
-            font-size: 0.875rem;
-            color: #6b7280;
-        }
-
-        .subject-performance-item {
-            margin-bottom: 1rem;
-        }
-
-        .subject-performance-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .percentage.good {
-            color: #16a34a;
-            font-weight: 600;
-        }
-
-        .percentage.average {
-            color: #d97706;
-            font-weight: 600;
-        }
-
-        .percentage.poor {
-            color: #dc2626;
-            font-weight: 600;
-        }
-
-        .metric-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s ease;
-        }
-
-        .metric-card:hover {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .metric-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            margin-bottom: 1rem;
-        }
-
-        .metric-content h3 {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            color: #111827;
-        }
-
-        .metric-content h6 {
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.25rem;
-        }
-    </style>
 </body>
 
 </html>

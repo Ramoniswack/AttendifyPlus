@@ -212,7 +212,7 @@ include 'sidebar_teacher_dashboard.php';
                         <hr class="dropdown-divider">
                     </li>
                     <li>
-                        <a class="dropdown-item text-danger" href="../../logout.php">
+                        <a class="dropdown-item text-danger" href="../logout.php">
                             <i data-lucide="log-out"></i> Logout
                         </a>
                     </li>
