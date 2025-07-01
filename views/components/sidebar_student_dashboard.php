@@ -20,7 +20,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       <a class="nav-link <?= ($currentPage == 'view_materials.php') ? 'active' : '' ?>" href="view_materials.php">
         <i data-lucide="folder-open" class="me-2"></i>View Materials
       </a>
-      <a class="nav-link <?= ($currentPage == 'attendance_history.php') ? 'active' : '' ?>" href="attendance_history.php">
+      <a class="nav-link <?= ($currentPage == 'my_attendance.php') ? 'active' : '' ?>" href="my_attendance.php">
         <i data-lucide="calendar-check" class="me-2"></i>My Attendance
       </a>
       <a class="nav-link <?= ($currentPage == 'my_subjects_student.php') ? 'active' : '' ?>" href="my_subjects_student.php">
