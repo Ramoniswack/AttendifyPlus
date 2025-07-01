@@ -234,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // Handle device token generation for existing students
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'generate_device_token') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'generate_token') {
     $studentID = $_POST['student_id'] ?? '';
 
     if (!empty($studentID)) {
@@ -663,7 +663,7 @@ foreach ($statsQueries as $key => $query) {
                                                 <?php if (!$student['DeviceRegistered'] && $student['pending_tokens'] == 0): ?>
                                                     <li>
                                                         <form method="POST" class="d-inline">
-                                                            <input type="hidden" name="action" value="generate_device_token">
+                                                            <input type="hidden" name="action" value="generate_token">
                                                             <input type="hidden" name="student_id" value="<?= $student['StudentID'] ?>">
                                                             <button type="submit" class="dropdown-item" onclick="return confirm('Generate device registration token for this student?')">
                                                                 <i data-lucide="smartphone"></i>

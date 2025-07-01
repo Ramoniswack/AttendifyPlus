@@ -1,49 +1,57 @@
 <?php
-// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\student\scan_qr.php
+// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\scan_qr.php
 session_start();
-require_once(__DIR__ . '/../../config/db_config.php');
-
-// Check if user is logged in as student
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'student') {
-    header("Location: ../auth/login.php");
+    header("Location: login.php");
     exit();
 }
 
-$loginID = $_SESSION['LoginID'];
+include '../../config/db_config.php';
 
-// Get student info - FIXED: Get email from login_tbl, not students table
-$studentStmt = $conn->prepare("
-    SELECT s.StudentID, s.FullName, s.DeviceRegistered, l.Email 
-    FROM students s 
-    JOIN login_tbl l ON s.LoginID = l.LoginID 
-    WHERE s.LoginID = ?
-");
-$studentStmt->bind_param("i", $loginID);
-$studentStmt->execute();
-$studentRes = $studentStmt->get_result();
-$student = $studentRes->fetch_assoc();
+// Get student information - FIXED QUERY
+$studentQuery = "SELECT s.StudentID, s.FullName, s.Contact, s.Address, s.ProgramCode, s.JoinYear,
+                        d.DepartmentName, d.DepartmentCode, 
+                        sem.SemesterNumber,
+                        l.Email
+                FROM students s 
+                JOIN departments d ON s.DepartmentID = d.DepartmentID 
+                JOIN semesters sem ON s.SemesterID = sem.SemesterID 
+                JOIN login_tbl l ON s.LoginID = l.LoginID
+                WHERE s.LoginID = ?";
+$stmt = $conn->prepare($studentQuery);
+$stmt->bind_param("i", $_SESSION['LoginID']);
+$stmt->execute();
+$student = $stmt->get_result()->fetch_assoc();
 
 if (!$student) {
-    header("Location: logout.php");
-    exit();
+    die("Student information not found. Please contact administrator.");
 }
 
-// Get recent attendance records
-$recentQuery = $conn->prepare("
-    SELECT ar.DateTime, ar.Status, ar.Method, s.SubjectName, s.SubjectCode, t.FullName as TeacherName
-    FROM attendance_records ar
-    JOIN subjects s ON ar.SubjectID = s.SubjectID
-    JOIN teachers t ON ar.TeacherID = t.TeacherID
-    WHERE ar.StudentID = ?
-    ORDER BY ar.DateTime DESC
-    LIMIT 5
-");
-$recentQuery->bind_param("i", $student['StudentID']);
-$recentQuery->execute();
-$recentAttendance = $recentQuery->get_result()->fetch_all(MYSQLI_ASSOC);
+// Get student's subjects for current semester
+$subjectsQuery = "SELECT s.SubjectID, s.SubjectCode, s.SubjectName, s.CreditHour
+                 FROM subjects s 
+                 WHERE s.DepartmentID = (SELECT DepartmentID FROM students WHERE LoginID = ?) 
+                 AND s.SemesterID = (SELECT SemesterID FROM students WHERE LoginID = ?)
+                 ORDER BY s.SubjectCode";
+$stmt = $conn->prepare($subjectsQuery);
+$stmt->bind_param("ii", $_SESSION['LoginID'], $_SESSION['LoginID']);
+$stmt->execute();
+$subjects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Handle direct token from URL
-$urlToken = $_GET['token'] ?? '';
+// Get recent attendance records
+$recentAttendanceQuery = "SELECT ar.DateTime, ar.Status, ar.Method, 
+                                s.SubjectCode, s.SubjectName, 
+                                t.FullName as TeacherName
+                         FROM attendance_records ar
+                         JOIN subjects s ON ar.SubjectID = s.SubjectID
+                         JOIN teachers t ON ar.TeacherID = t.TeacherID
+                         WHERE ar.StudentID = ?
+                         ORDER BY ar.DateTime DESC
+                         LIMIT 3";
+$stmt = $conn->prepare($recentAttendanceQuery);
+$stmt->bind_param("i", $student['StudentID']);
+$stmt->execute();
+$recentAttendance = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -56,20 +64,26 @@ $urlToken = $_GET['token'] ?? '';
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/attendance.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/dashboard_student.css">
     <link rel="stylesheet" href="../../assets/css/scan_qr.css">
 
     <!-- QR Scanner Library -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 
 <body>
-    <!-- Include navbar -->
+    <!-- Sidebar -->
+    <?php include '../components/sidebar_student_dashboard.php'; ?>
+
+    <!-- Navbar -->
     <?php include '../components/navbar_student.php'; ?>
 
-    <div class="container-fluid dashboard-container main-content">
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid dashboard-container">
         <!-- Page Header -->
         <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-4">
             <div>
@@ -79,121 +93,56 @@ $urlToken = $_GET['token'] ?? '';
                 </h2>
                 <p class="text-muted mb-0">Scan QR codes to mark your attendance</p>
             </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a href="dashboard_student.php" class="btn btn-outline-primary">
-                    <i data-lucide="arrow-left"></i> Back to Dashboard
-                </a>
-            </div>
         </div>
 
-        <div class="row g-4">
-            <!-- Left Column: Student Info & Instructions -->
-            <div class="col-lg-4">
-                <!-- Student Info Card -->
-                <div class="student-info-card fade-in mb-4">
+        <!-- Student Info Card -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8">
+                <div class="student-info-card">
                     <div class="d-flex align-items-center gap-3">
                         <div class="student-avatar">
                             <i data-lucide="user" style="width: 24px; height: 24px;"></i>
                         </div>
-                        <div>
-                            <h6 class="mb-1"><?= htmlspecialchars($student['FullName']) ?></h6>
-                            <small class="text-muted">ID: <?= $student['StudentID'] ?></small>
-                            <small class="text-muted d-block"><?= htmlspecialchars($student['Email']) ?></small>
-                            <div class="mt-1">
-                                <?php if ($student['DeviceRegistered']): ?>
-                                    <span class="badge bg-success">
-                                        <i data-lucide="check" style="width: 12px; height: 12px;"></i>
-                                        Device Registered
-                                    </span>
-                                <?php else: ?>
-                                    <span class="badge bg-warning">
-                                        <i data-lucide="alert-triangle" style="width: 12px; height: 12px;"></i>
-                                        Device Not Registered
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1"><?= htmlspecialchars($student['FullName']) ?></h5>
+                            <div class="text-muted">
+                                <span class="me-3">
+                                    <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
+                                    <?= htmlspecialchars($student['DepartmentName']) ?> - Semester <?= $student['SemesterNumber'] ?>
+                                </span>
+                                <?php if ($student['ProgramCode']): ?>
+                                    <span class="me-3">
+                                        <i data-lucide="tag" style="width: 14px; height: 14px;"></i>
+                                        <?= htmlspecialchars($student['ProgramCode']) ?>
                                     </span>
                                 <?php endif; ?>
+                                <span>
+                                    <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
+                                    Joined <?= $student['JoinYear'] ?>
+                                </span>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Instructions Card -->
-                <div class="instructions-card fade-in mb-4">
-                    <h6><i data-lucide="help-circle" class="me-2"></i>How to Scan</h6>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="instruction-step">
-                                <div class="step-icon">
-                                    <span class="fw-bold">1</span>
-                                </div>
-                                <h6>Start Scanner</h6>
-                                <small class="text-muted">Click "Start Scanning" button</small>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="instruction-step">
-                                <div class="step-icon">
-                                    <span class="fw-bold">2</span>
-                                </div>
-                                <h6>Point Camera</h6>
-                                <small class="text-muted">Aim at teacher's QR code</small>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="instruction-step">
-                                <div class="step-icon">
-                                    <span class="fw-bold">3</span>
-                                </div>
-                                <h6>Auto Mark</h6>
-                                <small class="text-muted">Attendance marked automatically</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Scans Card -->
-                <div class="recent-scans-card fade-in">
-                    <h6><i data-lucide="clock" class="me-2"></i>Recent Attendance</h6>
-                    <?php if (!empty($recentAttendance)): ?>
-                        <?php foreach ($recentAttendance as $record): ?>
-                            <div class="scan-item">
-                                <div class="scan-icon <?= $record['Status'] === 'present' ? 'success' : 'error' ?>">
-                                    <i data-lucide="<?= $record['Status'] === 'present' ? 'check' : 'x' ?>" style="width: 16px; height: 16px;"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-medium small"><?= htmlspecialchars($record['SubjectCode']) ?></div>
-                                    <div class="text-muted" style="font-size: 0.75rem;">
-                                        <?= date('M j, g:i A', strtotime($record['DateTime'])) ?>
-                                        <?php if ($record['Method'] === 'qr'): ?>
-                                            <span class="badge bg-info ms-1" style="font-size: 0.6rem;">QR</span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="text-center py-3">
-                            <i data-lucide="calendar-x" class="text-muted mb-2" style="width: 32px; height: 32px;"></i>
-                            <p class="text-muted small mb-0">No recent attendance records</p>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
+        </div>
 
-            <!-- Right Column: Scanner -->
-            <div class="col-lg-8">
-                <div class="scanner-card fade-in">
+        <!-- Scanner Card -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="scanner-card">
                     <!-- Scanner Status -->
                     <div class="scanner-status">
-                        <div class="status-indicator" id="statusIndicator">
+                        <div id="statusIndicator" class="status-indicator">
                             <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
                         </div>
-                        <h5 id="statusTitle">Camera Ready</h5>
-                        <p class="text-muted mb-0" id="statusMessage">Click "Start Scanning" to begin</p>
+                        <h5 id="statusTitle">Initializing Scanner...</h5>
+                        <p id="statusMessage" class="text-muted mb-0">Please wait while we set up your camera</p>
                     </div>
 
                     <!-- Scanner Container -->
-                    <div class="scanner-container">
-                        <div id="qr-reader"></div>
+                    <div id="scannerContainer" class="scanner-container">
+                        <div id="qr-reader" class="qr-reader"></div>
 
                         <!-- Scanner Overlay -->
                         <div class="scanner-overlay">
@@ -203,31 +152,38 @@ $urlToken = $_GET['token'] ?? '';
                                 <div class="corner bottom-left"></div>
                                 <div class="corner bottom-right"></div>
                                 <div class="scanner-line"></div>
-                                <div class="scanner-text">Position QR code within frame</div>
+                            </div>
+                            <div class="scanner-text">
+                                Point your camera at the QR code
                             </div>
                         </div>
                     </div>
 
                     <!-- Scanner Controls -->
                     <div class="scanner-controls">
-                        <button type="button" class="btn btn-success" id="startScanBtn">
+                        <button id="startScanBtn" class="btn btn-primary btn-lg">
                             <i data-lucide="play"></i> Start Scanning
                         </button>
-                        <button type="button" class="btn btn-danger" id="stopScanBtn" style="display: none;">
-                            <i data-lucide="square"></i> Stop Scanning
+                        <button id="stopScanBtn" class="btn btn-outline-secondary btn-lg" style="display: none;">
+                            <i data-lucide="pause"></i> Stop Scanning
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" id="switchCameraBtn" style="display: none;">
-                            <i data-lucide="refresh-cw"></i> Switch Camera
+                        <button id="switchCameraBtn" class="btn btn-outline-info" style="display: none;" title="Switch Camera">
+                            <i data-lucide="rotate-cw"></i> Switch Camera
                         </button>
                     </div>
 
                     <!-- Manual Input Section -->
                     <div class="manual-input-section">
-                        <h6><i data-lucide="keyboard" class="me-2"></i>Manual Code Entry</h6>
-                        <p class="text-muted small">If scanning doesn't work, you can manually enter the attendance code</p>
+                        <h6>
+                            <i data-lucide="keyboard"></i>
+                            Manual Code Entry
+                        </h6>
+                        <p class="text-muted mb-3">If scanning doesn't work, enter the code manually</p>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="manualCodeInput" placeholder="Enter attendance code...">
-                            <button class="btn btn-primary" type="button" id="submitManualCode">
+                            <input type="text" id="manualCodeInput" class="form-control"
+                                placeholder="Enter attendance code..."
+                                autocomplete="off">
+                            <button id="submitManualCode" class="btn btn-success">
                                 <i data-lucide="send"></i> Submit
                             </button>
                         </div>
@@ -235,58 +191,165 @@ $urlToken = $_GET['token'] ?? '';
                 </div>
             </div>
         </div>
+
+        <!-- Instructions and Recent Activity -->
+        <div class="row justify-content-center mt-4">
+            <!-- Instructions -->
+            <div class="col-lg-6 col-md-8 mb-4">
+                <div class="instructions-card">
+                    <h6>
+                        <i data-lucide="help-circle"></i>
+                        How to Scan QR Code
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="instruction-step">
+                                <div class="step-icon">
+                                    <i data-lucide="camera" style="width: 20px; height: 20px;"></i>
+                                </div>
+                                <h6>Allow Camera</h6>
+                                <p class="text-muted small">Grant camera permission when prompted</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="instruction-step">
+                                <div class="step-icon">
+                                    <i data-lucide="play" style="width: 20px; height: 20px;"></i>
+                                </div>
+                                <h6>Start Scanner</h6>
+                                <p class="text-muted small">Tap "Start Scanning" button</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="instruction-step">
+                                <div class="step-icon">
+                                    <i data-lucide="qr-code" style="width: 20px; height: 20px;"></i>
+                                </div>
+                                <h6>Scan Code</h6>
+                                <p class="text-muted small">Point camera at QR code</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Scans -->
+            <div class="col-lg-6 col-md-8 mb-4">
+                <div class="recent-scans-card">
+                    <h6>
+                        <i data-lucide="clock"></i>
+                        Recent Attendance
+                    </h6>
+                    <?php if (empty($recentAttendance)): ?>
+                        <div class="text-center py-4">
+                            <i data-lucide="calendar-x" style="width: 32px; height: 32px; opacity: 0.5;"></i>
+                            <p class="text-muted mt-2 mb-0">No recent attendance records</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($recentAttendance as $record): ?>
+                            <div class="scan-item">
+                                <div class="scan-icon <?= $record['Status'] == 'present' ? 'success' : 'error' ?>">
+                                    <i data-lucide="<?= $record['Status'] == 'present' ? 'check' : 'x' ?>" style="width: 16px; height: 16px;"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-medium"><?= htmlspecialchars($record['SubjectCode']) ?></div>
+                                    <small class="text-muted">
+                                        <?= htmlspecialchars($record['SubjectName']) ?> -
+                                        <?= ucfirst($record['Status']) ?>
+                                        <?php if ($record['Method'] == 'qr'): ?>
+                                            <span class="badge bg-primary ms-1">QR</span>
+                                        <?php endif; ?>
+                                    </small>
+                                    <div class="small text-muted">
+                                        <?= date('M j, Y g:i A', strtotime($record['DateTime'])) ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Subjects -->
+        <?php if (!empty($subjects)): ?>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="instructions-card">
+                        <h6>
+                            <i data-lucide="book-open"></i>
+                            My Subjects (Semester <?= $student['SemesterNumber'] ?>)
+                        </h6>
+                        <div class="row g-3">
+                            <?php foreach ($subjects as $subject): ?>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center gap-2 p-2 bg-light rounded">
+                                        <i data-lucide="book" style="width: 16px; height: 16px;" class="text-primary"></i>
+                                        <div>
+                                            <div class="fw-medium"><?= htmlspecialchars($subject['SubjectCode']) ?></div>
+                                            <small class="text-muted"><?= htmlspecialchars($subject['SubjectName']) ?></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 
     <!-- Success Modal -->
     <div class="modal fade" id="successModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-body text-center p-4">
-                    <div class="success-icon mb-3">
-                        <i data-lucide="check-circle" style="width: 48px; height: 48px; color: #28a745;"></i>
-                    </div>
-                    <h5 class="mb-2">Attendance Marked!</h5>
-                    <p class="text-muted mb-3" id="successMessage">Your attendance has been recorded successfully</p>
-                    <div class="border rounded p-3 mb-3">
-                        <div class="row">
-                            <div class="col-sm-4">
-                                <strong>Subject:</strong>
-                            </div>
-                            <div class="col-sm-8" id="successSubject">-</div>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i data-lucide="check-circle"></i>
+                        Attendance Marked!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center py-3">
+                        <div class="success-icon mb-3">
+                            <i data-lucide="check-circle" style="width: 64px; height: 64px;" class="text-success"></i>
                         </div>
-                        <div class="row mt-2">
-                            <div class="col-sm-4">
-                                <strong>Time:</strong>
-                            </div>
-                            <div class="col-sm-8" id="successTime">-</div>
+                        <h5 id="successSubject">Subject Name</h5>
+                        <p id="successMessage" class="text-muted">Your attendance has been recorded successfully!</p>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                                <span id="successTime"></span>
+                            </small>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                        <i data-lucide="thumbs-up"></i> Great!
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/lucide.min.js"></script>
     <script src="../../assets/js/scan_qr.js"></script>
 
+    <!-- Pass student data to JavaScript -->
     <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
-
-        // Auto-process URL token if present
-        <?php if ($urlToken): ?>
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('Auto-processing URL token: <?= $urlToken ?>');
-                processAttendance('<?= $urlToken ?>');
-            });
-        <?php endif; ?>
-
-        // Apply theme
-        if (localStorage.getItem("theme") === "dark") {
-            document.body.classList.add("dark-mode");
-        }
+        window.studentData = {
+            studentId: <?= $student['StudentID'] ?>,
+            fullName: '<?= htmlspecialchars($student['FullName']) ?>',
+            department: '<?= htmlspecialchars($student['DepartmentName']) ?>',
+            semester: <?= $student['SemesterNumber'] ?>
+        };
     </script>
 </body>
 

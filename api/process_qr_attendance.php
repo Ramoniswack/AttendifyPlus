@@ -1,4 +1,7 @@
 <?php
+// Enable error reporting for debugging (disable in production)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 session_start();
 require_once(__DIR__ . '/../config/db_config.php');
@@ -17,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $token = $_POST['token'] ?? '';
-
 if (empty($token)) {
     echo json_encode(['success' => false, 'message' => 'No attendance token provided']);
     exit();
@@ -32,6 +34,7 @@ try {
     $studentStmt->execute();
     $studentRes = $studentStmt->get_result();
     $student = $studentRes->fetch_assoc();
+    $studentStmt->close();
 
     if (!$student) {
         echo json_encode(['success' => false, 'message' => 'Student not found']);
@@ -56,6 +59,7 @@ try {
     $qrSessionStmt->execute();
     $qrSessionRes = $qrSessionStmt->get_result();
     $qrSession = $qrSessionRes->fetch_assoc();
+    $qrSessionStmt->close();
 
     if (!$qrSession) {
         echo json_encode(['success' => false, 'message' => 'QR code is invalid or has expired']);
@@ -72,6 +76,7 @@ try {
     $enrollmentStmt->execute();
     $enrollmentRes = $enrollmentStmt->get_result();
     $isEnrolled = $enrollmentRes->fetch_assoc()['count'] > 0;
+    $enrollmentStmt->close();
 
     if (!$isEnrolled) {
         echo json_encode(['success' => false, 'message' => 'You are not enrolled in this subject']);
@@ -87,6 +92,7 @@ try {
     $existingStmt->execute();
     $existingRes = $existingStmt->get_result();
     $existing = $existingRes->fetch_assoc();
+    $existingStmt->close();
 
     if ($existing) {
         if ($existing['Method'] === 'qr') {
@@ -115,6 +121,7 @@ try {
     $attendanceStmt->bind_param("iii", $student['StudentID'], $qrSession['TeacherID'], $qrSession['SubjectID']);
 
     if ($attendanceStmt->execute()) {
+        $attendanceStmt->close();
         echo json_encode([
             'success' => true,
             'message' => 'Attendance marked successfully!',
@@ -125,11 +132,10 @@ try {
             'method' => 'qr'
         ]);
     } else {
+        $attendanceStmt->close();
         echo json_encode(['success' => false, 'message' => 'Failed to mark attendance. Please try again.']);
     }
-
 } catch (Exception $e) {
     error_log("QR Attendance Error: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Database error occurred. Please try again.']);
 }
-?>

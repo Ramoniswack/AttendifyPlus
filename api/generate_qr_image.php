@@ -1,4 +1,5 @@
 <?php
+// filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\api\generate_qr_image.php
 
 header('Content-Type: image/png');
 header('Cache-Control: no-cache, no-store, must-revalidate');
@@ -11,7 +12,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0); // Don't display errors in image output
 
 $token = $_GET['token'] ?? '';
-$size = (int)($_GET['size'] ?? '200');
+$size = (int)($_GET['size'] ?? 200);
 
 // Ensure size is within reasonable bounds
 $size = max(100, min(400, $size));
@@ -146,6 +147,39 @@ if (!$qrGenerated) {
         }
     } catch (Exception $e) {
         error_log("QR Generator: QuickChart failed - " . $e->getMessage());
+    }
+}
+
+// Method 4: QRCode Generator API
+if (!$qrGenerated) {
+    try {
+        $qrCodeGenUrl = "https://qr-code-generator.com/api/qr-code.php?size={$size}&data=" . urlencode($scanUrl);
+
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 8,
+                'ignore_errors' => true,
+                'user_agent' => 'AttendifyPlus QR Generator 1.0'
+            ],
+            'https' => [
+                'timeout' => 8,
+                'ignore_errors' => true,
+                'user_agent' => 'AttendifyPlus QR Generator 1.0',
+                'verify_peer' => false,
+                'verify_peer_name' => false
+            ]
+        ]);
+
+        $qrImage = @file_get_contents($qrCodeGenUrl, false, $context);
+
+        if ($qrImage !== false && !empty($qrImage) && strlen($qrImage) > 100) {
+            error_log("QR Generator: Successfully used QRCode Generator API");
+            $method_used = 'qrcodegen';
+            echo $qrImage;
+            $qrGenerated = true;
+        }
+    } catch (Exception $e) {
+        error_log("QR Generator: QRCode Generator failed - " . $e->getMessage());
     }
 }
 

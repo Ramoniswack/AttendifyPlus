@@ -619,6 +619,7 @@ foreach ($students as $student) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/lucide.min.js"></script>
     <script src="../../assets/js/attendance.js"></script>
+    <script src="../../assets/js/qrcode.min.js"></script>
 
     <script>
         // Initialize page
