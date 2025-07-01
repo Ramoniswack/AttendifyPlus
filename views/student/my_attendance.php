@@ -56,6 +56,9 @@ $recentActivity = [
     ['date' => '2024-01-14', 'subject' => 'Computer Science', 'status' => 'present', 'time' => '10:00 AM', 'method' => 'QR'],
     ['date' => '2024-01-13', 'subject' => 'English', 'status' => 'present', 'time' => '01:00 PM', 'method' => 'Manual']
 ];
+
+// Get current page name for sidebar
+$currentPage = basename($_SERVER['PHP_SELF']);
 ?>
 
 <!DOCTYPE html>
@@ -94,7 +97,7 @@ $recentActivity = [
         <!-- Page Header -->
         <div class="page-header mb-4">
             <div class="d-flex justify-content-between align-items-start flex-wrap">
-                <div>
+                <div class="header-content">
                     <h2 class="page-title">
                         <i data-lucide="bar-chart-3"></i>
                         Attendance Analytics
@@ -103,7 +106,7 @@ $recentActivity = [
                 </div>
                 <div class="header-actions">
                     <div class="dropdown">
-                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             <i data-lucide="calendar"></i>
                             This Semester
                         </button>
@@ -114,7 +117,7 @@ $recentActivity = [
                             <li><a class="dropdown-item" href="#">Academic Year</a></li>
                         </ul>
                     </div>
-                    <button class="btn btn-primary" onclick="exportReport()">
+                    <button class="btn btn-light" onclick="exportReport()">
                         <i data-lucide="download"></i>
                         Export Report
                     </button>
