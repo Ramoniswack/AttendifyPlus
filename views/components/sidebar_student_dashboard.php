@@ -11,14 +11,12 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <i data-lucide="layout-dashboard" class="me-2"></i>Dashboard
       </a>
       <a class="nav-link <?= ($currentPage == 'submit_assignment.php') ? 'active' : '' ?>" href="submit_assignment.php">
-        <i data-lucide="file-plus" class="me-2"></i>Submit Assignment
+        <i data-lucide="file-plus" class="me-2"></i>Assignments
       </a>
       <a class="nav-link <?= ($currentPage == 'scan_qr.php') ? 'active' : '' ?>" href="scan_qr.php">
         <i data-lucide="qr-code" class="me-2"></i>Scan QR
       </a>
-      <a class="nav-link <?= ($currentPage == 'view_assignments.php') ? 'active' : '' ?>" href="view_assignments.php">
-        <i data-lucide="clipboard-list" class="me-2"></i>View Assignments
-      </a>
+
       <a class="nav-link <?= ($currentPage == 'view_materials.php') ? 'active' : '' ?>" href="view_materials.php">
         <i data-lucide="folder-open" class="me-2"></i>View Materials
       </a>
