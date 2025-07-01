@@ -660,44 +660,63 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
             formData.append('fingerprint', fingerprint);
             formData.append('user_agent', navigator.userAgent);
 
-            // Fix the fetch URL to use correct path
-            fetch('../student/student_devices.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
+            console.log('Sending device registration request...');
+            console.log('Fingerprint:', fingerprint.substring(0, 10) + '...');
+
+            // Use correct path - remove '../student/' prefix
+            fetch('student_devices.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.text(); // Get as text first for debugging
+            })
+            .then(text => {
+                console.log('Raw response:', text);
+                try {
+                    const data = JSON.parse(text);
+                    console.log('Parsed response:', data);
+                    
                     if (data.success) {
                         statusDiv.innerHTML = `
-                        <i data-lucide="check-circle" style="width: 48px; height: 48px;" class="text-success"></i>
-                        <p class="text-success mt-2 mb-0">${data.message}</p>
-                    `;
-
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
+                            <i data-lucide="check-circle" style="width: 48px; height: 48px;" class="text-success"></i>
+                            <p class="text-success mt-2 mb-0">${data.message}</p>
+                        `;
+                        setTimeout(() => location.reload(), 2000);
                     } else {
                         statusDiv.innerHTML = `
-                        <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
-                        <p class="text-danger mt-2 mb-0">Error: ${data.error}</p>
-                    `;
+                            <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
+                            <p class="text-danger mt-2 mb-0">Error: ${data.error || data.message}</p>
+                        `;
                         modalFooter.style.display = 'flex';
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
+                } catch (e) {
+                    console.error('JSON parse error:', e);
                     statusDiv.innerHTML = `
-                    <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
-                    <p class="text-danger mt-2 mb-0">Registration failed. Please try again.</p>
-                `;
+                        <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
+                        <p class="text-danger mt-2 mb-0">Server error: ${text}</p>
+                    `;
                     modalFooter.style.display = 'flex';
-                })
-                .finally(() => {
-                    // Re-initialize Lucide icons
-                    if (typeof lucide !== "undefined") {
-                        lucide.createIcons();
-                    }
-                });
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                statusDiv.innerHTML = `
+                    <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
+                    <p class="text-danger mt-2 mb-0">Network error: ${error.message}</p>
+                `;
+                modalFooter.style.display = 'flex';
+            })
+            .finally(() => {
+                if (typeof lucide !== "undefined") {
+                    lucide.createIcons();
+                }
+            });
         }
 
         function generateDeviceFingerprint() {

@@ -247,11 +247,12 @@ function processAttendance(token) {
     const formData = new FormData();
     formData.append('token', token);
     
-    fetch('../api/process_qr_attendance.php', {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin'
-    })
+   // In scan_qr.js, fix the fetch URL:
+fetch('../../api/process_qr_attendance.php', {  // Add proper relative path
+    method: 'POST',
+    body: formData,
+    credentials: 'same-origin'
+})
     .then(response => {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
