@@ -1,3 +1,55 @@
-<!-- Placeholder for .gitignore -->
-Uploads/
-config/db_config
+# Development and Debug Files
+debug_*.php
+test_*.php
+test_*.html
+*_backup.*
+*_old.*
+*.log
+
+# Backup folders
+api_backup/
+
+# Environment and Config
+.env
+config/local_*
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+Thumbs.db
+
+# Dependencies
+/vendor/
+node_modules/
+
+# Uploads (except directory structure)
+uploads/students/*
+uploads/teachers/*
+uploads/admins/*
+uploads/materials/*
+!uploads/students/.gitkeep
+!uploads/teachers/.gitkeep
+!uploads/admins/.gitkeep
+!uploads/materials/.gitkeep
+
+# Database backups and temp files
+database/backup/
+database/temp/
+*.sql.bak
+*.dump
+
+# Logs and temporary files
+logs/
+tmp/
+temp/
+*.tmp
+
+# System files
+*.swp
+*.swo
+*~
+
+# Production config (uncomment for production)
+# config/db_config.php

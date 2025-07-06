@@ -13,9 +13,10 @@ ini_set('display_errors', 0); // Don't display errors in image output
 
 $token = $_GET['token'] ?? '';
 $size = (int)($_GET['size'] ?? 200);
+$mode = $_GET['mode'] ?? 'classroom'; // New: QR mode parameter
 
 // Ensure size is within reasonable bounds
-$size = max(100, min(400, $size));
+$size = max(100, min(800, $size)); // Increased max size for classroom projection
 
 if (empty($token)) {
     // Return a simple error image
@@ -48,6 +49,26 @@ error_log("QR Generator: Creating QR for URL: " . $scanUrl);
 // Try multiple QR code generation methods
 $qrGenerated = false;
 $method_used = 'unknown';
+
+// Method 0: Try enhanced Composer-based QR generator first
+if (!$qrGenerated && file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    try {
+        require_once(__DIR__ . '/../vendor/autoload.php');
+        require_once(__DIR__ . '/../src/QRCodeManager.php');
+
+        $qrManager = new AttendifyPlus\QRCodeManager();
+        $result = $qrManager->generateAttendanceQR($token, $mode, 'png');
+
+        if ($result['success']) {
+            echo $result['content'];
+            $qrGenerated = true;
+            $method_used = 'composer_enhanced';
+            error_log("QR Generator: Successfully used Enhanced Composer QR (mode: $mode)");
+        }
+    } catch (Exception $e) {
+        error_log("QR Generator: Enhanced Composer method failed - " . $e->getMessage());
+    }
+}
 
 // Method 1: Google Charts API
 if (!$qrGenerated) {

@@ -280,6 +280,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit();
 }
 
+// Handle device unregistration for students
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'unregister_device') {
+    $studentID = $_POST['student_id'] ?? '';
+
+    if (!empty($studentID)) {
+        try {
+            $conn->begin_transaction();
+
+            // Get student details for logging
+            $studentStmt = $conn->prepare("SELECT FullName FROM students WHERE StudentID = ?");
+            $studentStmt->bind_param("i", $studentID);
+            $studentStmt->execute();
+            $studentResult = $studentStmt->get_result();
+            $studentData = $studentResult->fetch_assoc();
+            $studentName = $studentData['FullName'] ?? 'Unknown';
+            $studentStmt->close();
+
+            // Remove device registration from students table
+            $updateStmt = $conn->prepare("UPDATE students SET DeviceRegistered = FALSE WHERE StudentID = ?");
+            $updateStmt->bind_param("i", $studentID);
+            $updateStmt->execute();
+            $updateStmt->close();
+
+            // Remove device fingerprint from student_devices table
+            $deleteDeviceStmt = $conn->prepare("DELETE FROM student_devices WHERE StudentID = ?");
+            $deleteDeviceStmt->bind_param("i", $studentID);
+            $deleteDeviceStmt->execute();
+            $deleteDeviceStmt->close();
+
+            // Mark any pending tokens as used/expired
+            $expireTokensStmt = $conn->prepare("UPDATE device_registration_tokens SET Used = TRUE WHERE StudentID = ? AND Used = FALSE");
+            $expireTokensStmt->bind_param("i", $studentID);
+            $expireTokensStmt->execute();
+            $expireTokensStmt->close();
+
+            $conn->commit();
+            $_SESSION['success_message'] = "Device successfully unregistered for {$studentName}. Student can now register a new device.";
+        } catch (Exception $e) {
+            $conn->rollback();
+            $_SESSION['error_message'] = "Failed to unregister device: " . $e->getMessage();
+        }
+    } else {
+        $_SESSION['error_message'] = "Invalid student ID for device unregistration.";
+    }
+
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
+// Handle device token regeneration (for device changes)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'regenerate_token') {
+    $studentID = $_POST['student_id'] ?? '';
+
+    if (!empty($studentID)) {
+        try {
+            $conn->begin_transaction();
+
+            // Get student details
+            $studentStmt = $conn->prepare("SELECT FullName, DeviceRegistered FROM students WHERE StudentID = ?");
+            $studentStmt->bind_param("i", $studentID);
+            $studentStmt->execute();
+            $studentResult = $studentStmt->get_result();
+            $studentData = $studentResult->fetch_assoc();
+            $studentStmt->close();
+
+            if ($studentData) {
+                // First unregister existing device
+                $updateStmt = $conn->prepare("UPDATE students SET DeviceRegistered = FALSE WHERE StudentID = ?");
+                $updateStmt->bind_param("i", $studentID);
+                $updateStmt->execute();
+                $updateStmt->close();
+
+                // Remove old device fingerprint
+                $deleteDeviceStmt = $conn->prepare("DELETE FROM student_devices WHERE StudentID = ?");
+                $deleteDeviceStmt->bind_param("i", $studentID);
+                $deleteDeviceStmt->execute();
+                $deleteDeviceStmt->close();
+
+                // Mark old tokens as used
+                $expireTokensStmt = $conn->prepare("UPDATE device_registration_tokens SET Used = TRUE WHERE StudentID = ? AND Used = FALSE");
+                $expireTokensStmt->bind_param("i", $studentID);
+                $expireTokensStmt->execute();
+                $expireTokensStmt->close();
+
+                // Generate new token
+                $token = bin2hex(random_bytes(32));
+                $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+
+                $tokenStmt = $conn->prepare("INSERT INTO device_registration_tokens (StudentID, Token, ExpiresAt) VALUES (?, ?, ?)");
+                $tokenStmt->bind_param("iss", $studentID, $token, $expiresAt);
+
+                if ($tokenStmt->execute()) {
+                    $conn->commit();
+                    $_SESSION['success_message'] = "Device unregistered and new registration token generated for {$studentData['FullName']}! Valid for 10 minutes.";
+                } else {
+                    $conn->rollback();
+                    $_SESSION['error_message'] = "Failed to generate new registration token.";
+                }
+                $tokenStmt->close();
+            } else {
+                $conn->rollback();
+                $_SESSION['error_message'] = "Student not found.";
+            }
+        } catch (Exception $e) {
+            $conn->rollback();
+            $_SESSION['error_message'] = "Failed to regenerate device token: " . $e->getMessage();
+        }
+    } else {
+        $_SESSION['error_message'] = "Invalid student ID for token regeneration.";
+    }
+
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
 // Check for messages from session (after redirect)
 if (isset($_SESSION['success_message'])) {
     $successMsg = $_SESSION['success_message'];
@@ -660,12 +775,68 @@ foreach ($statsQueries as $key => $query) {
                                                         </button>
                                                     </form>
                                                 </li>
-                                                <?php if (!$student['DeviceRegistered'] && $student['pending_tokens'] == 0): ?>
+
+                                                <!-- Device Management Options -->
+                                                <?php if ($student['DeviceRegistered']): ?>
+                                                    <li>
+                                                        <hr class="dropdown-divider">
+                                                    </li>
+                                                    <li class="dropdown-header">Device Management</li>
+                                                    <li>
+                                                        <form method="POST" class="d-inline">
+                                                            <input type="hidden" name="action" value="unregister_device">
+                                                            <input type="hidden" name="student_id" value="<?= $student['StudentID'] ?>">
+                                                            <button type="submit" class="dropdown-item text-warning"
+                                                                onclick="return confirm('This will unregister the student\'s device. They will need to register a new device. Continue?')">
+                                                                <i data-lucide="smartphone-x"></i>
+                                                                Unregister Device
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form method="POST" class="d-inline">
+                                                            <input type="hidden" name="action" value="regenerate_token">
+                                                            <input type="hidden" name="student_id" value="<?= $student['StudentID'] ?>">
+                                                            <button type="submit" class="dropdown-item text-info"
+                                                                onclick="return confirm('This will unregister the current device and generate a new registration token. The student can then register a new device. Continue?')">
+                                                                <i data-lucide="refresh-cw"></i>
+                                                                Regenerate Token (Device Change)
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                <?php elseif ($student['pending_tokens'] > 0): ?>
+                                                    <li>
+                                                        <hr class="dropdown-divider">
+                                                    </li>
+                                                    <li class="dropdown-header">Device Management</li>
+                                                    <li>
+                                                        <span class="dropdown-item-text text-muted">
+                                                            <i data-lucide="clock"></i>
+                                                            Token pending (expires <?= date('M j, g:i A', strtotime($student['latest_token_expires'])) ?>)
+                                                        </span>
+                                                    </li>
+                                                    <li>
+                                                        <form method="POST" class="d-inline">
+                                                            <input type="hidden" name="action" value="regenerate_token">
+                                                            <input type="hidden" name="student_id" value="<?= $student['StudentID'] ?>">
+                                                            <button type="submit" class="dropdown-item text-info"
+                                                                onclick="return confirm('Generate a new device registration token? This will invalidate any existing tokens.')">
+                                                                <i data-lucide="refresh-cw"></i>
+                                                                Regenerate Token
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                <?php else: ?>
+                                                    <li>
+                                                        <hr class="dropdown-divider">
+                                                    </li>
+                                                    <li class="dropdown-header">Device Management</li>
                                                     <li>
                                                         <form method="POST" class="d-inline">
                                                             <input type="hidden" name="action" value="generate_token">
                                                             <input type="hidden" name="student_id" value="<?= $student['StudentID'] ?>">
-                                                            <button type="submit" class="dropdown-item" onclick="return confirm('Generate device registration token for this student?')">
+                                                            <button type="submit" class="dropdown-item text-success"
+                                                                onclick="return confirm('Generate device registration token for this student?')">
                                                                 <i data-lucide="smartphone"></i>
                                                                 Generate Device Token
                                                             </button>

@@ -1,0 +1,2 @@
+# This file ensures the directory is included in git
+# Upload files are ignored by .gitignore but directory structure is preserved
