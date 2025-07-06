@@ -7,7 +7,7 @@
   --text-light: #333;
   --text-dark: #eee;
   --accent-light: #1A73E8;
-  --accent-dark: #00ffc8;
+  --accent-dark: rgba(0, 212, 170, 1);
   --navbar-light: var(--accent-light);
   --navbar-dark: var(--accent-dark);
   --text-muted-light: #6c757d;

@@ -1,0 +1,40 @@
+{
+    "name": "attendifyplus/attendance-system",
+    "description": "AttendifyPlus - Advanced Attendance Management System with QR Code Support",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "endroid/qr-code": "^4.8"
+    },
+    "suggest": {
+        "ext-gd": "For image manipulation support",
+        "ext-imagick": "For advanced image processing"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AttendifyPlus\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AttendifyPlus\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "scripts": {
+        "post-install-cmd": [
+            "@php -r \"if (!file_exists('src')) { mkdir('src', 0755, true); }\""
+        ],
+        "post-update-cmd": [
+            "@php -r \"echo 'QR Code libraries updated successfully!\\n';\""
+        ]
+    }
+}

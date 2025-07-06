@@ -198,6 +198,12 @@ function updateThemeElements() {
 }
 
 function updateChartsForTheme() {
+  // Check if Chart.js is available before proceeding
+  if (typeof Chart === 'undefined') {
+    console.log('Chart.js not available, skipping chart theme update');
+    return;
+  }
+  
   const isDark = document.body.classList.contains("dark-mode");
   const gridColor = isDark ? "#374151" : "#e5e7eb";
   const textColor = isDark ? "#f3f4f6" : "#1f2937";
@@ -205,13 +211,13 @@ function updateChartsForTheme() {
   Chart.defaults.color = textColor;
 
   // Update existing charts if they exist
-  if (window.attendanceChart) {
+  if (window.attendanceChart && typeof window.attendanceChart.update === 'function') {
     window.attendanceChart.options.scales.y.grid.color = gridColor;
     window.attendanceChart.options.scales.x.grid.color = gridColor;
     window.attendanceChart.update();
   }
 
-  if (window.assignmentChart) {
+  if (window.assignmentChart && typeof window.assignmentChart.update === 'function') {
     window.assignmentChart.options.scales.y.grid.color = gridColor;
     window.assignmentChart.options.scales.x.grid.color = gridColor;
     window.assignmentChart.update();

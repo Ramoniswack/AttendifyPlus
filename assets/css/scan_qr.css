@@ -1,126 +1,670 @@
-/* QR Scanner Specific Styles */
+/* ====================================================================
+   QR SCANNER - PREMIUM MODERN UI DESIGN
+   Beautiful, Mobile-First, Dark Mode Adaptive Design
+   ==================================================================== */
 
-.student-info-card {
-    background: var(--card-light);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 12px;
+:root {
+    /* Light Theme Colors */
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-light: rgba(59, 130, 246, 0.1);
+    --success: #10b981;
+    --success-light: rgba(16, 185, 129, 0.1);
+    --warning: #f59e0b;
+    --warning-light: rgba(245, 158, 11, 0.1);
+    --danger: #ef4444;
+    --danger-light: rgba(239, 68, 68, 0.1);
+    --dark: #1f2937;
+    --light: #f8fafc;
+    --white: #ffffff;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border: #e5e7eb;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --shadow-lg: rgba(0, 0, 0, 0.15);
+    --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --backdrop-blur: blur(20px);
+}
+
+/* Dark Theme Colors */
+[data-bs-theme="dark"],
+body.dark-mode {
+    --primary: #047857;
+    --primary-hover: #065f46;
+    --primary-light: rgba(4, 120, 87, 0.15);
+    --success: #10b981;
+    --success-light: rgba(16, 185, 129, 0.15);
+    --warning: #f59e0b;
+    --warning-light: rgba(245, 158, 11, 0.15);
+    --danger: #ef4444;
+    --danger-light: rgba(239, 68, 68, 0.15);
+    --dark: #111827;
+    --light: #1f2937;
+    --white: #111827;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --border: #374151;
+    --shadow: rgba(0, 0, 0, 0.4);
+    --shadow-lg: rgba(0, 0, 0, 0.6);
+    --gradient-primary: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+/* ====================================================================
+   BASE LAYOUT & TYPOGRAPHY
+   ==================================================================== */
+
+.scanner-body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--light);
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+.dashboard-container {
+    padding: 1rem;
+    max-width: 100%;
+}
+
+/* ====================================================================
+   PAGE HEADER
+   ==================================================================== */
+
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.page-title i {
+    width: 28px;
+    height: 28px;
+    color: var(--primary);
+}
+
+/* ====================================================================
+   MOBILE QUICK ACTIONS BAR
+   ==================================================================== */
+
+.mobile-quick-actions {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 4px 20px var(--shadow);
+    position: sticky;
+    top: 70px;
+    z-index: 100;
+    -webkit-backdrop-filter: var(--backdrop-blur);
+    backdrop-filter: var(--backdrop-blur);
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
+
+.mobile-quick-actions .d-flex {
+    width: 100%;
+}
+
+#mobileStartScanBtn {
+    background: var(--gradient-primary) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 700 !important;
+    font-size: 1.2rem !important;
+    padding: 1.25rem 2rem !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 20px var(--primary-light) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    min-height: 60px !important;
+    flex: 1 !important;
+}
+
+#mobileStartScanBtn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+#mobileStartScanBtn:hover::before {
+    left: 100%;
+}
+
+#mobileStartScanBtn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 30px var(--primary-light) !important;
+}
+
+#mobileStartScanBtn:active {
+    transform: translateY(0) scale(0.98) !important;
+}
+
+/* ====================================================================
+   STUDENT INFO CARD - MODERN DESIGN
+   ==================================================================== */
+
+.student-info-card-modern {
+    background: var(--gradient-primary);
+    border-radius: 20px;
     padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: 0 8px 32px var(--primary-light);
+    position: relative;
+    overflow: hidden;
+    min-height: 100px;
 }
 
-body.dark-mode .student-info-card {
-    background: var(--card-dark);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+.student-info-card-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(40px, -40px);
 }
 
-.student-avatar {
+.student-profile {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 2;
+    min-height: 60px;
+}
+
+.student-avatar-modern {
     width: 50px;
     height: 50px;
-    background: var(--accent-light);
+    background: rgba(255, 255, 255, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+}
+
+.student-details {
+    flex: 1;
+}
+
+.student-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    color: white;
+    line-height: 1.3;
+}
+
+.student-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.department-badge {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.join-year {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.25rem 0.6rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+}
+
+.scan-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.status-indicator-modern {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+}
+
+.status-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ====================================================================
+   DESKTOP SCANNER CARD
+   ==================================================================== */
+
+.scanner-card-modern {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px var(--shadow);
+    margin-bottom: 2rem;
+}
+
+.scanner-header {
+    padding: 2rem 2rem 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--light) 0%, var(--white) 100%);
+}
+
+.scanner-header h5 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.scanner-controls-desktop {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.scanner-container-desktop {
+    padding: 2rem;
+    text-align: center;
+    background: var(--light);
+    position: relative;
+}
+
+.qr-reader-desktop {
+    max-width: 400px;
+    margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px var(--shadow);
+}
+
+.scanner-status-desktop {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border);
+    background: var(--white);
+}
+
+.status-indicator-desktop {
+    width: 50px;
+    height: 50px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 20px var(--primary-light);
+}
+
+/* ====================================================================
+   ACTIVITY CARD - RECENT ATTENDANCE
+   ==================================================================== */
+
+.activity-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px var(--shadow);
+}
+
+.activity-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--light) 0%, var(--white) 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.activity-header h6 {
+    color: var(--text-primary);
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.activity-header h6 i {
+    width: 20px;
+    height: 20px;
+    color: var(--primary);
+}
+
+.activity-count {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 4px 15px var(--primary-light);
+}
+
+.activity-list {
+    padding: 1.5rem 2rem 2rem 2rem;
+}
+
+.activity-empty {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-muted);
+}
+
+.activity-empty i {
+    color: var(--text-muted);
+    opacity: 0.5;
+    margin-bottom: 1rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    background: var(--light);
+    border: 1px solid var(--border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.activity-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.activity-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px var(--shadow);
+}
+
+.activity-item:hover::before {
+    transform: scaleY(1);
+}
+
+.activity-item:last-child {
+    margin-bottom: 0;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-body.dark-mode .student-avatar {
-    background: var(--accent-dark);
-    color: black;
+.activity-icon.success {
+    background: var(--gradient-success);
 }
 
-/* Scanner Card */
-.scanner-card {
-    background: var(--card-light);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+.activity-icon.error {
+    background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    font-size: 1rem;
+}
+
+.activity-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.activity-time {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.activity-status {
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.activity-status.present {
+    background: var(--success-light);
+    color: var(--success);
+    border: 2px solid var(--success);
+}
+
+.activity-status.absent {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 2px solid var(--danger);
+}
+
+/* ====================================================================
+   BUTTONS & CONTROLS
+   ==================================================================== */
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
     border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-body.dark-mode .scanner-card {
-    background: var(--card-dark);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-/* Scanner Status */
-.scanner-status {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.status-indicator {
-    width: 60px;
-    height: 60px;
-    background: var(--accent-light);
-    border-radius: 50%;
-    display: flex;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem;
-    color: white;
-    transition: all 0.3s ease;
-}
-
-body.dark-mode .status-indicator {
-    background: var(--accent-dark);
-    color: black;
-}
-
-/* Scanner Container */
-.scanner-container {
+    gap: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    font-size: 0.9rem;
+    min-height: 44px;
     position: relative;
-    max-width: 400px;
-    margin: 0 auto 2rem;
-    border-radius: 12px;
     overflow: hidden;
 }
 
-.qr-reader {
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 4px 15px var(--primary-light);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px var(--primary-light);
+}
+
+.btn-success {
+    background: var(--gradient-success);
+    color: white;
+    box-shadow: 0 4px 15px var(--success-light);
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px var(--success-light);
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 2px solid var(--border);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--text-secondary);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-info {
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.btn-outline-info:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* ====================================================================
+   FULLSCREEN SCANNER - MOBILE
+   ==================================================================== */
+
+.fullscreen-scanner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #000000;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+}
+
+.fullscreen-header {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
+    padding: 1rem;
+    position: relative;
+    z-index: 10;
+}
+
+.fullscreen-camera-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-qr-reader {
     width: 100% !important;
-    border-radius: 12px;
+    height: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
 }
 
-.qr-reader video {
-    border-radius: 12px;
+.fullscreen-qr-reader video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
 }
 
-/* Scanner Overlay */
-.scanner-overlay {
+.fullscreen-overlay {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     pointer-events: none;
-    z-index: 10;
-    display: none;
 }
 
-.scanner-frame {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 250px;
-    height: 250px;
-    border: 2px solid transparent;
+.scanner-target {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    max-width: 80vw;
+    max-height: 80vw;
+}
+
+.corner-frame {
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 .corner {
     position: absolute;
-    width: 30px;
-    height: 30px;
-    border: 3px solid var(--accent-light);
-}
-
-body.dark-mode .corner {
-    border-color: var(--accent-dark);
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--primary);
+    border-radius: 8px;
 }
 
 .corner.top-left {
@@ -151,339 +695,351 @@ body.dark-mode .corner {
     border-top: none;
 }
 
-.scanner-line {
-    position: absolute;
-    top: 0;
-    left: 10%;
-    width: 80%;
-    height: 2px;
-    background: var(--accent-light);
-    animation: scan 2s linear infinite;
-}
-
-body.dark-mode .scanner-line {
-    background: var(--accent-dark);
-}
-
-@keyframes scan {
-    0% { top: 0; opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { top: 100%; opacity: 1; }
-}
-
-.scanner-text {
-    position: absolute;
-    bottom: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: var(--text-light);
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-align: center;
-    white-space: nowrap;
-}
-
-body.dark-mode .scanner-text {
-    color: var(--text-dark);
-}
-
-/* Scanner Controls */
-.scanner-controls {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-}
-
-.scanner-controls .btn {
-    min-width: 140px;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.scanner-controls .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Manual Input Section */
-.manual-input-section {
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    padding-top: 2rem;
-    margin-top: 2rem;
-}
-
-body.dark-mode .manual-input-section {
-    border-top-color: rgba(255, 255, 255, 0.1);
-}
-
-.manual-input-section h6 {
-    color: var(--accent-light);
-    margin-bottom: 0.5rem;
-}
-
-body.dark-mode .manual-input-section h6 {
-    color: var(--accent-dark);
-}
-
-/* Instructions Card */
-.instructions-card {
-    background: var(--card-light);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    height: 100%;
-}
-
-body.dark-mode .instructions-card {
-    background: var(--card-dark);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.instructions-card h6 {
-    color: var(--accent-light);
-    margin-bottom: 1rem;
-}
-
-body.dark-mode .instructions-card h6 {
-    color: var(--accent-dark);
-}
-
-.instruction-step {
-    text-align: center;
-}
-
-.step-icon {
-    width: 40px;
-    height: 40px;
-    background: var(--accent-light);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 0.5rem;
-    color: white;
-}
-
-body.dark-mode .step-icon {
-    background: var(--accent-dark);
-    color: black;
-}
-
-.instruction-step h6 {
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-    color: var(--text-light);
-}
-
-body.dark-mode .instruction-step h6 {
-    color: var(--text-dark);
-}
-
-/* Recent Scans Card */
-.recent-scans-card {
-    background: var(--card-light);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    height: 100%;
-}
-
-body.dark-mode .recent-scans-card {
-    background: var(--card-dark);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.recent-scans-card h6 {
-    color: var(--accent-light);
-    margin-bottom: 1rem;
-}
-
-body.dark-mode .recent-scans-card h6 {
-    color: var(--accent-dark);
-}
-
-.scan-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-    background: rgba(0, 0, 0, 0.02);
-    transition: all 0.2s ease;
-}
-
-body.dark-mode .scan-item {
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.scan-item:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-body.dark-mode .scan-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.scan-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    flex-shrink: 0;
-}
-
-.scan-icon.success {
-    background: #28a745;
-}
-
-.scan-icon.error {
-    background: #dc3545;
-}
-
-/* Success Modal Enhancements */
-.success-icon {
-    width: 80px;
-    height: 80px;
-    background: rgba(40, 167, 69, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .scanner-card {
-        padding: 1rem;
-    }
-    
-    .scanner-frame {
-        width: 200px;
-        height: 200px;
-    }
-    
-    .scanner-controls {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .scanner-controls .btn {
-        min-width: 200px;
-    }
-    
-    .instructions-card,
-    .recent-scans-card {
-        margin-bottom: 1rem;
-    }
-    
-    .instruction-step {
-        margin-bottom: 1rem;
-    }
-}
-
-@media (max-width: 576px) {
-    .student-info-card {
-        padding: 1rem;
-    }
-    
-    .student-avatar {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .scanner-card {
-        padding: 1rem;
-    }
-    
-    .scanner-frame {
-        width: 180px;
-        height: 180px;
-    }
-    
-    .scanner-controls .btn {
-        min-width: 100%;
-    }
-}
-
-/* Animation Classes */
-.fade-in {
-    animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.pulse {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-/* Loading States */
-.loading-overlay {
+.scanning-line {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.9);
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    animation: scan 2s linear infinite;
+    border-radius: 2px;
+    box-shadow: 0 0 10px var(--primary);
+}
+
+@keyframes scan {
+    0% { transform: translateY(0); opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { transform: translateY(280px); opacity: 1; }
+}
+
+.scan-instructions {
+    margin-top: 3rem;
+    text-align: center;
+}
+
+.scan-instructions h5 {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+/* ====================================================================
+   SUCCESS MODAL
+   ==================================================================== */
+
+.success-modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    background: var(--white);
+}
+
+.success-animation {
+    display: flex;
+    justify-content: center;
+}
+
+.success-checkmark {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--gradient-success);
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 0 auto;
+    box-shadow: 0 8px 30px var(--success-light);
+    animation: successPulse 0.6s ease-out;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.success-title {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.success-message {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.success-details {
+    background: var(--light);
     border-radius: 12px;
-    z-index: 100;
+    padding: 1rem;
+    margin: 1rem 0;
+    border: 1px solid var(--border);
 }
 
-body.dark-mode .loading-overlay {
-    background: rgba(0, 0, 0, 0.9);
+/* ====================================================================
+   LOADING & ANIMATIONS
+   ==================================================================== */
+
+.loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-left-color: var(--accent-light);
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid transparent;
+    border-top: 3px solid currentColor;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
 
-body.dark-mode .loading-spinner {
-    border-color: rgba(255, 255, 255, 0.1);
-    border-left-color: var(--accent-dark);
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
+/* ====================================================================
+   MOBILE RESPONSIVE DESIGN
+   ==================================================================== */
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 0.5rem;
     }
+    
+    /* Mobile Quick Actions */
+    .mobile-quick-actions {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        border-left: none;
+        border-right: none;
+        border-radius: 0;
+    }
+    
+    /* Page Header Mobile */
+    .page-title {
+        font-size: 1.5rem;
+        justify-content: center;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Student Info Card Mobile */
+    .student-info-card-modern {
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        min-height: 90px;
+    }
+    
+    .student-profile {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+        min-height: 0;
+    }
+    
+    .student-meta {
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .student-name {
+        font-size: 1.1rem;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Activity Card Mobile */
+    .activity-header {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: center;
+    }
+    
+    .activity-list {
+        padding: 1rem;
+    }
+    
+    .activity-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+    
+    .activity-content {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .activity-status {
+        align-self: center;
+        min-width: 100px;
+    }
+    
+    /* Button Mobile */
+    .btn {
+        width: 100%;
+        max-width: 280px;
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+        min-height: 50px;
+    }
+    
+    /* Hide desktop elements */
+    .d-none.d-lg-block {
+        display: none !important;
+    }
+    
+    /* Show mobile elements */
+    .d-block.d-lg-none {
+        display: block !important;
+    }
+}
+
+/* Extra Small Screens */
+@media (max-width: 480px) {
+    .dashboard-container {
+        padding: 0.25rem;
+    }
+    
+    .mobile-quick-actions {
+        padding: 0.75rem;
+        border-radius: 12px;
+    }
+    
+    #mobileStartScanBtn {
+        min-height: 52px !important;
+        font-size: 1rem !important;
+        padding: 0.875rem 1.5rem !important;
+    }
+    
+    .student-info-card-modern {
+        padding: 1rem;
+    }
+    
+    .activity-item {
+        padding: 0.875rem;
+    }
+    
+    .page-title {
+        font-size: 1.25rem;
+    }
+}
+
+/* Large Mobile/Tablet */
+@media (min-width: 769px) and (max-width: 991px) {
+    .activity-item {
+        flex-direction: row;
+        text-align: left;
+    }
+    
+    .activity-content {
+        text-align: left;
+    }
+    
+    .student-profile {
+        flex-direction: row;
+        text-align: left;
+    }
+    
+    .student-meta {
+        justify-content: flex-start;
+    }
+}
+
+/* ====================================================================
+   ACCESSIBILITY & FOCUS STATES
+   ==================================================================== */
+
+.btn:focus {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.btn:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Touch Optimizations */
+@media (max-width: 768px) {
+    .btn, .activity-item, .student-info-card-modern {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    .btn:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+    
+    @media (hover: hover) {
+        .activity-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px var(--shadow);
+        }
+        
+        .student-info-card-modern:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px var(--primary-light);
+        }
+    }
+}
+
+/* ====================================================================
+   UTILITY CLASSES
+   ==================================================================== */
+
+.text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px var(--shadow);
+}
+
+/* ====================================================================
+   SMOOTH TRANSITIONS FOR THEME SWITCHING
+   ==================================================================== */
+
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Status Messages */
+.status-message {
+    margin: 1rem 0;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    border: 2px solid transparent;
+}
+
+.status-success {
+    background: var(--success-light);
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.status-error {
+    background: var(--danger-light);
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.status-warning {
+    background: var(--warning-light);
+    color: var(--warning);
+    border-color: var(--warning);
 }

@@ -66,7 +66,7 @@ AttendifyPlus revolutionizes traditional attendance systems with **QR code techn
 
    ```bash
    # Import the database schema
-   mysql -u your_username -p < database/attendifyplus_fainal.sql
+   mysql -u your_username -p < database/attendifyplus.sql
    ```
 
 3. **Configure Database**
@@ -282,10 +282,14 @@ AttendifyPlus/
 
 ## API Endpoints
 
-| Endpoint                         | Method | Description                       |
-| -------------------------------- | ------ | --------------------------------- |
-| `/api/generate_qr_image.php`     | POST   | Generate QR for attendance        |
-| `/api/process_qr_attendance.php` | POST   | Process QR scan & mark attendance |
+| Endpoint                             | Method | Description                       |
+| ------------------------------------ | ------ | --------------------------------- |
+| `/api/generate_qr_enhanced.php`      | POST   | Generate QR with Composer library |
+| `/api/generate_qr_image.php`         | GET    | Generate QR image (fallback)      |
+| `/api/process_qr_attendance.php`     | POST   | Process QR scan & mark attendance |
+| `/api/deactivate_qr.php`             | POST   | Deactivate QR session             |
+| `/api/get_pending_qr_attendance.php` | POST   | Get pending QR scans              |
+| `/api/check_qr_pending.php`          | POST   | Check student pending status      |
 
 ## Usage Statistics
 
