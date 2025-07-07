@@ -14,109 +14,123 @@
 
 ---
 
-## 🌟 Overview
+## Overview
 
-AttendifyPlus revolutionizes traditional attendance systems with **advanced QR code technology**, providing a seamless, contactless solution for educational institutions. Built with modern web technologies, it offers real-time attendance tracking, comprehensive analytics, and multi-role management with a **mobile-first design**.
+AttendifyPlus is a comprehensive attendance management system that uses QR code technology to provide contactless attendance tracking for educational institutions. The system features real-time attendance monitoring, comprehensive analytics, and role-based management interfaces for administrators, teachers, and students.
 
-## ✨ Key Features
+## Key Features
 
-### 🔐 Multi-Role Authentication
+### Multi-Role Authentication
+
 - **Admin Panel**: Complete system oversight and user management
-- **Teacher Dashboard**: Class management and attendance tracking  
+- **Teacher Dashboard**: Class management and attendance tracking
 - **Student Portal**: Mobile-optimized QR scanning and attendance history
 
-### 📱 Advanced QR Code Technology
+### QR Code Technology
+
 - **Dynamic QR Generation**: Secure token-based system with automatic expiration
 - **Mobile-First Scanner**: Full-screen scanning experience optimized for smartphones
 - **Real-time Validation**: Instant attendance marking with visual feedback
 - **Cross-Platform Support**: Works on iOS, Android, and desktop browsers
 
-### 📊 Analytics & Reporting
+### Analytics & Reporting
+
 - **Attendance Percentage**: Real-time calculations with trend analysis
 - **Subject-wise Metrics**: Detailed performance insights
 - **Comprehensive Reports**: Exportable data for academic records
 - **Visual Dashboards**: Interactive charts and graphs
 
-### 🎯 Smart Features
+### Additional Features
+
 - **Material Management**: Upload/download system for course materials
 - **Assignment Portal**: Submission and tracking system
 - **Responsive UI**: Modern design with dark/light theme support
 - **Progressive Web App**: Installable on mobile devices
 - **Real-time Notifications**: Instant feedback and alerts
 
-## 🚀 Latest Updates (2025)
+## Recent Updates (2025)
 
 ### Mobile QR Scanner Redesign
-- **Horizontal Layout**: Student info card maintains row layout on all devices (320px to desktop)
-- **Touch-Optimized**: 44px minimum touch targets for accessibility
-- **Safari Compatibility**: Full iOS support with proper webkit prefixes
-- **Landscape Support**: Optimized for mobile landscape orientation
-- **Performance**: Reduced load times and smooth animations
+
+- Student info card maintains horizontal layout on all devices (320px to desktop)
+- Touch-optimized interface with 44px minimum touch targets for accessibility
+- Full iOS support with proper webkit prefixes for Safari compatibility
+- Optimized for mobile landscape orientation
+- Improved performance with reduced load times and smooth animations
 
 ### Modern Web Standards
-- **PWA Support**: Updated meta tags for mobile web app capability
-- **Cross-Browser**: Full Safari, Chrome, Firefox, and Edge support
-- **Accessibility**: WCAG 2.1 compliant with proper focus states
-- **Mobile Performance**: Optimized for low-end devices
 
-## 🛠️ Technology Stack
+- Updated meta tags for mobile web app capability
+- Full Safari, Chrome, Firefox, and Edge support
+- WCAG 2.1 compliant with proper focus states
+- Optimized performance for low-end devices
+
+## Technology Stack
 
 ### Backend
+
 - **PHP 8.0+** - Server-side logic with modern features
-- **MySQL 5.7+** - Robust database management
+- **MySQL 5.7+** - Database management
 - **Composer** - Dependency management for QR generation
 - **RESTful APIs** - Clean API architecture
 
 ### Frontend
+
 - **HTML5/CSS3** - Semantic markup and modern styling
 - **Bootstrap 5.3** - Mobile-first responsive framework
 - **JavaScript (ES6+)** - Modern browser features
 - **CSS Variables** - Dynamic theming support
-- **Lucide Icons** - Beautiful modern iconography
+- **Lucide Icons** - Modern iconography
 
 ### Libraries & Tools
+
 - **Endroid QR Code** - Professional QR generation via Composer
 - **HTML5 QR Scanner** - Mobile camera QR scanning
 - **Progressive Enhancement** - Graceful degradation for older browsers
 
-## 📋 Prerequisites
+## Prerequisites
 
-- **PHP 8.0+**
-- **MySQL 5.7+**
-- **Composer 2.0+**
-- **Web Server** (Apache/Nginx)
-- **Modern Browser** with camera support
-- **HTTPS** (required for camera access on mobile)
+- PHP 8.0+
+- MySQL 5.7+
+- Composer 2.0+
+- Web Server (Apache/Nginx)
+- Modern Browser with camera support
+- HTTPS (required for camera access on mobile)
 
-## 🚀 Installation
+## Installation
 
 ### 1. Clone Repository
+
 ```bash
 git clone https://github.com/your-username/attendifyplus.git
 cd attendifyplus
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 composer install
 ```
 
 ### 3. Database Setup
+
 ```bash
 # Import the database schema
-mysql -u your_username -p < database/attendifyplus.sql
+mysql -u username -p < database/apd.sql
 ```
 
 ### 4. Configure Database
+
 ```php
 // config/db_config.php
 $host = 'localhost';
-$username = 'your_username';
-$password = 'your_password';
+$username = 'database_username';
+$password = 'database_password';
 $database = 'attendifyplus_db';
 ```
 
 ### 5. Set Permissions
+
 ```bash
 chmod 755 uploads/
 chmod 755 uploads/materials/
@@ -126,7 +140,9 @@ chmod 755 uploads/admins/
 ```
 
 ### 6. Configure Web Server
+
 Ensure your web server serves the application over HTTPS for camera access:
+
 ```apache
 # Apache (.htaccess)
 RewriteEngine On
@@ -135,11 +151,12 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 ```
 
 ### 7. Launch Application
+
 ```
 https://localhost/attendifyplus/views/auth/login.php
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 AttendifyPlus/
@@ -148,7 +165,7 @@ AttendifyPlus/
 │   ├── process_qr_attendance.php   # QR scan processing
 │   └── ...
 ├── assets/                   # Static resources
-│   ├── css/                 # Modern responsive stylesheets
+│   ├── css/                 # Responsive stylesheets
 │   │   ├── scan_qr.css     # Mobile-optimized QR scanner
 │   │   └── ...
 │   ├── js/                  # JavaScript modules
@@ -169,24 +186,24 @@ AttendifyPlus/
 │   │   └── scan_qr.php    # Mobile QR scanner
 │   └── teacher/            # Teacher functionality
 ├── composer.json            # Composer configuration
-└── README.md               # This file
+└── README.md               # Documentation
 ```
 
-## 👥 Development Team
+## Development Team
 
 <table align="center">
   <tr>
     <td align="center">
-      <img src="assets/img/team/Ramohan.png" width="100px;" alt="Ramohan"/><br />
-      <sub><b>Ramohan</b></sub><br />
+      <img src="assets/img/team/Ramohan.png" width="100px;" alt="Ramohan Tiwari"/><br />
+      <sub><b>Ramohan Tiwari</b></sub><br />
       <sub>Project Lead & Full-Stack Developer</sub><br />
-      <small>Integration • QR Logic • Mobile Optimization • Critical Tasks</small>
+      <small>System Architecture • QR Logic •  Database Design</small>
     </td>
     <td align="center">
       <img src="assets/img/team/subash.png" width="100px;" alt="Subash"/><br />
       <sub><b>Subash</b></sub><br />
       <sub>Backend Developer</sub><br />
-      <small>PHP Logic • Attendance System • API Development</small>
+      <small>PHP Logic • Database Operations</small>
     </td>
   </tr>
   <tr>
@@ -194,162 +211,301 @@ AttendifyPlus/
       <img src="assets/img/team/namrata.png" width="100px;" alt="Namrata"/><br />
       <sub><b>Namrata</b></sub><br />
       <sub>Frontend Developer</sub><br />
-      <small>UI/UX Design • Material Upload • Responsive Design</small>
+      <small>UI/UX Design • Material Management</small>
     </td>
     <td align="center">
       <img src="assets/img/team/Rikita.png" width="100px;" alt="Rikita"/><br />
       <sub><b>Rikita</b></sub><br />
-      <sub>QA Engineer & Developer</sub><br />
-      <small>Testing • Validation • Profile Management</small>
+      <sub>QA Engineer</sub><br />
+      <small>Testing • Validation</small>
     </td>
   </tr>
 </table>
 
-## 🏗️ System Architecture
+## System Architecture
 
 ### Database Schema
+
 ```mermaid
 erDiagram
     login_tbl {
-        INT LoginID PK
-        VARCHAR Email UK
-        VARCHAR Password
-        ENUM Role
-        ENUM Status
-        DATETIME CreatedDate
+        int LoginID PK
+        varchar Email
+        varchar Password
+        enum Role
+        enum Status
+        datetime CreatedDate
     }
-
+    
     departments {
-        INT DepartmentID PK
-        VARCHAR DepartmentName UK
-        VARCHAR DepartmentCode UK
+        int DepartmentID PK
+        varchar DepartmentName
+        varchar DepartmentCode
     }
-
+    
+    semesters {
+        int SemesterID PK
+        int SemesterNumber
+    }
+    
+    admins {
+        int AdminID PK
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int LoginID FK
+    }
+    
+    teachers {
+        int TeacherID PK
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int LoginID FK
+    }
+    
     students {
-        INT StudentID PK
-        VARCHAR FullName
-        VARCHAR Contact
-        VARCHAR Address
-        VARCHAR PhotoURL
-        INT DepartmentID FK
-        INT SemesterID FK
-        YEAR JoinYear
-        VARCHAR ProgramCode
-        INT LoginID FK,UK
+        int StudentID PK
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int DepartmentID FK
+        int SemesterID FK
+        year JoinYear
+        varchar ProgramCode
+        boolean DeviceRegistered
+        int LoginID FK
     }
-
+    
     subjects {
-        INT SubjectID PK
-        VARCHAR SubjectCode
-        VARCHAR SubjectName
-        INT CreditHour
-        INT LectureHour
-        BOOLEAN IsElective
-        INT DepartmentID FK
-        INT SemesterID FK
+        int SubjectID PK
+        varchar SubjectCode
+        varchar SubjectName
+        int CreditHour
+        int LectureHour
+        boolean IsElective
+        int DepartmentID FK
+        int SemesterID FK
     }
-
+    
+    teacher_subject_map {
+        int MapID PK
+        int TeacherID FK
+        int SubjectID FK
+    }
+    
+    teacher_department_map {
+        int MapID PK
+        int TeacherID FK
+        int DepartmentID FK
+    }
+    
     attendance_records {
-        INT AttendanceID PK
-        INT StudentID FK
-        INT SubjectID FK
-        INT TeacherID FK
-        DATETIME DateTime
-        ENUM Status
-        VARCHAR Method
-        VARCHAR QRToken
+        int AttendanceID PK
+        int StudentID FK
+        int SubjectID FK
+        int TeacherID FK
+        datetime DateTime
+        enum Status
+        enum Method
+    }
+    
+    qr_attendance_sessions {
+        int SessionID PK
+        int TeacherID FK
+        int SubjectID FK
+        date Date
+        varchar QRToken
+        datetime ExpiresAt
+        boolean IsActive
+        datetime CreatedAt
+    }
+    
+    qr_attendance_pending {
+        int PendingID PK
+        int StudentID FK
+        int TeacherID FK
+        int SubjectID FK
+        int SessionID FK
+        datetime CreatedAt
+        varchar Status
+    }
+    
+    device_registration_tokens {
+        int TokenID PK
+        int StudentID FK
+        varchar Token
+        datetime ExpiresAt
+        boolean Used
+        datetime CreatedAt
+    }
+    
+    student_devices {
+        int DeviceID PK
+        int StudentID FK
+        varchar DeviceFingerprint
+        varchar DeviceName
+        text DeviceInfo
+        boolean IsActive
+        datetime RegisteredAt
+        datetime LastUsed
+    }
+    
+    materials {
+        int MaterialID PK
+        int TeacherID FK
+        int SubjectID FK
+        varchar Title
+        text Description
+        varchar FileName
+        varchar OriginalFileName
+        bigint FileSize
+        varchar FileType
+        varchar FilePath
+        datetime UploadDateTime
+        boolean IsActive
+        int DownloadCount
+        varchar Tags
+    }
+    
+    material_access_logs {
+        int LogID PK
+        int MaterialID FK
+        int StudentID FK
+        int TeacherID FK
+        datetime AccessDateTime
+        enum ActionType
+        varchar IPAddress
     }
 
-    %% Key relationships
-    login_tbl ||--|| students : "authenticates"
-    departments ||--o{ students : "belongs to"
-    subjects ||--o{ attendance_records : "attendance for"
-    students ||--o{ attendance_records : "has"
+    %% Authentication relationships
+    login_tbl ||--|| admins : "1:1"
+    login_tbl ||--|| teachers : "1:1"
+    login_tbl ||--|| students : "1:1"
+    
+    %% Department and semester relationships
+    departments ||--o{ students : "1:many"
+    departments ||--o{ subjects : "1:many"
+    departments ||--o{ teacher_department_map : "1:many"
+    semesters ||--o{ students : "1:many"
+    semesters ||--o{ subjects : "1:many"
+    
+    %% Teacher relationships
+    teachers ||--o{ teacher_subject_map : "1:many"
+    teachers ||--o{ teacher_department_map : "1:many"
+    teachers ||--o{ attendance_records : "1:many"
+    teachers ||--o{ qr_attendance_sessions : "1:many"
+    teachers ||--o{ qr_attendance_pending : "1:many"
+    teachers ||--o{ materials : "1:many"
+    teachers ||--o{ material_access_logs : "1:many"
+    
+    %% Subject relationships
+    subjects ||--o{ teacher_subject_map : "1:many"
+    subjects ||--o{ attendance_records : "1:many"
+    subjects ||--o{ qr_attendance_sessions : "1:many"
+    subjects ||--o{ qr_attendance_pending : "1:many"
+    subjects ||--o{ materials : "1:many"
+    
+    %% Student relationships
+    students ||--o{ attendance_records : "1:many"
+    students ||--o{ qr_attendance_pending : "1:many"
+    students ||--o{ device_registration_tokens : "1:many"
+    students ||--o{ student_devices : "1:many"
+    students ||--o{ material_access_logs : "1:many"
+    
+    %% QR system relationships
+    qr_attendance_sessions ||--o{ qr_attendance_pending : "1:many"
+    
+    %% Material system relationships
+    materials ||--o{ material_access_logs : "1:many"
 ```
 
-## 🔌 API Endpoints
+## API Endpoints
 
-| Endpoint | Method | Description | Mobile Optimized |
-|----------|--------|-------------|------------------|
-| `/api/generate_qr_enhanced.php` | POST | Generate QR with Composer | ✅ |
-| `/api/process_qr_attendance.php` | POST | Process QR scan & mark attendance | ✅ |
-| `/api/deactivate_qr.php` | POST | Deactivate QR session | ✅ |
-| `/api/get_pending_qr_attendance.php` | POST | Get pending QR scans | ✅ |
-| `/api/check_qr_pending.php` | POST | Check student pending status | ✅ |
+| Endpoint                             | Method | Description                       |
+| ------------------------------------ | ------ | --------------------------------- |
+| `/api/generate_qr_enhanced.php`      | POST   | Generate QR with Composer         |
+| `/api/process_qr_attendance.php`     | POST   | Process QR scan & mark attendance |
+| `/api/deactivate_qr.php`             | POST   | Deactivate QR session             |
+| `/api/get_pending_qr_attendance.php` | POST   | Get pending QR scans              |
+| `/api/check_qr_pending.php`          | POST   | Check student pending status      |
 
-## 📱 Mobile Features
+## Mobile Features
 
 ### QR Scanner Optimizations
-- **Full-Screen Mode**: Immersive scanning experience
-- **Camera Controls**: Switch between front/back cameras
-- **Auto-Focus**: Smart camera focusing for better QR detection
-- **Orientation Support**: Works in both portrait and landscape
-- **Low-Light Performance**: Enhanced scanning in poor lighting
+
+- Full-screen scanning mode with immersive experience
+- Camera controls to switch between front/back cameras
+- Smart camera focusing for better QR detection
+- Orientation support for both portrait and landscape
+- Enhanced scanning performance in low-light conditions
 
 ### Progressive Web App
-- **Installable**: Add to home screen on mobile devices
-- **Offline Ready**: Basic functionality works without internet
-- **Push Notifications**: Real-time attendance confirmations
-- **App-like Experience**: Native app feel on mobile
 
-## 📊 Performance Metrics
+- Installable on mobile devices (add to home screen)
+- Basic functionality works without internet connection
+- Real-time attendance confirmations
+- Native app-like experience on mobile
 
-- **QR Generation**: < 1 second with Composer library
-- **Mobile Scanning**: < 2 seconds average scan time
-- **Page Load**: < 3 seconds on 3G networks
-- **Cross-Browser**: 100% compatibility (modern browsers)
-- **Mobile Responsive**: 100% mobile optimization
-- **Accessibility**: WCAG 2.1 AA compliant
+## Performance Metrics
 
-## 🧪 Testing
+- QR Generation: < 1 second with Composer library
+- Mobile Scanning: < 2 seconds average scan time
+- Page Load: < 3 seconds on 3G networks
+- Cross-Browser: 100% compatibility (modern browsers)
+- Mobile Responsive: 100% mobile optimization
+- Accessibility: WCAG 2.1 AA compliant
+
+## Testing
 
 ### Supported Devices
-- **iOS**: iPhone 6+ (iOS 12+)
-- **Android**: Android 7.0+ with Chrome/Firefox
-- **Desktop**: All modern browsers
-- **Tablets**: iPad, Android tablets
+
+- iOS: iPhone 6+ (iOS 12+)
+- Android: Android 7.0+ with Chrome/Firefox
+- Desktop: All modern browsers
+- Tablets: iPad, Android tablets
 
 ### Browser Support
-- ✅ Chrome 80+
-- ✅ Safari 12+
-- ✅ Firefox 75+
-- ✅ Edge 80+
 
-## 🤝 Contributing
+- Chrome 80+
+- Safari 12+
+- Firefox 75+
+- Edge 80+
+
+## Contributing
 
 1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+2. Create feature branch (`git checkout -b feature/FeatureName`)
 3. Follow coding standards (PSR-12 for PHP)
 4. Test on mobile devices
-5. Commit changes (`git commit -m 'Add AmazingFeature'`)
-6. Push to branch (`git push origin feature/AmazingFeature`)
+5. Commit changes (`git commit -m 'Add FeatureName'`)
+6. Push to branch (`git push origin feature/FeatureName`)
 7. Open a Pull Request
 
 ### Development Guidelines
-- **Mobile-First**: Always design for mobile first
-- **Accessibility**: Follow WCAG guidelines
-- **Performance**: Optimize for low-end devices
-- **Security**: Validate all inputs and use HTTPS
 
-## 📝 License
+- Mobile-First: Always design for mobile first
+- Accessibility: Follow WCAG guidelines
+- Performance: Optimize for low-end devices
+- Security: Validate all inputs and use HTTPS
+
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Educational Institution support for testing and feedback
 - Open Source Community for libraries and tools
 - Bootstrap Team for the responsive framework
-- Lucide for beautiful, consistent icons
+- Lucide for consistent icons
 - Endroid for the professional QR code library
-
-## 📞 Support
-
-For support, email your-email@example.com or join our Slack channel.
 
 ---
 
 <div align="center">
-  <i>Making attendance management smarter, faster, and more accessible</i><br/>
-  <small>Built with ❤️ for the future of education</small>
+  <i>Making attendance management smarter, faster, and more accessible</i>
 </div>
