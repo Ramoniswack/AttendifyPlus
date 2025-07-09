@@ -24,6 +24,12 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <i data-lucide="book-open" class="me-2"></i>My Subjects
       </a>
 
+      <!-- Assignments -->
+        <!-- Attendance Reports -->
+      <a class="nav-link <?= ($currentPage == 'assignments.php') ? 'active' : '' ?>" href="assignments.php">
+        <i data-lucide="bar-chart-3" class="me-2"></i>Assignments
+      </a>
+
       <!-- Attendance Reports -->
       <a class="nav-link <?= ($currentPage == 'attendance_report.php') ? 'active' : '' ?>" href="attendance_report.php">
         <i data-lucide="bar-chart-3" class="me-2"></i>Attendance Reports
