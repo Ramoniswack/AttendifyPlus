@@ -9,11 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add("dark-mode");
   }
 
-  // Force sidebar to be hidden on load
-  ensureSidebarHidden();
-
-  // Initialize sidebar toggle
-  initializeSidebarToggle();
+  // Note: Sidebar functionality now handled by sidebar_teacher.js
 
   // Theme toggle function
   window.toggleTheme = function () {
@@ -27,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateThemeElements();
 });
 
-// ===== SIDEBAR MANAGEMENT ===== //
+// ===== SIDEBAR MANAGEMENT NOW IN SIDEBAR_TEACHER.JS ===== //
 
 function ensureSidebarHidden() {
   console.log('Ensuring sidebar is hidden on load...');

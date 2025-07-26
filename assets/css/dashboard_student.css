@@ -518,7 +518,7 @@ body.dark-mode .sidebar .nav-link.text-danger:hover {
 /* Responsive Design */
 @media (min-width: 1200px) {
   body.sidebar-open .main-content {
-    margin-left: 280px;
+    margin-left: var(--sidebar-width);
   }
   body.sidebar-open .sidebar-overlay {
     display: none;
@@ -527,7 +527,7 @@ body.dark-mode .sidebar .nav-link.text-danger:hover {
 
 @media (min-width: 992px) and (max-width: 1199px) {
   body.sidebar-open .main-content {
-    margin-left: 280px;
+    margin-left: var(--sidebar-width);
   }
   body.sidebar-open .sidebar-overlay {
     display: none;
@@ -535,28 +535,12 @@ body.dark-mode .sidebar .nav-link.text-danger:hover {
 }
 
 @media (max-width: 991.98px) {
-  .sidebar {
-    width: 90vw;
-    max-width: 320px;
-    left: -90vw;
-  }
-  .sidebar.active {
-    left: 0;
-  }
   .main-content {
     margin-left: 0 !important;
   }
 }
 
 @media (max-width: 767px) {
-  .sidebar {
-    width: 95vw;
-    max-width: 300px;
-    left: -95vw;
-  }
-  .sidebar.active {
-    left: 0;
-  }
   .stat-card {
     padding: 1.5rem;
   }
@@ -576,14 +560,6 @@ body.dark-mode .sidebar .nav-link.text-danger:hover {
 }
 
 @media (max-width: 576px) {
-  .sidebar {
-    width: 100vw;
-    max-width: 280px;
-    left: -100vw;
-  }
-  .sidebar.active {
-    left: 0;
-  }
   .stat-card {
     padding: 1.25rem;
   }
@@ -625,4 +601,155 @@ body.dark-mode .dashboard-container h5 {
 /* Device Registration Card */
 .device-registration-card {
   border-left: 4px solid #3b82f6;
+}
+
+.mini-stat-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(32,31,30,0.08);
+  border: 1px solid #f3f4f6;
+  min-height: 120px;
+  transition: box-shadow 0.2s;
+  margin-bottom: 0;
+}
+.mini-stat-card:hover {
+  box-shadow: 0 4px 24px rgba(26,115,232,0.10);
+}
+.mini-stat-icon {
+  color: #e53935;
+  font-size: 1.5rem;
+  opacity: 0.8;
+  margin-bottom: 0.5rem;
+}
+.mini-stat-value {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #1a73e8;
+  margin-bottom: 0.2rem;
+}
+.mini-stat-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1a237e;
+  opacity: 0.85;
+}
+.mini-stat-desc {
+  font-size: 0.95rem;
+  color: #718096;
+}
+.mini-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a237e;
+  margin-bottom: 0.5rem;
+}
+.mini-notification-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.mini-notification-title {
+  font-weight: 600;
+  color: #e53935;
+}
+.mini-notification-desc {
+  font-size: 0.97rem;
+  color: #718096;
+}
+.mini-calendar-wrapper {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 0.5rem 0.5rem 0.2rem 0.5rem;
+}
+.mini-calendar-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a73e8;
+  margin-bottom: 0.2rem;
+}
+.mini-calendar-table {
+  font-size: 0.95rem;
+  text-align: center;
+  border-collapse: separate;
+  border-spacing: 2px;
+}
+.mini-calendar-table th {
+  color: #b71c1c;
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding-bottom: 2px;
+}
+.mini-calendar-table td {
+  background: #fff;
+  border-radius: 6px;
+  width: 2.1em;
+  height: 2.1em;
+  color: #333;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.mini-calendar-today {
+  background: #1a73e8 !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+@media (max-width: 900px) {
+  .mini-stat-card {
+    padding: 1.1rem 0.7rem 1rem 0.7rem;
+    min-height: 100px;
+  }
+  .mini-stat-value {
+    font-size: 1.5rem;
+  }
+}
+@media (max-width: 600px) {
+  .mini-stat-card {
+    padding: 1rem 0.5rem 0.8rem 0.5rem;
+    min-height: 80px;
+  }
+  .mini-stat-label {
+    font-size: 0.98rem;
+  }
+  .mini-stat-value {
+    font-size: 1.2rem;
+  }
+  .mini-card-title {
+    font-size: 1rem;
+  }
+}
+body.dark-mode .mini-stat-card {
+  background: #23242a;
+  border-color: #33343a;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+body.dark-mode .mini-stat-label,
+body.dark-mode .mini-card-title {
+  color: #f3f4f6;
+}
+body.dark-mode .mini-stat-value {
+  color: #047857;
+}
+body.dark-mode .mini-stat-icon {
+  color: #047857;
+}
+body.dark-mode .mini-stat-desc,
+body.dark-mode .mini-notification-desc {
+  color: #a0aec0;
+}
+body.dark-mode .mini-notification-title {
+  color: #ff6b6b;
+}
+body.dark-mode .mini-calendar-wrapper {
+  background: #23242a;
+}
+body.dark-mode .mini-calendar-header {
+  color: #047857;
+}
+body.dark-mode .mini-calendar-table td {
+  background: #23242a;
+  color: #f3f4f6;
+}
+body.dark-mode .mini-calendar-today {
+  background: #047857 !important;
+  color: #fff !important;
 }

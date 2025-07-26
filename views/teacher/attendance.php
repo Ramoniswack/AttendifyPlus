@@ -2,6 +2,7 @@
 
 session_start();
 require_once(__DIR__ . '/../../config/db_config.php');
+require_once(__DIR__ . '/../../helpers/notification_helpers.php');
 
 // Check session
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') {
@@ -281,6 +282,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance'])) {
 
         $conn->commit();
 
+        // Count attendance statistics for notification
+        $presentCount = 0;
+        $totalCount = 0;
+        foreach ($_POST['attendance'] as $studentID => $status) {
+            $totalCount++;
+            if ($status === 'present') {
+                $presentCount++;
+            }
+        }
+
+        // Create notification for students about attendance being taken
+        if (!$updateMode) { // Only notify on initial save, not updates
+            notifyAttendanceTaken($conn, $teacherID, $selectedSubjectID, 'manual', $presentCount, $totalCount);
+        }
+
         if ($updateMode) {
             header("Location: attendance.php?success=updated&semester=$selectedSemesterID&subject=$selectedSubjectID&date=$date");
         } else {
@@ -422,7 +438,14 @@ foreach ($students as $student) {
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/dashboard_teacher.css">
+    <link rel="stylesheet" href="../../assets/css/sidebar_teacher.css">
     <link rel="stylesheet" href="../../assets/css/attendance.css">
+
+    <!-- JS Libraries -->
+    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="../../assets/js/sidebar_teacher.js" defer></script>
+    <script src="../../assets/js/navbar_teacher.js" defer></script>
 </head>
 
 <body>
@@ -867,9 +890,7 @@ foreach ($students as $student) {
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/js/lucide.min.js"></script>
     <script src="../../assets/js/qrcode.min.js"></script>
-    <script src="../../assets/js/dashboard_teacher.js"></script>
     <script src="../../assets/js/attendance.js"></script>
 
     <script>

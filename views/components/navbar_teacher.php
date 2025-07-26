@@ -1,6 +1,5 @@
 <?php
 // filepath: d:\NEEDS\6th sem\New folder\htdocs\AttendifyPlus\views\components\navbar_teacher.php
-include 'sidebar_teacher_dashboard.php';
 ?>
 
 <nav class="navbar navbar-expand-lg navbar-dark admin-navbar">
@@ -40,7 +39,7 @@ include 'sidebar_teacher_dashboard.php';
             <div class="dropdown notification-dropdown-wrapper">
                 <button class="btn navbar-btn notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                     <i data-lucide="bell"></i>
-                    <span class="notification-badge">2</span>
+                    <span class="notification-badge" style="display: none;">0</span>
                     <span class="btn-text d-none d-xxl-inline">Alerts</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
@@ -50,32 +49,7 @@ include 'sidebar_teacher_dashboard.php';
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <div class="notification-item">
-                                <div class="notification-icon bg-info">
-                                    <i data-lucide="calendar"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <span class="notification-title">Class Reminder</span>
-                                    <span class="notification-time">10 minutes ago</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <div class="notification-item">
-                                <div class="notification-icon bg-success">
-                                    <i data-lucide="check-circle"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <span class="notification-title">Assignment Submitted</span>
-                                    <span class="notification-time">1 hour ago</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
+                    <!-- Dynamic notifications will be inserted here by JavaScript -->
                     <li>
                         <hr class="dropdown-divider">
                     </li>
@@ -87,7 +61,7 @@ include 'sidebar_teacher_dashboard.php';
             <div class="dropdown profile-dropdown-wrapper">
                 <button class="btn navbar-btn profile-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile Menu">
                     <div class="profile-avatar">
-                        <i data-lucide="user"></i>
+                        <i data-lucide="user-check"></i>
                     </div>
                     <span class="btn-text d-none d-xxl-inline"><?= htmlspecialchars($_SESSION['Username']) ?></span>
                     <i data-lucide="chevron-down" class="dropdown-arrow d-none d-xxl-inline"></i>
@@ -143,39 +117,27 @@ include 'sidebar_teacher_dashboard.php';
             </button>
 
             <!-- Notifications -->
-            <div class="dropdown">
-                <button class="btn navbar-btn-mobile notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
-                    <i data-lucide="bell"></i>
-                    <span class="mobile-notification-badge">2</span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end notification-dropdown mobile-dropdown">
-                    <li class="dropdown-header">
-                        <i data-lucide="bell"></i> Notifications
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <div class="notification-item">
-                                <div class="notification-icon bg-info">
-                                    <i data-lucide="calendar"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <span class="notification-title">Class Reminder</span>
-                                    <span class="notification-time">10 mins ago</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+            <button class="btn navbar-btn-mobile notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                <i data-lucide="bell"></i>
+                <span class="mobile-notification-badge" style="display: none;">0</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end notification-dropdown mobile-dropdown">
+                <li class="dropdown-header"><i data-lucide="bell"></i> Notifications</li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <!-- Dynamic notifications will be inserted here by JavaScript -->
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li><a class="dropdown-item text-center" href="#">View All Notifications</a></li>
+            </ul>
 
             <!-- Profile -->
             <div class="dropdown">
                 <button class="btn navbar-btn-mobile profile-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile">
                     <div class="profile-avatar-small">
-                        <i data-lucide="user"></i>
+                        <i data-lucide="user-check"></i>
                     </div>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end profile-dropdown mobile-dropdown">

@@ -189,14 +189,15 @@ foreach ($statsQueries as $key => $query) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manage Subjects | Attendify+</title>
     <link rel="stylesheet" href="../../assets/css/manage_subject.css" />
+    <link rel="stylesheet" href="../../assets/css/sidebar_admin.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <script src="../../assets/js/lucide.min.js"></script>
     <script src="../../assets/js/manage_teacher.js" defer></script>
+    <script src="../../assets/js/navbar_admin.js" defer></script>
 </head>
 
 <body>
-    <!-- Include sidebar and navbar -->
     <?php include '../components/sidebar_admin_dashboard.php'; ?>
     <?php include '../components/navbar_admin.php'; ?>
 

@@ -40,7 +40,7 @@ include 'sidebar_admin_dashboard.php';
             <div class="dropdown notification-dropdown-wrapper">
                 <button class="btn navbar-btn notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                     <i data-lucide="bell"></i>
-                    <span class="notification-badge">3</span>
+                    <span class="notification-badge" style="display: none;">0</span>
                     <span class="btn-text d-none d-xxl-inline">Alerts</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
@@ -50,45 +50,7 @@ include 'sidebar_admin_dashboard.php';
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <div class="notification-item">
-                                <div class="notification-icon bg-warning">
-                                    <i data-lucide="alert-triangle"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <span class="notification-title">System Alert</span>
-                                    <span class="notification-time">5 minutes ago</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <div class="notification-item">
-                                <div class="notification-icon bg-info">
-                                    <i data-lucide="user-plus"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <span class="notification-title">New Teacher Registered</span>
-                                    <span class="notification-time">15 minutes ago</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <div class="notification-item">
-                                <div class="notification-icon bg-success">
-                                    <i data-lucide="database"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <span class="notification-title">Database Backup Complete</span>
-                                    <span class="notification-time">1 hour ago</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
+                    <!-- Dynamic notifications will be inserted here by JavaScript -->
                     <li>
                         <hr class="dropdown-divider">
                     </li>
@@ -164,7 +126,7 @@ include 'sidebar_admin_dashboard.php';
             <div class="dropdown">
                 <button class="btn navbar-btn-mobile notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                     <i data-lucide="bell"></i>
-                    <span class="mobile-notification-badge">3</span>
+                    <span class="mobile-notification-badge" style="display: none;">0</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end notification-dropdown mobile-dropdown">
                     <li class="dropdown-header">
@@ -173,32 +135,11 @@ include 'sidebar_admin_dashboard.php';
                     <li>
                         <hr class="dropdown-divider">
                     </li>
+                    <!-- Dynamic notifications will be inserted here by JavaScript -->
                     <li>
-                        <a class="dropdown-item" href="#">
-                            <div class="notification-item">
-                                <div class="notification-icon bg-warning">
-                                    <i data-lucide="alert-triangle"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <span class="notification-title">System Alert</span>
-                                    <span class="notification-time">5 mins ago</span>
-                                </div>
-                            </div>
-                        </a>
+                        <hr class="dropdown-divider">
                     </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <div class="notification-item">
-                                <div class="notification-icon bg-info">
-                                    <i data-lucide="user-plus"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <span class="notification-title">New Teacher</span>
-                                    <span class="notification-time">15 mins ago</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
+                    <li><a class="dropdown-item text-center" href="#">View All Notifications</a></li>
                 </ul>
             </div>
 
@@ -259,3 +200,4 @@ include 'sidebar_admin_dashboard.php';
 </nav>
 
 <link rel="stylesheet" href="../../assets/css/navbar_admin.css">
+<script src="../../assets/js/navbar_admin.js"></script>

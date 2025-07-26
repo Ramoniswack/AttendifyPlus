@@ -20,9 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
-    
-    // Initialize theme
-    initializeTheme();
 });
 
 function initializeScanner() {
@@ -155,25 +152,30 @@ function showScannerControls() {
 
 function startScanning() {
     if (isScanning) return;
-    
+
     const qrReader = document.getElementById('qr-reader');
     const startBtn = document.getElementById('startScanBtn');
     const stopBtn = document.getElementById('stopScanBtn');
-    
+    const scannerContainer = document.getElementById('scannerContainer');
+
+    if (scannerContainer) {
+        scannerContainer.style.display = '';
+    }
+
     if (!qrReader) {
         console.error('QR reader element not found');
         return;
     }
-    
+
     // Initialize Html5Qrcode for desktop
     html5QrCode = new Html5Qrcode("qr-reader");
-    
+
     const config = {
         fps: 10,
         qrbox: { width: 200, height: 200 },
         aspectRatio: 1.0
     };
-    
+
     html5QrCode.start(
         currentCameraId,
         config,
@@ -189,7 +191,7 @@ function startScanning() {
         if (startBtn) startBtn.style.display = 'none';
         if (stopBtn) stopBtn.style.display = 'inline-block';
         updateStatus('scan', 'Scanning Active', 'Point your camera at the QR code');
-        
+
         // Show scanner overlay
         const overlay = document.querySelector('.scanner-overlay-desktop');
         if (overlay) {
@@ -899,47 +901,4 @@ function checkExpiredQRPreventAutoRefresh() {
             // Don't show error to user, just proceed normally
         });
     }
-}
-
-// Theme management (compatible with dashboard_student.js)
-function initializeTheme() {
-    // Use dashboard_student.js theme management if available
-    if (typeof window.toggleTheme === 'function') {
-        console.log('Using dashboard theme management');
-        return;
-    }
-    
-    // Fallback theme initialization
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-bs-theme', savedTheme);
-    document.body.classList.toggle('dark-mode', savedTheme === 'dark');
-    updateThemeIcons(savedTheme);
-}
-
-function updateThemeIcons(theme) {
-    const lightIcons = document.querySelectorAll('.theme-icon.light-icon');
-    const darkIcons = document.querySelectorAll('.theme-icon.dark-icon');
-    
-    if (theme === 'dark') {
-        lightIcons.forEach(icon => icon.style.display = 'none');
-        darkIcons.forEach(icon => icon.style.display = 'block');
-    } else {
-        lightIcons.forEach(icon => icon.style.display = 'block');
-        darkIcons.forEach(icon => icon.style.display = 'none');
-    }
-}
-
-// Don't override window.toggleTheme if dashboard_student.js is loaded
-if (typeof window.toggleTheme === 'undefined') {
-    window.toggleTheme = function() {
-        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
-        document.documentElement.setAttribute('data-bs-theme', newTheme);
-        document.body.classList.toggle('dark-mode', newTheme === 'dark');
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcons(newTheme);
-        
-        showToast(`Switched to ${newTheme} mode`, 'info', 2000);
-    };
 }

@@ -874,6 +874,9 @@ body.dark-mode .input-group-text {
   border: 1px solid var(--border-light);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1080;
+  position: absolute;
+  margin-top: 2px;
 }
 
 body.dark-mode .dropdown-menu {
@@ -921,4 +924,179 @@ body.dark-mode #resultsCount {
 
 body.dark-mode .filter-loading {
   background-color: var(--card-dark);
+}
+
+/* Status change buttons */
+.btn-group .dropdown-toggle {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+}
+
+.btn-group .dropdown-menu {
+  min-width: 200px;
+  padding: 0.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  top: auto;
+  bottom: 100%;
+  margin-bottom: 5px;
+  transform-origin: bottom center;
+}
+
+body.dark-mode .btn-group .dropdown-menu {
+  background: var(--card-dark);
+  border-color: var(--border-dark);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Add dropdown arrow at bottom */
+.btn-group .dropdown-menu::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--card-light);
+}
+
+body.dark-mode .btn-group .dropdown-menu::after {
+  border-top-color: var(--card-dark);
+}
+
+/* Animation for dropdown */
+.btn-group .dropdown-menu {
+  animation: dropdownFadeUp 0.2s ease-out;
+}
+
+@keyframes dropdownFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-light);
+  border-radius: 4px;
+}
+
+body.dark-mode .dropdown-item {
+  color: var(--text-dark);
+}
+
+.dropdown-item:hover {
+  background: var(--hover-light);
+  transform: translateY(-1px);
+}
+
+body.dark-mode .dropdown-item:hover {
+  background: var(--hover-dark);
+}
+
+/* Modal footer with status change */
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-light);
+}
+
+body.dark-mode .modal-footer {
+  border-top-color: var(--border-dark);
+}
+
+.modal-footer .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.modal-footer .btn-danger,
+.modal-footer .btn-success {
+  min-width: 160px;
+}
+
+.modal-footer .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .modal-footer .btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Form styling in modal */
+.update-admin-form .form-control {
+  background: var(--input-bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+body.dark-mode .update-admin-form .form-control {
+  background: var(--input-bg-dark);
+  border-color: var(--border-dark);
+  color: var(--text-dark);
+}
+
+.update-admin-form .form-control:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+}
+
+body.dark-mode .update-admin-form .form-control:focus {
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 3px rgba(0, 255, 200, 0.1);
+}
+
+.update-admin-form .form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+}
+
+body.dark-mode .update-admin-form .form-label {
+  color: var(--text-dark);
+}
+
+.btn-group {
+  position: relative;
+}
+
+.btn-group .dropdown-toggle {
+  position: relative;
+  z-index: 1070;
+}
+
+.btn-group.show .dropdown-menu {
+  display: block;
+  z-index: 1080;
 }

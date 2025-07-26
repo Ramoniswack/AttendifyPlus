@@ -1,0 +1,428 @@
+/* Microsoft Teams-inspired Upload Materials UI */
+:root {
+  --teams-primary: #6264a7;
+  --teams-accent: #464775;
+  --teams-bg: #f3f2f1;
+  --teams-sidebar: #201f1e;
+  --teams-sidebar-active: #6264a7;
+  --teams-card: #fff;
+  --teams-border: #e1dfdd;
+  --teams-text: #252423;
+  --teams-muted: #605e5c;
+  --teams-radius: 10px;
+  --teams-shadow: 0 2px 8px rgba(32,31,30,0.08);
+}
+
+body, html {
+  background: var(--teams-bg);
+  font-family: 'Segoe UI', 'Poppins', Arial, sans-serif;
+  color: var(--teams-text);
+  margin: 0;
+  padding: 0;
+}
+
+body.dark-mode {
+  --teams-primary: #00ffc8;
+  --teams-accent: #00bfae;
+  --teams-bg: #18191c;
+  --teams-card: #23242a;
+  --teams-border: #33343a;
+  --teams-text: #f3f4f6;
+  --teams-muted: #a0aec0;
+}
+
+body.dark-mode, body.dark-mode html {
+  background: var(--teams-bg);
+  color: var(--teams-text);
+}
+
+body.dark-mode .teams-main {
+  background: var(--teams-bg);
+}
+
+body.dark-mode .teams-card {
+  background: #23242a;
+  color: #f3f4f6;
+  border-color: #33343a;
+}
+body.dark-mode .teams-upload-area {
+  background: #23242a;
+  color: #f3f4f6;
+  border-color: #047857;
+}
+body.dark-mode .fw-semibold,
+body.dark-mode .page-header .page-title,
+body.dark-mode .page-header .page-title i[data-lucide] {
+  color: #047857 !important;
+}
+body.dark-mode .teams-file-icon,
+body.dark-mode .teams-card i[data-lucide],
+body.dark-mode .teams-card svg {
+  color: #047857 !important;
+  stroke: #047857 !important;
+}
+body.dark-mode .teams-upload-btn {
+  background: #047857;
+  color: #23242a;
+}
+body.dark-mode .teams-upload-btn:hover {
+  background: #065f46;
+  color: #23242a;
+}
+body.dark-mode .teams-file-item {
+  background: var(--teams-card);
+  border-color: var(--teams-border);
+  color: var(--teams-text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+}
+
+body.dark-mode .teams-file-name {
+  color: var(--teams-text);
+}
+body.dark-mode .teams-file-meta {
+  color: var(--teams-muted);
+}
+body.dark-mode .teams-file-action-btn {
+  color: var(--teams-primary);
+}
+body.dark-mode .teams-file-action-btn:hover {
+  background: #23242a;
+}
+
+body.dark-mode .teams-tabs {
+  border-bottom: 2px solid var(--teams-border);
+  background: var(--teams-bg);
+}
+body.dark-mode .teams-tab {
+  color: var(--teams-muted);
+  background: none;
+}
+body.dark-mode .teams-tab.active {
+  color: var(--teams-primary);
+  border-bottom: 3px solid var(--teams-primary);
+  background: var(--teams-bg);
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background: #23242a;
+  color: #f3f4f6;
+  border-color: #33343a;
+}
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+  border-color: #047857;
+  box-shadow: 0 0 0 0.2rem rgba(4,120,87,0.15);
+}
+body.dark-mode .form-label {
+  color: var(--teams-text);
+}
+body.dark-mode .teams-upload-btn {
+  background: #22c55e;
+  color: #23242a;
+}
+body.dark-mode .teams-upload-btn:hover {
+  background: #16a34a;
+  color: #23242a;
+}
+
+body.dark-mode .teams-card .teams-file-name,
+body.dark-mode .teams-card .fw-semibold {
+  color: #f3f4f6 !important;
+}
+/* Only keep green for the main card/page header title */
+body.dark-mode .page-header .page-title,
+body.dark-mode .page-header .page-title i[data-lucide] {
+  color: #047857 !important;
+}
+
+body.dark-mode .teams-upload-btn {
+  background: #047857 !important;
+  color: #f3f4f6 !important;
+  border: none !important;
+}
+body.dark-mode .teams-upload-btn:hover {
+  background: #065f46 !important;
+  color: #f3f4f6 !important;
+}
+
+.teams-sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 70px;
+  background: var(--teams-sidebar);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  z-index: 1000;
+  transition: width 0.2s;
+}
+.teams-sidebar:hover, .teams-sidebar.expanded {
+  width: 220px;
+}
+.teams-sidebar .sidebar-logo {
+  width: 40px; height: 40px;
+  margin-bottom: 2rem;
+}
+.teams-sidebar .sidebar-nav {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.teams-sidebar .sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.7rem 1rem;
+  border-radius: var(--teams-radius);
+  transition: background 0.2s;
+  font-size: 1rem;
+}
+.teams-sidebar .sidebar-link.active, .teams-sidebar .sidebar-link:hover {
+  background: var(--teams-sidebar-active);
+}
+.teams-sidebar .sidebar-link .icon {
+  font-size: 1.4rem;
+}
+.teams-sidebar .sidebar-link .label {
+  display: none;
+}
+.teams-sidebar.expanded .sidebar-link .label {
+  display: inline;
+}
+
+.teams-topbar {
+  margin-left: 70px;
+  height: 60px;
+  background: var(--teams-card);
+  border-bottom: 1px solid var(--teams-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+}
+.teams-topbar .teams-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--teams-primary);
+}
+.teams-topbar .teams-search {
+  background: var(--teams-bg);
+  border: 1px solid var(--teams-border);
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  font-size: 1rem;
+  width: 220px;
+}
+
+.teams-main {
+  margin-left: 70px;
+  padding: 2rem 2vw;
+  min-height: 100vh;
+  transition: margin-left 0.2s;
+}
+.teams-sidebar.expanded ~ .teams-main,
+.teams-sidebar.expanded ~ .teams-topbar {
+  margin-left: 220px;
+}
+
+.teams-tabs {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 2px solid var(--teams-border);
+  margin-bottom: 2rem;
+}
+.teams-tab {
+  padding: 0.7rem 1.2rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 1rem;
+  color: var(--teams-muted);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border 0.2s, color 0.2s;
+}
+.teams-tab.active {
+  border-bottom: 3px solid var(--teams-primary);
+  color: var(--teams-primary);
+  background: var(--teams-bg);
+}
+
+.teams-card {
+  background: var(--teams-card);
+  border-radius: var(--teams-radius);
+  box-shadow: var(--teams-shadow);
+  border: 1px solid var(--teams-border);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.teams-upload-area {
+  border: 2px dashed var(--teams-primary);
+  border-radius: var(--teams-radius);
+  background: #f7f6fa;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+}
+.teams-upload-area.dragover {
+  background: #e5e4f0;
+  border-color: var(--teams-accent);
+}
+.teams-upload-area input[type="file"] {
+  display: none;
+}
+.teams-upload-btn {
+  background: var(--teams-primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.teams-upload-btn:hover {
+  background: var(--teams-accent);
+}
+
+.teams-file-list {
+  margin-top: 2rem;
+}
+.teams-file-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--teams-card);
+  border: 1px solid var(--teams-border);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 4px rgba(32,31,30,0.04);
+}
+.teams-file-icon {
+  font-size: 2rem;
+  color: var(--teams-primary);
+  flex-shrink: 0;
+}
+.teams-file-info {
+  flex: 1;
+  min-width: 0;
+}
+.teams-file-name {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--teams-text);
+  margin-bottom: 0.2rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.teams-file-meta {
+  color: var(--teams-muted);
+  font-size: 0.9rem;
+}
+.teams-file-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.teams-file-action-btn {
+  background: none;
+  border: none;
+  color: var(--teams-primary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+  transition: background 0.2s;
+}
+.teams-file-action-btn:hover {
+  background: #f3f2f1;
+}
+
+@media (max-width: 900px) {
+  .teams-card {
+    max-width: 98vw !important;
+    padding: 0.5rem !important;
+  }
+  .teams-tabs {
+    gap: 0.5rem;
+    font-size: 0.98rem;
+  }
+}
+@media (max-width: 700px) {
+  .teams-card {
+    max-width: 100vw !important;
+    padding: 0.2rem !important;
+  }
+  .teams-tabs {
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.95rem;
+  }
+  .teams-file-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.7rem 0.5rem !important;
+  }
+  .teams-upload-area {
+    padding: 1rem !important;
+    font-size: 0.95rem;
+  }
+  .teams-upload-btn {
+    width: 100%;
+    padding: 0.7rem 0 !important;
+    font-size: 1rem;
+  }
+  .teams-card .p-4 {
+    padding: 1rem !important;
+  }
+  .teams-card .px-4 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  .teams-card .pt-4 {
+    padding-top: 1rem !important;
+  }
+  .teams-card .pb-2 {
+    padding-bottom: 0.5rem !important;
+  }
+  .teams-card .mb-3 {
+    margin-bottom: 0.7rem !important;
+  }
+  .teams-card img {
+    width: 80px !important;
+  }
+}
+@media (max-width: 480px) {
+  .teams-card {
+    border-radius: 6px !important;
+    padding: 0 !important;
+  }
+  .teams-tabs {
+    font-size: 0.9rem;
+  }
+  .teams-file-item {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.2rem !important;
+  }
+  .teams-upload-area {
+    padding: 0.7rem !important;
+    font-size: 0.92rem;
+  }
+  .teams-card img {
+    width: 60px !important;
+  }
+}

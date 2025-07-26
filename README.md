@@ -236,18 +236,18 @@ erDiagram
         enum Status
         datetime CreatedDate
     }
-    
+
     departments {
         int DepartmentID PK
         varchar DepartmentName
         varchar DepartmentCode
     }
-    
+
     semesters {
         int SemesterID PK
         int SemesterNumber
     }
-    
+
     admins {
         int AdminID PK
         varchar FullName
@@ -256,7 +256,7 @@ erDiagram
         varchar PhotoURL
         int LoginID FK
     }
-    
+
     teachers {
         int TeacherID PK
         varchar FullName
@@ -265,7 +265,7 @@ erDiagram
         varchar PhotoURL
         int LoginID FK
     }
-    
+
     students {
         int StudentID PK
         varchar FullName
@@ -279,7 +279,7 @@ erDiagram
         boolean DeviceRegistered
         int LoginID FK
     }
-    
+
     subjects {
         int SubjectID PK
         varchar SubjectCode
@@ -290,19 +290,19 @@ erDiagram
         int DepartmentID FK
         int SemesterID FK
     }
-    
+
     teacher_subject_map {
         int MapID PK
         int TeacherID FK
         int SubjectID FK
     }
-    
+
     teacher_department_map {
         int MapID PK
         int TeacherID FK
         int DepartmentID FK
     }
-    
+
     attendance_records {
         int AttendanceID PK
         int StudentID FK
@@ -312,7 +312,7 @@ erDiagram
         enum Status
         enum Method
     }
-    
+
     qr_attendance_sessions {
         int SessionID PK
         int TeacherID FK
@@ -323,7 +323,7 @@ erDiagram
         boolean IsActive
         datetime CreatedAt
     }
-    
+
     qr_attendance_pending {
         int PendingID PK
         int StudentID FK
@@ -333,7 +333,7 @@ erDiagram
         datetime CreatedAt
         varchar Status
     }
-    
+
     device_registration_tokens {
         int TokenID PK
         int StudentID FK
@@ -342,7 +342,7 @@ erDiagram
         boolean Used
         datetime CreatedAt
     }
-    
+
     student_devices {
         int DeviceID PK
         int StudentID FK
@@ -353,7 +353,7 @@ erDiagram
         datetime RegisteredAt
         datetime LastUsed
     }
-    
+
     materials {
         int MaterialID PK
         int TeacherID FK
@@ -370,7 +370,7 @@ erDiagram
         int DownloadCount
         varchar Tags
     }
-    
+
     material_access_logs {
         int LogID PK
         int MaterialID FK
@@ -385,14 +385,14 @@ erDiagram
     login_tbl ||--|| admins : "1:1"
     login_tbl ||--|| teachers : "1:1"
     login_tbl ||--|| students : "1:1"
-    
+
     %% Department and semester relationships
     departments ||--o{ students : "1:many"
     departments ||--o{ subjects : "1:many"
     departments ||--o{ teacher_department_map : "1:many"
     semesters ||--o{ students : "1:many"
     semesters ||--o{ subjects : "1:many"
-    
+
     %% Teacher relationships
     teachers ||--o{ teacher_subject_map : "1:many"
     teachers ||--o{ teacher_department_map : "1:many"
@@ -401,24 +401,24 @@ erDiagram
     teachers ||--o{ qr_attendance_pending : "1:many"
     teachers ||--o{ materials : "1:many"
     teachers ||--o{ material_access_logs : "1:many"
-    
+
     %% Subject relationships
     subjects ||--o{ teacher_subject_map : "1:many"
     subjects ||--o{ attendance_records : "1:many"
     subjects ||--o{ qr_attendance_sessions : "1:many"
     subjects ||--o{ qr_attendance_pending : "1:many"
     subjects ||--o{ materials : "1:many"
-    
+
     %% Student relationships
     students ||--o{ attendance_records : "1:many"
     students ||--o{ qr_attendance_pending : "1:many"
     students ||--o{ device_registration_tokens : "1:many"
     students ||--o{ student_devices : "1:many"
     students ||--o{ material_access_logs : "1:many"
-    
+
     %% QR system relationships
     qr_attendance_sessions ||--o{ qr_attendance_pending : "1:many"
-    
+
     %% Material system relationships
     materials ||--o{ material_access_logs : "1:many"
 ```

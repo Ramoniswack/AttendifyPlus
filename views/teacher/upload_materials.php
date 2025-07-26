@@ -2,6 +2,7 @@
 
 session_start();
 require_once(__DIR__ . '/../../config/db_config.php');
+require_once(__DIR__ . '/../../helpers/notification_helpers.php');
 
 // Check session
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') {
@@ -139,6 +140,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_material'])) {
                 $insertStmt->bind_param("iissssssss", $teacherID, $subjectID, $title, $description, $uniqueFileName, $fileName, $fileSize, $fileType, $relativePath, $tags);
 
                 if ($insertStmt->execute()) {
+                    $materialId = $conn->insert_id;
+
+                    // Create notification for students about new material
+                    notifyMaterialUpload($conn, $teacherID, $subjectID, $materialId, $title);
+
                     $_SESSION['upload_success'] = "Material uploaded successfully!";
                     $insertStmt->close();
                     header("Location: " . $_SERVER['PHP_SELF']);
@@ -183,899 +189,165 @@ if (isset($_SESSION['upload_error'])) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Upload Materials | Attendify+</title>
-
-    <!-- CSS -->
     <link rel="stylesheet" href="../../assets/css/dashboard_teacher.css">
+    <link rel="stylesheet" href="../../assets/css/sidebar_teacher.css">
+    <link rel="stylesheet" href="../../assets/css/upload_materials.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        /* CSS Variables - EXACT MATCH FROM MY_SUBJECTS */
-        :root {
-            --primary-color: #1a73e8;
-            --text-primary: #2d3748;
-            --text-secondary: #718096;
-            --border-light: #e2e8f0;
-            --bg-subtle: #f8fafc;
-            --accent-light: #1A73E8;
-            --accent-dark: #00ffc8;
-            --card-light: #ffffff;
-            --card-dark: #1f1f1f;
-            --text-light: #333;
-            --text-dark: #eee;
-            --text-muted-light: #6c757d;
-            --text-muted-dark: #a0a0a0;
-            --shadow-light: rgba(0, 0, 0, 0.1);
-            --shadow-dark: rgba(0, 0, 0, 0.3);
-            --input-bg-light: #ffffff;
-            --input-bg-dark: #2a2a2a;
-            --hover-light: rgba(0, 0, 0, 0.05);
-            --hover-dark: rgba(255, 255, 255, 0.1);
-        }
-
-        body.dark-mode {
-            --primary-color: #00ffc8;
-            --text-primary: #e2e8f0;
-            --text-secondary: #a0aec0;
-            --border-light: #2d3748;
-            --bg-subtle: #1a202c;
-        }
-
-        /* Enhanced Upload Card */
-        .upload-card {
-            border: 1px solid var(--border-light);
-            background: var(--card-light);
-            border-radius: 12px;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 8px var(--shadow-light);
-        }
-
-        body.dark-mode .upload-card {
-            background: var(--card-dark);
-            border-color: var(--border-light);
-            box-shadow: 0 2px 8px var(--shadow-dark);
-        }
-
-        .upload-card:hover {
-            box-shadow: 0 4px 12px var(--shadow-light);
-        }
-
-        body.dark-mode .upload-card:hover {
-            box-shadow: 0 4px 12px var(--shadow-dark);
-        }
-
-        /* Material Cards */
-        .material-card {
-            border: 1px solid var(--border-light);
-            background: var(--card-light);
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            margin-bottom: 0.75rem;
-        }
-
-        body.dark-mode .material-card {
-            background: var(--card-dark);
-            border-color: var(--border-light);
-        }
-
-        .material-card:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px var(--shadow-light);
-        }
-
-        body.dark-mode .material-card:hover {
-            box-shadow: 0 3px 8px var(--shadow-dark);
-        }
-
-        /* File Type Icons */
-        .file-type-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            flex-shrink: 0;
-        }
-
-        .file-type-pdf {
-            background: #e53e3e;
-            color: white;
-        }
-
-        .file-type-ppt,
-        .file-type-pptx {
-            background: #d69e2e;
-            color: white;
-        }
-
-        .file-type-doc,
-        .file-type-docx {
-            background: #3182ce;
-            color: white;
-        }
-
-        .file-type-txt {
-            background: #38a169;
-            color: white;
-        }
-
-        /* Form Styling */
-        .form-control,
-        .form-select {
-            background: var(--input-bg-light);
-            border: 1px solid var(--border-light);
-            color: var(--text-light);
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        body.dark-mode .form-control,
-        body.dark-mode .form-select {
-            background: var(--input-bg-dark);
-            border-color: var(--border-light);
-            color: var(--text-dark);
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: var(--accent-light);
-            box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.15);
-            background: var(--input-bg-light);
-        }
-
-        body.dark-mode .form-control:focus,
-        body.dark-mode .form-select:focus {
-            border-color: var(--accent-dark);
-            box-shadow: 0 0 0 0.2rem rgba(0, 255, 200, 0.15);
-            background: var(--input-bg-dark);
-        }
-
-        .form-label {
-            font-weight: 600;
-            color: var(--text-light);
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        body.dark-mode .form-label {
-            color: var(--text-dark);
-        }
-
-        /* Responsive Buttons */
-        .upload-btn {
-            background: linear-gradient(135deg, var(--accent-light) 0%, #0056b3 100%);
-            border: none;
-            color: white;
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            font-size: 0.875rem;
-        }
-
-        body.dark-mode .upload-btn {
-            background: linear-gradient(135deg, var(--accent-dark) 0%, #00d4aa 100%);
-            color: black;
-        }
-
-        .upload-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(26, 115, 232, 0.3);
-            color: white;
-        }
-
-        body.dark-mode .upload-btn:hover {
-            box-shadow: 0 5px 15px rgba(0, 255, 200, 0.3);
-            color: black;
-        }
-
-        /* Minimal Search Inside Materials Section */
-        .materials-search-bar {
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-light);
-            border-radius: 8px;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        body.dark-mode .materials-search-bar {
-            background: rgba(255, 255, 255, 0.03);
-            border-color: var(--border-light);
-        }
-
-        .search-input-group {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .search-input {
-            background: var(--input-bg-light);
-            border: 1px solid var(--border-light);
-            color: var(--text-light);
-            padding: 0.5rem 2.5rem 0.5rem 0.75rem;
-            font-size: 0.8rem;
-            width: 100%;
-            border-radius: 6px;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        body.dark-mode .search-input {
-            background: var(--input-bg-dark);
-            border-color: var(--border-light);
-            color: var(--text-dark);
-        }
-
-        .search-input:focus {
-            border-color: var(--accent-light);
-            box-shadow: 0 0 0 0.15rem rgba(26, 115, 232, 0.15);
-        }
-
-        body.dark-mode .search-input:focus {
-            border-color: var(--accent-dark);
-            box-shadow: 0 0 0 0.15rem rgba(0, 255, 200, 0.15);
-        }
-
-        .search-input::placeholder {
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-        }
-
-        .search-btn-minimal {
-            position: absolute;
-            right: 0.5rem;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            padding: 0.25rem;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .search-btn-minimal:hover {
-            color: var(--accent-light);
-            background: var(--hover-light);
-        }
-
-        body.dark-mode .search-btn-minimal:hover {
-            color: var(--accent-dark);
-            background: var(--hover-dark);
-        }
-
-        .filter-row {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            margin-top: 0.5rem;
-        }
-
-        .filter-select-mini {
-            background: var(--input-bg-light);
-            border: 1px solid var(--border-light);
-            color: var(--text-light);
-            padding: 0.35rem 0.5rem;
-            font-size: 0.75rem;
-            border-radius: 4px;
-            flex: 1;
-            min-width: 0;
-        }
-
-        body.dark-mode .filter-select-mini {
-            background: var(--input-bg-dark);
-            border-color: var(--border-light);
-            color: var(--text-dark);
-        }
-
-        .clear-filters-mini {
-            background: none;
-            border: 1px solid var(--border-light);
-            color: var(--text-secondary);
-            padding: 0.35rem 0.6rem;
-            font-size: 0.7rem;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .clear-filters-mini:hover {
-            color: var(--accent-light);
-            border-color: var(--accent-light);
-            background: var(--hover-light);
-        }
-
-        body.dark-mode .clear-filters-mini:hover {
-            color: var(--accent-dark);
-            border-color: var(--accent-dark);
-            background: var(--hover-dark);
-        }
-
-        /* Stats */
-        .stats-text {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
-
-        .minimal-badge {
-            background: var(--bg-subtle);
-            color: var(--text-primary);
-            border: 1px solid var(--border-light);
-            font-weight: 500;
-            font-size: 0.7rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-        }
-
-        .file-size {
-            color: var(--text-secondary);
-            font-size: 0.7rem;
-        }
-
-        /* Materials Header */
-        .materials-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .materials-count {
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        /* Page Title */
-        .page-title {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--accent-light);
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        body.dark-mode .page-title {
-            color: var(--accent-dark);
-        }
-
-        /* Results Count */
-        .results-count-mini {
-            color: var(--text-secondary);
-            font-size: 0.7rem;
-            margin-top: 0.5rem;
-            padding: 0.25rem 0;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .upload-btn {
-                padding: 0.625rem 1rem;
-                font-size: 0.8rem;
-            }
-
-            .file-type-icon {
-                width: 32px;
-                height: 32px;
-                font-size: 0.6rem;
-            }
-
-            .material-card {
-                padding: 0.75rem !important;
-            }
-
-            .form-control,
-            .form-select {
-                padding: 0.5rem;
-                font-size: 0.8rem;
-            }
-
-            .upload-card {
-                padding: 1rem !important;
-            }
-
-            .btn {
-                font-size: 0.8rem;
-                padding: 0.5rem 0.75rem;
-            }
-
-            .page-title {
-                font-size: 1.8rem;
-            }
-
-            .filter-row {
-                flex-direction: column;
-                gap: 0.4rem;
-            }
-
-            .filter-select-mini {
-                width: 100%;
-            }
-
-            .search-input {
-                padding: 0.45rem 2.2rem 0.45rem 0.6rem;
-                font-size: 0.75rem;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .upload-btn {
-                padding: 0.5rem 0.75rem;
-                font-size: 0.75rem;
-            }
-
-            .file-type-icon {
-                width: 28px;
-                height: 28px;
-                font-size: 0.55rem;
-            }
-
-            .minimal-badge {
-                font-size: 0.65rem;
-                padding: 0.2rem 0.4rem;
-            }
-
-            .material-card h6 {
-                font-size: 0.9rem;
-            }
-
-            .stats-text {
-                font-size: 0.8rem;
-            }
-
-            .file-size {
-                font-size: 0.65rem;
-            }
-
-            .materials-count {
-                font-size: 0.7rem;
-            }
-
-            .page-title {
-                font-size: 1.6rem;
-            }
-
-            .materials-search-bar {
-                padding: 0.5rem;
-            }
-
-            .search-input {
-                padding: 0.4rem 2rem 0.4rem 0.5rem;
-                font-size: 0.7rem;
-            }
-
-            .filter-select-mini {
-                padding: 0.3rem 0.4rem;
-                font-size: 0.7rem;
-            }
-
-            .clear-filters-mini {
-                padding: 0.3rem 0.5rem;
-                font-size: 0.65rem;
-            }
-        }
-
-        /* No Results */
-        .no-results {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-secondary);
-        }
-
-        .no-results i {
-            opacity: 0.5;
-            margin-bottom: 1rem;
-        }
-
-        /* Alert Styling */
-        .alert {
-            border-radius: 12px;
-            border: none;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        body.dark-mode .alert-success {
-            background-color: #1e3a2e;
-            color: #5cb85c;
-        }
-
-        body.dark-mode .alert-danger {
-            background-color: #3a1e20;
-            color: #d9534f;
-        }
-    </style>
-
-    <!-- JS Libraries -->
-    <script src="../../assets/js/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <script src="../../assets/js/sidebar_teacher.js" defer></script>
     <script src="../../assets/js/dashboard_teacher.js" defer></script>
+    <script src="../../assets/js/upload_materials.js" defer></script>
+    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="../../assets/js/navbar_teacher.js" defer></script>
 </head>
 
 <body>
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Sidebar -->
     <?php include '../components/sidebar_teacher_dashboard.php'; ?>
-
-    <!-- Navbar -->
     <?php include '../components/navbar_teacher.php'; ?>
-
-    <!-- Main Content -->
-    <div class="container-fluid dashboard-container">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="container-fluid dashboard-container main-content">
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-4">
             <div>
                 <h2 class="page-title">
                     <i data-lucide="upload-cloud"></i>
                     Upload Materials
                 </h2>
-                <p class="stats-text mb-0">Share lecture slides, notes and resources with students</p>
-            </div>
-            <div class="stats-text">
-                <?= date('M j, Y') ?> • <?= date('g:i A') ?>
+                <p class="text-muted mb-0">Share lecture slides, notes and resources with students</p>
             </div>
         </div>
-
-        <!-- Alert Messages -->
         <?php if ($successMsg): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i data-lucide="check-circle" class="me-2" style="width: 16px; height: 16px;"></i>
+                <i data-lucide="check-circle" class="me-2"></i>
                 <?= htmlspecialchars($successMsg) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
-
         <?php if ($errorMsg): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i data-lucide="alert-circle" class="me-2" style="width: 16px; height: 16px;"></i>
+                <i data-lucide="alert-circle" class="me-2"></i>
                 <?= htmlspecialchars($errorMsg) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
-
-        <div class="row g-4">
-            <!-- Upload Section -->
-            <div class="col-lg-6">
-                <div class="upload-card p-4" id="uploadCard">
-                    <div class="text-center mb-4">
-                        <div class="mb-3">
-                            <i data-lucide="upload-cloud" style="width: 40px; height: 40px; color: var(--accent-light);"></i>
-                        </div>
-                        <h5 class="mb-2">Upload Course Material</h5>
-                        <p class="stats-text">Upload your lecture slides, notes and resources</p>
-                        <p class="stats-text">Supported: PDF, PPT, DOC, TXT • Max size: 100MB</p>
-                    </div>
-
-                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label for="subject_id" class="form-label">
-                                    <i data-lucide="book"></i>
-                                    Subject <span style="color: #dc3545;">*</span>
-                                </label>
-                                <select class="form-select" id="subject_id" name="subject_id" required>
-                                    <option value="">Select Subject</option>
-                                    <?php
-                                    // Reset the result pointer for subjects
-                                    $subjectsResult->data_seek(0);
-                                    while ($subject = $subjectsResult->fetch_assoc()): ?>
-                                        <option value="<?= $subject['SubjectID'] ?>">
-                                            <?= htmlspecialchars($subject['SubjectCode']) ?> - <?= htmlspecialchars($subject['SubjectName']) ?>
-                                        </option>
-                                    <?php endwhile; ?>
-                                </select>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="title" class="form-label">
-                                    <i data-lucide="edit"></i>
-                                    Title <span style="color: #dc3545;">*</span>
-                                </label>
-                                <input type="text" class="form-control" id="title" name="title" required
-                                    placeholder="e.g., Lecture 5: Database Design">
-                                <small class="form-text text-muted">Must be unique within the selected subject (case-insensitive)</small>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="description" class="form-label">
-                                    <i data-lucide="file-text"></i>
-                                    Description
-                                </label>
-                                <textarea class="form-control" id="description" name="description" rows="2"
-                                    placeholder="Brief description of the material content..."></textarea>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="tags" class="form-label">
-                                    <i data-lucide="tag"></i>
-                                    Tags (Optional)
-                                </label>
-                                <input type="text" class="form-control" id="tags" name="tags"
-                                    placeholder="e.g., database, sql, design">
-                                <small class="form-text text-muted">Comma-separated keywords</small>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="material_file" class="form-label">
-                                    <i data-lucide="paperclip"></i>
-                                    File <span style="color: #dc3545;">*</span>
-                                </label>
-                                <input type="file" class="form-control" id="material_file" name="material_file"
-                                    accept=".pdf,.ppt,.pptx,.doc,.docx,.txt" required>
-                                <small class="form-text text-muted">PDF, PPT, DOC, TXT (Max 100MB)</small>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <button type="submit" name="upload_material" class="upload-btn">
-                                        <i data-lucide="upload" class="me-1" style="width: 14px; height: 14px;"></i>
-                                        Upload Material
-                                    </button>
-                                    <button type="reset" class="btn btn-outline-secondary">
-                                        <i data-lucide="x" class="me-1" style="width: 14px; height: 14px;"></i>
-                                        Clear
-                                    </button>
+        <div class="teams-tabs mb-4">
+            <button class="teams-tab active" id="tab-files">Files</button>
+            <button class="teams-tab" id="tab-upload">Upload</button>
+        </div>
+        <!-- Search Bar -->
+        <div class="mb-4" id="materialsSearchBar">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0"><i data-lucide="search"></i></span>
+                <input type="text" class="form-control" id="materialsSearchInput" placeholder="Search materials by title, subject, or tag...">
+            </div>
+        </div>
+        <!-- Files Tab -->
+        <section id="filesSection">
+            <div class="row g-4" id="materialsCardGrid">
+                <?php if ($materialsResult->num_rows > 0): ?>
+                    <?php while ($material = $materialsResult->fetch_assoc()): ?>
+                        <div class="col-md-6 col-lg-4 material-card-item" data-title="<?= strtolower(htmlspecialchars($material['Title'])) ?>" data-subject="<?= strtolower(htmlspecialchars($material['SubjectCode'])) ?>" data-tags="<?= strtolower(htmlspecialchars($material['Tags'])) ?>">
+                            <div class="teams-card p-4 d-flex flex-column gap-2 h-100">
+                                <div class="d-flex align-items-center gap-3 mb-2">
+                                    <span class="teams-file-icon" data-lucide="file"></span>
+                                    <div>
+                                        <div class="fw-semibold teams-file-name" style="font-size:1.1rem;"> <?= htmlspecialchars($material['Title']) ?> </div>
+                                        <div class="teams-file-meta" style="font-size:0.92rem;">
+                                            <?= htmlspecialchars($material['SubjectCode']) ?> &bull; <?= formatFileSize($material['FileSize']) ?> &bull; <?= date('M j, g:i A', strtotime($material['UploadDateTime'])) ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php if (!empty($material['Description'])): ?>
+                                    <div class="text-muted mb-2" style="font-size:0.95rem;">
+                                        <?= htmlspecialchars(strlen($material['Description']) > 80 ? substr($material['Description'], 0, 80) . '...' : $material['Description']) ?>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="d-flex gap-2 mt-auto">
+                                    <a class="btn btn-outline-primary btn-sm" href="download_material.php?id=<?= $material['MaterialID'] ?>" title="Download"><i data-lucide="download"></i></a>
+                                    <a class="btn btn-outline-danger btn-sm" href="delete_material.php?id=<?= $material['MaterialID'] ?>" title="Delete"><i data-lucide="trash-2"></i></a>
                                 </div>
                             </div>
+                        </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <div class="text-center text-muted py-5">
+                        <i data-lucide="file-x" style="font-size:2.5rem;"></i>
+                        <div class="fw-semibold mt-3" style="font-size:1.2rem;">No materials uploaded yet</div>
+                        <div class="text-muted mt-2">Upload your lecture slides, notes, and resources here. Students will be able to view and download them.</div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </section>
+        <!-- Upload Tab -->
+        <section id="uploadSection" style="display:none;">
+            <div class="teams-card p-0 mx-auto" style="max-width:600px;">
+                <div class="px-4 pt-4 pb-2 d-flex align-items-center gap-2">
+                    <span style="font-size:1.3rem;color:var(--accent-light);"><i data-lucide="upload-cloud"></i></span>
+                    <span class="fw-semibold" style="font-size:1.1rem;color:var(--accent-light);">Upload Material</span>
+                </div>
+                <hr class="m-0" />
+                <div class="p-4">
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <div class="mb-3">
+                            <label for="subject_id" class="form-label">Subject <span style="color:#dc3545;">*</span></label>
+                            <select class="form-select" id="subject_id" name="subject_id" required>
+                                <option value="">Select Subject</option>
+                                <?php $subjectsResult->data_seek(0);
+                                while ($subject = $subjectsResult->fetch_assoc()): ?>
+                                    <option value="<?= $subject['SubjectID'] ?>">
+                                        <?= htmlspecialchars($subject['SubjectCode']) ?> - <?= htmlspecialchars($subject['SubjectName']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title <span style="color:#dc3545;">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required placeholder="e.g., Lecture 5: Database Design">
+                            <small class="form-text text-muted">Must be unique within the selected subject (case-insensitive)</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="2" placeholder="Brief description of the material content..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Tags (Optional)</label>
+                            <input type="text" class="form-control" id="tags" name="tags" placeholder="e.g., database, sql, design">
+                            <small class="form-text text-muted">Comma-separated keywords</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="material_file" class="form-label">File <span style="color:#dc3545;">*</span></label>
+                            <input type="file" class="form-control" id="material_file" name="material_file" accept=".pdf,.ppt,.pptx,.doc,.docx,.txt" required>
+                            <small class="form-text text-muted">PDF, PPT, DOC, TXT (Max 100MB)</small>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" name="upload_material" class="teams-upload-btn">
+                                <i data-lucide="upload"></i> Upload Material
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
-
-            <!-- Materials List -->
-            <div class="col-lg-6">
-                <div class="card border-0 h-100" style="border-radius: 12px; box-shadow: 0 2px 8px var(--shadow-light);">
-                    <div class="card-header bg-transparent border-0 pb-0">
-                        <div class="materials-header">
-                            <h6 class="mb-0 fw-semibold">
-                                <i data-lucide="folder" class="me-1"></i>
-                                Your Materials
-                            </h6>
-                            <span class="materials-count" id="materialsCount">
-                                Loading...
-                            </span>
-                        </div>
-
-                        <!-- Minimal Search Bar Inside Materials Section -->
-                        <div class="materials-search-bar">
-                            <div class="search-input-group">
-                                <input id="materialSearch" type="text" class="search-input"
-                                    placeholder="Search your materials..."
-                                    value="<?= htmlspecialchars($searchTerm) ?>" />
-                                <button type="button" class="search-btn-minimal">
-                                    <i data-lucide="search" style="width: 14px; height: 14px;"></i>
-                                </button>
-                            </div>
-                            <div class="filter-row">
-                                <select id="filterSubject" class="filter-select-mini">
-                                    <option value="">All Subjects</option>
-                                    <?php
-                                    $subjectsResult->data_seek(0);
-                                    while ($subject = $subjectsResult->fetch_assoc()): ?>
-                                        <option value="<?= htmlspecialchars($subject['SubjectID']) ?>"
-                                            <?= $subjectFilter == $subject['SubjectID'] ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($subject['SubjectCode']) ?>
-                                        </option>
-                                    <?php endwhile; ?>
-                                </select>
-                                <select id="filterFileType" class="filter-select-mini">
-                                    <option value="">All Types</option>
-                                    <option value="pdf">PDF</option>
-                                    <option value="ppt,pptx">PPT</option>
-                                    <option value="doc,docx">DOC</option>
-                                    <option value="txt">TXT</option>
-                                </select>
-                                <button id="clearFilters" class="clear-filters-mini">
-                                    <i data-lucide="x" style="width: 10px; height: 10px;"></i>
-                                    Clear
-                                </button>
-                            </div>
-                            <div class="results-count-mini" id="resultsCount"></div>
-                        </div>
-                    </div>
-                    <div class="card-body" style="max-height: 600px; overflow-y: auto;">
-                        <div id="materialsContainer">
-                            <?php if ($materialsResult->num_rows > 0): ?>
-                                <?php while ($material = $materialsResult->fetch_assoc()): ?>
-                                    <div class="material-card p-3 material-item"
-                                        data-title="<?= strtolower(htmlspecialchars($material['Title'])) ?>"
-                                        data-description="<?= strtolower(htmlspecialchars($material['Description'])) ?>"
-                                        data-tags="<?= strtolower(htmlspecialchars($material['Tags'])) ?>"
-                                        data-subject="<?= htmlspecialchars($material['SubjectID']) ?>"
-                                        data-filetype="<?= strtolower($material['FileType']) ?>">
-                                        <div class="d-flex align-items-start gap-3">
-                                            <div class="file-type-icon file-type-<?= strtolower($material['FileType']) ?>">
-                                                <?= strtoupper($material['FileType']) ?>
-                                            </div>
-                                            <div class="flex-grow-1 min-w-0">
-                                                <h6 class="mb-1 fw-medium text-truncate" style="font-size: 0.9rem;">
-                                                    <?= htmlspecialchars($material['Title']) ?>
-                                                </h6>
-                                                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                                                    <span class="minimal-badge badge rounded-pill">
-                                                        <?= htmlspecialchars($material['SubjectCode']) ?>
-                                                    </span>
-                                                    <span class="file-size">
-                                                        <?= formatFileSize($material['FileSize']) ?>
-                                                    </span>
-                                                </div>
-                                                <?php if (!empty($material['Description'])): ?>
-                                                    <p class="stats-text mb-2 text-truncate" style="font-size: 0.8rem;">
-                                                        <?= htmlspecialchars(substr($material['Description'], 0, 80)) ?><?= strlen($material['Description']) > 80 ? '...' : '' ?>
-                                                    </p>
-                                                <?php endif; ?>
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <small class="stats-text" style="font-size: 0.75rem;">
-                                                        <?= date('M j, g:i A', strtotime($material['UploadDateTime'])) ?>
-                                                    </small>
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-link btn-sm text-muted p-0" data-bs-toggle="dropdown">
-                                                            <i data-lucide="more-horizontal" style="width: 16px; height: 16px;"></i>
-                                                        </button>
-                                                        <ul class="dropdown-menu dropdown-menu-end">
-                                                            <li><a class="dropdown-item" href="download_material.php?id=<?= $material['MaterialID'] ?>">
-                                                                    <i data-lucide="download" class="me-2" style="width: 14px; height: 14px;"></i>Download
-                                                                </a></li>
-                                                            <li><a class="dropdown-item text-danger" href="delete_material.php?id=<?= $material['MaterialID'] ?>">
-                                                                    <i data-lucide="trash-2" class="me-2" style="width: 14px; height: 14px;"></i>Delete
-                                                                </a></li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <div class="no-results">
-                                    <i data-lucide="file-x" class="text-muted mb-2" style="width: 32px; height: 32px;"></i>
-                                    <p class="stats-text mb-0">No materials uploaded yet</p>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </section>
     </div>
-
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Initialize Lucide icons
         lucide.createIcons();
-
-        // Search and filter functionality
-        const searchInput = document.getElementById('materialSearch');
-        const subjectFilter = document.getElementById('filterSubject');
-        const fileTypeFilter = document.getElementById('filterFileType');
-        const clearFiltersBtn = document.getElementById('clearFilters');
-        const resultsCount = document.getElementById('resultsCount');
-        const materialsCount = document.getElementById('materialsCount');
-        const materialItems = document.querySelectorAll('.material-item');
-
-        function updateResultsCount() {
-            const visibleItems = document.querySelectorAll('.material-item:not([style*="display: none"])').length;
-            const totalItems = materialItems.length;
-            resultsCount.textContent = `Showing ${visibleItems} of ${totalItems} materials`;
-            materialsCount.textContent = `${visibleItems} found`;
-        }
-
-        function filterMaterials() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const subjectFilterValue = subjectFilter.value;
-            const fileTypeFilterValue = fileTypeFilter.value;
-
-            materialItems.forEach(item => {
-                const title = item.dataset.title || '';
-                const description = item.dataset.description || '';
-                const tags = item.dataset.tags || '';
-                const subject = item.dataset.subject || '';
-                const filetype = item.dataset.filetype || '';
-
-                let showItem = true;
-
-                // Search filter
-                if (searchTerm) {
-                    const searchMatch = title.includes(searchTerm) ||
-                        description.includes(searchTerm) ||
-                        tags.includes(searchTerm);
-                    if (!searchMatch) showItem = false;
-                }
-
-                // Subject filter
-                if (subjectFilterValue && subject !== subjectFilterValue) {
-                    showItem = false;
-                }
-
-                // File type filter
-                if (fileTypeFilterValue) {
-                    const allowedTypes = fileTypeFilterValue.split(',');
-                    if (!allowedTypes.includes(filetype)) {
-                        showItem = false;
-                    }
-                }
-
-                item.style.display = showItem ? '' : 'none';
+        // Live search filter
+        const searchInput = document.getElementById('materialsSearchInput');
+        const cardGrid = document.getElementById('materialsCardGrid');
+        if (searchInput && cardGrid) {
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                cardGrid.querySelectorAll('.material-card-item').forEach(card => {
+                    const title = card.getAttribute('data-title') || '';
+                    const subject = card.getAttribute('data-subject') || '';
+                    const tags = card.getAttribute('data-tags') || '';
+                    card.style.display = (title.includes(term) || subject.includes(term) || tags.includes(term)) ? '' : 'none';
+                });
             });
-
-            updateResultsCount();
         }
-
-        // Event listeners for filters
-        searchInput.addEventListener('input', filterMaterials);
-        subjectFilter.addEventListener('change', filterMaterials);
-        fileTypeFilter.addEventListener('change', filterMaterials);
-
-        // Clear filters
-        clearFiltersBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            subjectFilter.value = '';
-            fileTypeFilter.value = '';
-            filterMaterials();
-        });
-
-        // File input change handler
-        document.getElementById('material_file').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                const file = e.target.files[0];
-                const fileSize = formatFileSize(file.size);
-                const fileName = file.name;
-                console.log(`Selected: ${fileName} (${fileSize})`);
-            }
-        });
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // Initialize results count
-        updateResultsCount();
-
-        // Auto-dismiss alerts after 5 seconds
-        setTimeout(() => {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            });
-        }, 5000);
-
-        // Final icon refresh
-        setTimeout(() => {
-            lucide.createIcons();
-        }, 100);
     </script>
 </body>
 
 </html>
-
 <?php
 // Helper function for file size formatting
 function formatFileSize($bytes)

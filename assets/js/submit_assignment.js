@@ -682,34 +682,57 @@ function submitAssignment() {
         formData.append(`files[${index}]`, file);
     });
     
-    // Simulate API call (replace with actual submission)
-    setTimeout(() => {
+    // Submit to API
+    fetch('../../api/submit_assignment.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
         // Reset button state
         submitBtn.classList.remove('btn-loading');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i data-lucide="send"></i> Submit Assignment';
         
-        // Show success message
-        showNotification('success', 'Assignment Submitted!', 'Your assignment has been submitted successfully.');
-        
-        // Close modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('submissionModal'));
-        if (modal) {
-            modal.hide();
+        if (data.success) {
+            // Show success message
+            showNotification('success', 'Assignment Submitted!', data.message);
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('submissionModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Update UI to show submission
+            updateAssignmentCard(assignmentId, 'submitted');
+            
+            // Re-initialize icons
+            if (typeof lucide !== "undefined") {
+                lucide.createIcons();
+            }
+            
+            // Show celebration animation
+            showCelebrationAnimation();
+            
+            // Refresh notifications
+            if (typeof fetchAndRenderNotifications === 'function') {
+                fetchAndRenderNotifications();
+            }
+        } else {
+            showNotification('error', 'Submission Failed', data.error || 'Failed to submit assignment');
         }
+    })
+    .catch(error => {
+        console.error('Error submitting assignment:', error);
         
-        // Update UI to show submission
-        updateAssignmentCard(assignmentId, 'submitted');
+        // Reset button state
+        submitBtn.classList.remove('btn-loading');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i data-lucide="send"></i> Submit Assignment';
         
-        // Re-initialize icons
-        if (typeof lucide !== "undefined") {
-            lucide.createIcons();
-        }
-        
-        // Show celebration animation
-        showCelebrationAnimation();
-        
-    }, 2000);
+        showNotification('error', 'Submission Failed', 'Network error occurred. Please try again.');
+    });
 }
 
 // Validate submission

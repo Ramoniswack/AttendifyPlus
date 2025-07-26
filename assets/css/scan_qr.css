@@ -1,1113 +1,573 @@
 /* ====================================================================
-   QR SCANNER - MOBILE-FIRST DESIGN
-   Student-Focused, Simple, Beautiful UI/UX
+   QR SCANNER - MODERN, MOBILE-FIRST UI/UX
    ==================================================================== */
 
 :root {
-    /* Light Theme Colors */
     --primary: #3b82f6;
     --primary-hover: #2563eb;
     --primary-light: rgba(59, 130, 246, 0.1);
-    --success: #10b981;
-    --success-light: rgba(16, 185, 129, 0.1);
-    --warning: #f59e0b;
-    --warning-light: rgba(245, 158, 11, 0.1);
+    --success: #3b82f6;
+    --success-light: rgba(59, 130, 246, 0.12);
     --danger: #ef4444;
     --danger-light: rgba(239, 68, 68, 0.1);
-    --dark: #1f2937;
-    --light: #f8fafc;
-    --white: #ffffff;
+    --card-bg: #fff;
+    --card-radius: 18px;
+    --card-shadow: 0 4px 24px rgba(59, 130, 246, 0.08);
+    --border: #e5e7eb;
     --text-primary: #1f2937;
     --text-secondary: #6b7280;
     --text-muted: #9ca3af;
-    --border: #e5e7eb;
-    --shadow: rgba(0, 0, 0, 0.08);
-    --shadow-lg: rgba(0, 0, 0, 0.12);
-    --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    --backdrop-blur: blur(20px);
+    --font-main: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Dark Theme Colors */
-[data-bs-theme="dark"],
 body.dark-mode {
     --primary: #047857;
     --primary-hover: #065f46;
     --primary-light: rgba(4, 120, 87, 0.15);
-    --success: #10b981;
-    --success-light: rgba(16, 185, 129, 0.15);
-    --warning: #f59e0b;
-    --warning-light: rgba(245, 158, 11, 0.15);
+    --success: #047857;
+    --success-light: rgba(4, 120, 87, 0.15);
     --danger: #ef4444;
     --danger-light: rgba(239, 68, 68, 0.15);
-    --dark: #111827;
-    --light: #1f2937;
-    --white: #111827;
+    --card-bg: #181f2a;
+    --card-shadow: 0 4px 24px rgba(0, 212, 170, 0.10);
+    --border: #374151;
     --text-primary: #f9fafb;
     --text-secondary: #d1d5db;
     --text-muted: #9ca3af;
-    --border: #374151;
-    --shadow: rgba(0, 0, 0, 0.3);
-    --shadow-lg: rgba(0, 0, 0, 0.4);
-    --gradient-primary: linear-gradient(135deg, #047857 0%, #065f46 100%);
-    --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
-/* ====================================================================
-   MOBILE-FIRST BASE LAYOUT
-   ==================================================================== */
-
-.scanner-body {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--light);
+.main-content {
+    font-family: var(--font-main);
+    font-size: 16px;
+    background: var(--card-bg);
     color: var(--text-primary);
-    overflow-x: hidden;
-    line-height: 1.6;
-}
-
-.dashboard-container {
-    padding: 0.75rem;
-    max-width: 100%;
     min-height: 100vh;
+    padding-bottom: 2rem;
+    transition: background 0.3s, color 0.3s;
 }
 
-/* ====================================================================
-   MOBILE PAGE HEADER
-   ==================================================================== */
-
-.page-header {
-    margin-bottom: 1rem;
-    text-align: center;
-}
-
-.page-title {
-    color: var(--primary);
-    font-weight: 700;
-    font-size: 1.4rem;
-    margin-bottom: 0.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.page-title i {
-    width: 24px;
-    height: 24px;
-    color: var(--primary);
-}
-
-.page-header p {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin: 0;
-}
-
-/* ====================================================================
-   MOBILE SCAN BUTTON - HERO ELEMENT
-   ==================================================================== */
-
-.mobile-quick-actions {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 1.25rem;
-    margin: 0 0 1.5rem 0;
-    box-shadow: 0 4px 20px var(--shadow);
-    border-left: none;
-    border-right: none;
-    border-radius: 20px;
-}
-
-.mobile-quick-actions .d-flex {
-    width: 100%;
-}
-
-#mobileStartScanBtn {
-    background: var(--gradient-primary) !important;
-    border: none !important;
-    color: white !important;
-    font-weight: 700 !important;
-    font-size: 1.1rem !important;
-    padding: 1.25rem 2rem !important;
-    border-radius: 16px !important;
-    box-shadow: 0 6px 25px var(--primary-light) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    width: 100% !important;
-    min-height: 56px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 0.75rem !important;
-    position: relative !important;
-    overflow: hidden !important;
-    text-transform: none !important;
-    letter-spacing: 0.5px !important;
-}
-
-#mobileStartScanBtn i {
-    width: 20px !important;
-    height: 20px !important;
-}
-
-#mobileStartScanBtn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 30px var(--primary-light) !important;
-}
-
-#mobileStartScanBtn:active {
-    transform: translateY(0) scale(0.98) !important;
-}
-
-/* Ripple Effect */
-#mobileStartScanBtn::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-}
-
-#mobileStartScanBtn:active::after {
-    width: 300px;
-    height: 300px;
-}
-
-/* ====================================================================
-   MOBILE STUDENT INFO CARD - HORIZONTAL LAYOUT ON ALL DEVICES
-   
-   Key Features:
-   - Maintains horizontal (row) layout on ALL screen sizes (mobile, tablet, desktop)
-   - Student avatar, details, and scan status always arranged horizontally
-   - No vertical stacking even on smallest mobile devices (320px+)
-   - Responsive text sizes and spacing for optimal mobile usability
-   - Handles text overflow gracefully with ellipsis
-   - Optimized for touch interfaces with appropriate sizing
-   - Cross-browser compatible with Safari/iOS support
-   ==================================================================== */
-
-.student-info-card-modern {
-    background: var(--gradient-primary);
-    border-radius: 16px;
-    padding: 1.25rem;
+/* =====================
+   Student Info Card
+====================== */
+.main-content .student-info-card-modern {
+    background: var(--primary);
+    color: #fff;
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    padding: 1.25rem 1.5rem;
     margin-bottom: 1.5rem;
-    color: white;
-    box-shadow: 0 6px 25px var(--primary-light);
-    position: relative;
-    overflow: hidden;
-}
-
-.student-info-card-modern::before {
-    content: '';
-    position: absolute;
-    top: -20px;
-    right: -20px;
-    width: 80px;
-    height: 80px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
-    border-radius: 50%;
-}
-
-.student-profile {
-    display: flex;
-    flex-direction: row !important; /* Force horizontal layout on ALL devices */
-    align-items: center;
-    text-align: left;
-    gap: 1rem;
-    position: relative;
-    z-index: 2;
-    flex-wrap: nowrap; /* Prevent wrapping to maintain horizontal layout */
-}
-
-.student-avatar-modern {
-    width: 48px;
-    height: 48px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
     display: flex;
     align-items: center;
-    justify-content: center;
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    flex-shrink: 0;
-}
-
-.student-details {
-    flex: 1;
-    text-align: left;
-    min-width: 0; /* Allow flex item to shrink below content size */
-    overflow: hidden; /* Handle overflow gracefully */
-}
-
-.student-name {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
-    color: white;
-    line-height: 1.3;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap; /* Prevent name from wrapping on very small screens */
-}
-
-.student-meta {
-    display: flex;
+    gap: 1.25rem;
     flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 0.5rem;
-    margin-bottom: 0;
+    transition: background 0.3s, color 0.3s;
 }
-
-.department-badge {
-    background: rgba(255, 255, 255, 0.25);
-    padding: 0.3rem 0.6rem;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: white;
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    white-space: nowrap;
-}
-
-.join-year {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 0.3rem 0.6rem;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    white-space: nowrap;
-}
-
-.scan-status {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    padding: 0.5rem;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    flex-shrink: 0;
-    min-width: 70px;
-}
-
-.status-indicator-modern {
-    width: 24px;
-    height: 24px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.status-text {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: white;
-    text-align: center;
-    line-height: 1;
-}
-
-/* ====================================================================
-   MOBILE ACTIVITY CARD - RECENT ATTENDANCE
-   ==================================================================== */
-
-.activity-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px var(--shadow);
-    margin-bottom: 2rem;
-}
-
-.activity-header {
-    padding: 1.25rem;
-    background: linear-gradient(135deg, var(--light) 0%, var(--white) 100%);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border);
-}
-
-.activity-header h6 {
+body.dark-mode .main-content .student-info-card-modern {
+    background: var(--card-bg);
     color: var(--text-primary);
-    margin: 0;
-    font-weight: 700;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
 }
-
-.activity-header h6 i {
-    width: 18px;
-    height: 18px;
-    color: var(--primary);
-}
-
-.activity-count {
-    background: var(--gradient-primary);
-    color: white;
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    min-width: 32px;
-    text-align: center;
-}
-
-.activity-list {
-    padding: 1rem;
-}
-
-.activity-empty {
-    text-align: center;
-    padding: 2rem 1rem;
-    color: var(--text-muted);
-}
-
-.activity-empty i {
-    color: var(--text-muted);
-    opacity: 0.6;
-    margin-bottom: 0.75rem;
-}
-
-.activity-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
-    border-radius: 12px;
-    margin-bottom: 0.75rem;
-    background: var(--light);
-    border: 1px solid var(--border);
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.activity-item:last-child {
-    margin-bottom: 0;
-}
-
-.activity-item:active {
-    transform: scale(0.98);
-    background: var(--border);
-}
-
-.activity-icon {
-    width: 36px;
-    height: 36px;
+.main-content .student-avatar-modern {
+    width: 54px;
+    height: 54px;
+    background: rgba(255,255,255,0.18);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
-
-.activity-icon.success {
-    background: var(--gradient-success);
+body.dark-mode .main-content .student-avatar-modern {
+    background: var(--primary-light);
 }
-
-.activity-icon.error {
-    background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
-}
-
-.activity-content {
+.main-content .student-details {
     flex: 1;
     min-width: 0;
 }
-
-.activity-title {
-    font-weight: 700;
+.main-content .student-name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+    letter-spacing: 0.01em;
+    color: #fff;
+}
+body.dark-mode .main-content .student-name {
     color: var(--text-primary);
-    margin-bottom: 0.25rem;
-    font-size: 0.95rem;
-    line-height: 1.3;
 }
-
-.activity-subtitle {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.activity-time {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.activity-status {
-    padding: 0.35rem 0.7rem;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    flex-shrink: 0;
-    text-align: center;
-    min-width: 70px;
-}
-
-.activity-status.present {
-    background: var(--success-light);
-    color: var(--success);
-    border: 1.5px solid var(--success);
-}
-
-.activity-status.absent {
-    background: var(--danger-light);
-    color: var(--danger);
-    border: 1.5px solid var(--danger);
-}
-
-/* ====================================================================
-   MOBILE FULLSCREEN SCANNER
-   ==================================================================== */
-
-.fullscreen-scanner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #000000;
-    z-index: 9999;
+.main-content .student-meta {
     display: flex;
-    flex-direction: column;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    font-size: 0.95rem;
+    opacity: 0.92;
 }
-
-.fullscreen-header {
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
-    padding: 1rem;
-    position: relative;
-    z-index: 10;
-    padding-top: calc(1rem + env(safe-area-inset-top));
+.main-content .department-badge {
+    background: rgba(255,255,255,0.18);
+    border-radius: 8px;
+    padding: 0.2rem 0.7rem;
+    font-weight: 500;
+    color: #fff;
 }
-
-.fullscreen-header h6 {
-    color: white;
-    font-weight: 700;
-    font-size: 1rem;
-    margin: 0;
+body.dark-mode .main-content .department-badge {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+.main-content .join-year {
+    color: #e0e7ef;
+    font-size: 0.93rem;
+}
+body.dark-mode .main-content .join-year {
+    color: var(--text-secondary);
+}
+.main-content .scan-status {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    margin-left: auto;
 }
-
-.fullscreen-camera-container {
-    flex: 1;
-    position: relative;
+.main-content .status-indicator-modern {
+    width: 18px;
+    height: 18px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 0;
+}
+body.dark-mode .main-content .status-indicator-modern {
+    background: var(--primary-light);
+}
+.main-content .status-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #fff;
+    opacity: 0.85;
+}
+body.dark-mode .main-content .status-text {
+    color: var(--text-primary);
 }
 
-.fullscreen-qr-reader {
-    width: 100% !important;
-    height: 100% !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-}
-
-.fullscreen-qr-reader video {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-}
-
-.fullscreen-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+/* =====================
+   Scanner Card
+====================== */
+.main-content .scanner-card-modern {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    padding: 1.5rem 1.25rem 1.25rem 1.25rem;
+    margin-bottom: 2rem;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
     display: flex;
     flex-direction: column;
+    gap: 1.25rem;
+    transition: background 0.3s, color 0.3s;
+}
+body.dark-mode .main-content .scanner-card-modern {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    box-shadow: 0 4px 24px var(--primary-light);
+}
+.main-content .scanner-header h5 {
+    color: var(--primary);
+}
+body.dark-mode .main-content .scanner-header h5 {
+    color: var(--primary);
+}
+.main-content .scanner-header p {
+    color: var(--text-muted);
+}
+body.dark-mode .main-content .scanner-header p {
+    color: var(--text-muted);
+}
+.main-content .scanner-controls-desktop button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px var(--primary-light);
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+body.dark-mode .main-content .scanner-controls-desktop button {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px var(--primary-light);
+}
+.main-content .scanner-controls-desktop button.btn-outline-secondary,
+.main-content .scanner-controls-desktop button.btn-outline-info {
+    background: transparent;
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+}
+body.dark-mode .main-content .scanner-controls-desktop button.btn-outline-secondary,
+body.dark-mode .main-content .scanner-controls-desktop button.btn-outline-info {
+    background: transparent;
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+}
+.main-content .scanner-container-desktop {
+    background: #f3f6fa;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(59,130,246,0.07);
+    padding: 1.2rem 0.5rem;
+    display: flex;
     align-items: center;
     justify-content: center;
-    pointer-events: none;
-    padding: 2rem;
-}
-
-.scanner-target {
+    min-height: 260px;
     position: relative;
-    width: 250px;
-    height: 250px;
-    max-width: 70vw;
-    max-height: 70vw;
+    transition: background 0.3s;
 }
-
-.corner-frame {
-    position: relative;
+body.dark-mode .main-content .scanner-container-desktop {
+    background: #232b3b;
+    box-shadow: 0 2px 12px var(--primary-light);
+}
+.main-content .qr-reader-desktop {
     width: 100%;
-    height: 100%;
+    min-height: 220px;
+    max-width: 320px;
+    margin: 0 auto;
 }
 
-.corner {
+/* Scanner Overlay (animated line, corners) */
+.main-content .scanner-overlay-desktop {
     position: absolute;
-    width: 30px;
-    height: 30px;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+.main-content .scanner-frame-desktop {
+    position: absolute;
+    top: 10%; left: 10%; right: 10%; bottom: 10%;
+    border-radius: 12px;
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+body.dark-mode .main-content .scanner-frame-desktop {
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+.main-content .scanner-frame-desktop .corner {
+    position: absolute;
+    width: 24px; height: 24px;
     border: 3px solid var(--primary);
     border-radius: 6px;
 }
-
-.corner.top-left {
-    top: 0;
-    left: 0;
-    border-right: none;
-    border-bottom: none;
-}
-
-.corner.top-right {
-    top: 0;
-    right: 0;
-    border-left: none;
-    border-bottom: none;
-}
-
-.corner.bottom-left {
-    bottom: 0;
-    left: 0;
-    border-right: none;
-    border-top: none;
-}
-
-.corner.bottom-right {
-    bottom: 0;
-    right: 0;
-    border-left: none;
-    border-top: none;
-}
-
-.scanning-line {
+.main-content .scanner-frame-desktop .corner.top-left { top: -3px; left: -3px; border-right: none; border-bottom: none; }
+.main-content .scanner-frame-desktop .corner.top-right { top: -3px; right: -3px; border-left: none; border-bottom: none; }
+.main-content .scanner-frame-desktop .corner.bottom-left { bottom: -3px; left: -3px; border-right: none; border-top: none; }
+.main-content .scanner-frame-desktop .corner.bottom-right { bottom: -3px; right: -3px; border-left: none; border-top: none; }
+.main-content .scanner-frame-desktop .scanner-line-desktop {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    left: 0; right: 0;
+    top: 50%;
     height: 3px;
-    background: linear-gradient(90deg, transparent, var(--primary), transparent);
-    animation: scan 2s ease-in-out infinite;
+    background: linear-gradient(90deg, var(--primary), var(--primary-hover));
     border-radius: 2px;
-    box-shadow: 0 0 8px var(--primary);
+    animation: scanline 2s linear infinite;
+    opacity: 0.7;
+}
+@keyframes scanline {
+    0% { top: 10%; }
+    100% { top: 80%; }
 }
 
-@keyframes scan {
-    0%, 100% { transform: translateY(0); opacity: 1; }
-    50% { transform: translateY(250px); opacity: 0.7; }
-}
-
-.scan-instructions {
-    margin-top: 2rem;
-    text-align: center;
-    max-width: 280px;
-}
-
-.scan-instructions h5 {
-    font-weight: 700;
-    color: white;
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
-}
-
-.scan-instructions p {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-
-/* ====================================================================
-   MOBILE BUTTONS & CONTROLS
-   ==================================================================== */
-
-.btn {
-    padding: 0.75rem 1.25rem;
-    border: none;
-    border-radius: 12px;
-    font-weight: 600;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    font-size: 0.9rem;
-    min-height: 44px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.btn-primary {
-    background: var(--gradient-primary);
-    color: white;
-    box-shadow: 0 4px 15px var(--primary-light);
-}
-
-.btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px var(--primary-light);
-}
-
-.btn-primary:active {
-    transform: translateY(0) scale(0.98);
-}
-
-.btn-success {
-    background: var(--gradient-success);
-    color: white;
-    box-shadow: 0 4px 15px var(--success-light);
-}
-
-.btn-success:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px var(--success-light);
-}
-
-.btn-outline-light {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-}
-
-.btn-outline-light:hover {
-    background: rgba(255, 255, 255, 0.25);
-    color: white;
-}
-
-.btn-light {
-    background: rgba(255, 255, 255, 0.9);
-    color: #000;
-    border: none;
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-}
-
-.btn-light:hover {
-    background: white;
-    color: #000;
-}
-
-/* ====================================================================
-   SUCCESS MODAL - MOBILE OPTIMIZED
-   ==================================================================== */
-
-.success-modal-content {
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    background: var(--white);
-    margin: 1rem;
-}
-
-.success-animation {
+/* Scanner Status */
+.main-content .scanner-status-desktop {
     display: flex;
-    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    background: var(--primary-light);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    transition: background 0.3s;
 }
-
-.success-checkmark {
-    width: 64px;
-    height: 64px;
+body.dark-mode .main-content .scanner-status-desktop {
+    background: var(--primary-light);
+}
+.main-content .status-indicator-desktop {
+    width: 28px;
+    height: 28px;
+    background: var(--primary);
+    color: #fff;
     border-radius: 50%;
-    background: var(--gradient-success);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto;
-    box-shadow: 0 8px 30px var(--success-light);
-    animation: successPulse 0.6s ease-out;
+    font-size: 1.2rem;
 }
-
-@keyframes successPulse {
-    0% { transform: scale(0); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+body.dark-mode .main-content .status-indicator-desktop {
+    background: var(--primary);
+    color: #fff;
 }
-
-.success-title {
-    color: var(--text-primary);
-    font-weight: 700;
-    font-size: 1.3rem;
+.main-content #statusTitle {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--primary);
 }
-
-.success-message {
-    color: var(--text-secondary);
+body.dark-mode .main-content #statusTitle {
+    color: var(--primary);
+}
+.main-content #statusMessage {
     font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+body.dark-mode .main-content #statusMessage {
+    color: var(--text-secondary);
 }
 
-.success-details {
-    background: var(--light);
-    border-radius: 12px;
-    padding: 1rem;
-    margin: 1rem 0;
-    border: 1px solid var(--border);
+/* =====================
+   Recent Activity Card
+====================== */
+.main-content .activity-card {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    padding: 1.25rem 1rem;
+    margin-bottom: 1.5rem;
+    transition: background 0.3s, color 0.3s;
+}
+body.dark-mode .main-content .activity-card {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    box-shadow: 0 4px 24px var(--primary-light);
+}
+.main-content .activity-header h6 {
+    color: var(--primary);
+}
+body.dark-mode .main-content .activity-header h6 {
+    color: var(--primary);
+}
+.main-content .activity-count {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+body.dark-mode .main-content .activity-count {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+.main-content .activity-item {
+    border-bottom: 1px solid var(--border);
+}
+body.dark-mode .main-content .activity-item {
+    border-bottom: 1px solid var(--border);
+}
+.main-content .activity-icon {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+body.dark-mode .main-content .activity-icon {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+.main-content .activity-icon.success {
+    background: var(--success-light);
+    color: var(--success);
+}
+body.dark-mode .main-content .activity-icon.success {
+    background: var(--success-light);
+    color: var(--success);
+}
+.main-content .activity-icon.error {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+body.dark-mode .main-content .activity-icon.error {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+.main-content .activity-title {
+    color: var(--text-primary);
+}
+body.dark-mode .main-content .activity-title {
+    color: var(--text-primary);
+}
+.main-content .activity-subtitle {
+    color: var(--text-secondary);
+}
+body.dark-mode .main-content .activity-subtitle {
+    color: var(--text-secondary);
+}
+.main-content .activity-time {
+    color: var(--text-muted);
+}
+body.dark-mode .main-content .activity-time {
+    color: var(--text-muted);
+}
+.main-content .activity-status.present {
+    background: var(--success-light);
+    color: var(--success);
+}
+body.dark-mode .main-content .activity-status.present {
+    background: var(--success-light);
+    color: var(--success);
+}
+.main-content .activity-status.absent {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+body.dark-mode .main-content .activity-status.absent {
+    background: var(--danger-light);
+    color: var(--danger);
 }
 
-/* ====================================================================
-   MOBILE RESPONSIVE - STUDENT INFO CARD OPTIMIZATIONS
-   ==================================================================== */
+/* Responsive: Recent Activity as card on desktop, flat on mobile */
+.recent-activity-responsive {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    padding: 1.25rem 1rem;
+    margin-bottom: 1.5rem;
+    transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+}
+body.dark-mode .recent-activity-responsive {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    box-shadow: 0 4px 24px var(--primary-light);
+}
 
-/* Small mobile devices (320px and up) */
-@media (max-width: 576px) {
-    .student-info-card-modern {
-        padding: 1rem;
-        margin-bottom: 1.25rem;
+/* =====================
+   Responsive Design
+====================== */
+@media (max-width: 767px) {
+    .main-content {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
     }
-    
-    .student-profile {
-        gap: 0.75rem;
-        flex-direction: row !important; /* Ensure horizontal layout */
-        flex-wrap: nowrap !important; /* Prevent wrapping */
+    .main-content .student-info-card-modern {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 1rem !important;
+        padding: 1rem 0.5rem !important;
     }
-    
-    .student-avatar-modern {
-        width: 42px;
-        height: 42px;
-        flex-shrink: 0;
+    .main-content .student-avatar-modern {
+        margin-bottom: 0 !important;
     }
-    
-    .student-details {
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
+    .main-content .student-details {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        margin-left: 0.5rem !important;
     }
-    
-    .student-name {
+    .main-content .student-name {
         font-size: 1rem;
-        margin: 0 0 0.4rem 0;
-        line-height: 1.2;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
-    
-    .student-meta {
-        gap: 0.4rem;
-        flex-wrap: wrap;
+    .main-content .student-meta {
+        margin-top: 0.1rem;
     }
-    
-    .department-badge,
-    .join-year {
-        font-size: 0.7rem;
-        padding: 0.25rem 0.5rem;
+    .main-content .scanner-card-modern {
+        margin-bottom: 1.5rem;
+        padding: 1.1rem 0.5rem 1rem 0.5rem;
+        max-width: 100%;
     }
-    
-    .scan-status {
-        min-width: 60px;
-        padding: 0.4rem;
-        gap: 0.2rem;
-        flex-shrink: 0;
+    .main-content .scanner-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
     }
-    
-    .status-indicator-modern {
-        width: 20px;
-        height: 20px;
+    .main-content .scanner-controls-desktop {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
     }
-    
-    .status-text {
-        font-size: 0.65rem;
+    .main-content .scanner-container-desktop {
+        min-height: 180px;
+        padding: 0.7rem 0.2rem;
     }
-}
-
-/* Extra small devices (iPhone SE - 320px) */
-@media (max-width: 375px) {
-    .student-info-card-modern {
-        padding: 0.85rem;
+    .main-content .qr-reader-desktop {
+        min-height: 120px;
+        max-width: 100%;
     }
-    
-    .student-profile {
-        gap: 0.6rem;
+    .main-content .activity-card {
+        padding: 1rem 0.5rem;
     }
-    
-    .student-avatar-modern {
-        width: 38px;
-        height: 38px;
+    .main-content .activity-list {
+        max-height: none;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
     }
-    
-    .student-name {
-        font-size: 0.95rem;
-        margin: 0 0 0.3rem 0;
+    .main-content .activity-item {
+        padding-left: 0;
+        padding-right: 0;
     }
-    
-    .department-badge,
-    .join-year {
-        font-size: 0.65rem;
-        padding: 0.2rem 0.4rem;
+    .recent-activity-responsive {
+        background: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin-bottom: 1.5rem;
     }
-    
-    .scan-status {
-        min-width: 55px;
-        padding: 0.35rem;
+    .activity-header {
+        margin-bottom: 0.5rem;
+        padding-left: 0.25rem;
     }
-    
-    .status-indicator-modern {
-        width: 18px;
-        height: 18px;
+    .activity-list {
+        max-height: none;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
     }
-    
-    .status-text {
-        font-size: 0.6rem;
-    }
-}
-
-/* Medium mobile devices (577px to 767px) */
-@media (min-width: 577px) and (max-width: 767px) {
-    .student-info-card-modern {
-        padding: 1.1rem;
-    }
-    
-    .student-profile {
-        gap: 0.85rem;
-    }
-    
-    .student-avatar-modern {
-        width: 45px;
-        height: 45px;
-    }
-    
-    .student-name {
-        font-size: 1.05rem;
-    }
-    
-    .scan-status {
-        min-width: 65px;
-    }
-}
-
-/* ====================================================================
-   DESKTOP FALLBACK (MINIMAL)
-   ==================================================================== */
-
-@media (min-width: 992px) {
-    .dashboard-container {
-        padding: 1.5rem;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-    
-    .page-header {
-        text-align: left;
-        margin-bottom: 2rem;
-    }
-    
-    .page-title {
-        justify-content: flex-start;
-        font-size: 2rem;
-    }
-    
-    .student-profile {
-        flex-direction: row;
-        text-align: left;
-    }
-    
-    .student-meta {
-        justify-content: flex-start;
-    }
-    
-    .activity-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px var(--shadow);
-    }
-}
-
-/* ====================================================================
-   TABLET RESPONSIVE
-   ==================================================================== */
-
-@media (min-width: 768px) and (max-width: 991px) {
-    .dashboard-container {
-        padding: 1.25rem;
-    }
-    
-    .student-info-card-modern {
-        padding: 1.75rem;
-    }
-    
     .activity-item {
-        padding: 1.25rem;
-    }
-    
-    .mobile-quick-actions {
-        padding: 1.5rem;
-    }
-    
-    #mobileStartScanBtn {
-        min-height: 60px !important;
-        font-size: 1.15rem !important;
+        padding-left: 0;
+        padding-right: 0;
     }
 }
 
-/* ====================================================================
-   DARK MODE SPECIFIC MOBILE OPTIMIZATIONS
-   ==================================================================== */
-
-[data-bs-theme="dark"] .activity-item,
-body.dark-mode .activity-item {
-    background: var(--dark);
-    border-color: var(--border);
+@media (max-width: 480px) {
+    .main-content .student-info-card-modern {
+        padding: 0.7rem 0.3rem;
+    }
+    .main-content .scanner-card-modern {
+        padding: 0.7rem 0.1rem 0.7rem 0.1rem;
+    }
+    .main-content .activity-card {
+        padding: 0.7rem 0.1rem;
+    }
 }
 
-[data-bs-theme="dark"] .activity-item:active,
-body.dark-mode .activity-item:active {
-    background: var(--border);
-}
-
-[data-bs-theme="dark"] .mobile-quick-actions,
-body.dark-mode .mobile-quick-actions {
-    background: var(--white);
-    border-color: var(--border);
-}
-
-/* ====================================================================
-   ACCESSIBILITY & TOUCH OPTIMIZATIONS
-   ==================================================================== */
-
-/* Ensure all touch targets are at least 44px */
-.btn, .activity-item, .student-info-card-modern {
-    min-height: 44px;
-}
-
-/* Focus states for accessibility */
-.btn:focus {
-    outline: 2px solid var(--primary);
+/* =====================
+   Accessibility & Focus
+====================== */
+.main-content button:focus, .main-content button:active {
+    outline: 2px solid var(--primary-hover);
     outline-offset: 2px;
 }
 
-.btn:focus:not(:focus-visible) {
-    outline: none;
+/* =====================
+   Utility
+====================== */
+.main-content .text-center { text-align: center; }
+.main-content .mb-2 { margin-bottom: 0.5rem; }
+.main-content .mb-3 { margin-bottom: 1rem; }
+.main-content .mb-4 { margin-bottom: 1.5rem; }
+
+/* Page Title and Scanner Header use primary color (dark green in dark mode) */
+.main-content .page-title,
+.main-content .scanner-header h5 {
+    color: var(--primary) !important;
+}
+body.dark-mode .main-content .page-title,
+body.dark-mode .main-content .scanner-header h5 {
+    color: var(--primary) !important;
 }
 
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
+/* Success/Present status and icons use primary color */
+.main-content .activity-icon.success {
+    background: var(--success-light);
+    color: var(--success);
+}
+body.dark-mode .main-content .activity-icon.success {
+    background: var(--success-light);
+    color: var(--success);
+}
+.main-content .activity-status.present {
+    background: var(--success-light);
+    color: var(--success);
+}
+body.dark-mode .main-content .activity-status.present {
+    background: var(--success-light);
+    color: var(--success);
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .btn-primary {
-        border: 2px solid currentColor;
-    }
-    
-    .activity-status {
-        border-width: 2px;
-    }
-}
+/* End Modern QR Scanner Styles */
 
-/* ====================================================================
-   LOADING STATES
-   ==================================================================== */
-
-.loading {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid transparent;
-    border-top: 2px solid currentColor;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* ====================================================================
-   UTILITY CLASSES
-   ==================================================================== */
-
-.text-gradient {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.safe-area-top {
-    padding-top: env(safe-area-inset-top);
-}
-
-.safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Smooth transitions for theme switching */
-* {
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-/* ====================================================================
-   LANDSCAPE ORIENTATION OPTIMIZATIONS
-   ==================================================================== */
-
-/* Landscape orientation on mobile */
-@media (max-height: 500px) and (orientation: landscape) {
-    .student-info-card-modern {
-        padding: 0.75rem;
-        margin-bottom: 1rem;
-    }
-    
-    .student-profile {
-        gap: 0.6rem;
-    }
-    
-    .student-avatar-modern {
-        width: 36px;
-        height: 36px;
-    }
-    
-    .student-name {
-        font-size: 0.9rem;
-        margin: 0 0 0.25rem 0;
-    }
-    
-    .department-badge,
-    .join-year {
-        font-size: 0.65rem;
-        padding: 0.2rem 0.4rem;
-    }
-    
-    .scan-status {
-        min-width: 50px;
-        padding: 0.3rem;
-    }
-    
-    .status-indicator-modern {
-        width: 16px;
-        height: 16px;
-    }
-    
-    .status-text {
-        font-size: 0.6rem;
-    }
-}

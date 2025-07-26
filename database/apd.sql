@@ -232,7 +232,42 @@ CREATE TABLE IF NOT EXISTS qr_attendance_pending (
 );
 
 
+CREATE TABLE IF NOT EXISTS `assignment_views` (
+  `ViewID` int(11) NOT NULL AUTO_INCREMENT,
+  `AssignmentID` int(11) NOT NULL,
+  `StudentID` int(11) NOT NULL,
+  `ViewedAt` datetime DEFAULT CURRENT_TIMESTAMP,
+  `ViewCount` int(11) DEFAULT 1,
+  `LastViewedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`ViewID`),
+  UNIQUE KEY `unique_assignment_student_view` (`AssignmentID`,`StudentID`),
+  KEY `AssignmentID` (`AssignmentID`),
+  KEY `StudentID` (`StudentID`),
+  FOREIGN KEY (`AssignmentID`) REFERENCES `assignments` (`AssignmentID`) ON DELETE CASCADE,
+  FOREIGN KEY (`StudentID`) REFERENCES `students` (`StudentID`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+
+
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NULL,           -- For user-specific notifications
+    role VARCHAR(20) NULL,      -- For role-based notifications ('student', 'teacher', 'admin')
+    title VARCHAR(255) NOT NULL,
+    message TEXT,
+    icon VARCHAR(32),           -- e.g., 'alert-triangle'
+    type VARCHAR(32),           -- e.g., 'info', 'warning', 'success'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE notification_reads (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    notification_id INT NOT NULL,
+    user_id INT NOT NULL,
+    read_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY (notification_id, user_id)
+);
 
 
 

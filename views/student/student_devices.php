@@ -143,3 +143,119 @@ try {
     error_log("Device registration error: " . $e->getMessage());
     echo json_encode(['success' => false, 'error' => 'Failed to register device. Please try again.']);
 }
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Devices - AttendifyPlus</title>
+
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/dashboard_student.css">
+    <link rel="stylesheet" href="../../assets/css/sidebar_student.css">
+
+    <!-- JS Libraries -->
+    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="../../assets/js/dashboard_student.js" defer></script>
+    <script src="../../assets/js/navbar_student.js" defer></script>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <?php include '../components/sidebar_student_dashboard.php'; ?>
+
+    <!-- Navbar -->
+    <?php include '../components/navbar_student.php'; ?>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid dashboard-container main-content">
+        <!-- Page Header -->
+        <div class="page-header mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap">
+                <div>
+                    <h2 class="page-title">
+                        <i data-lucide="smartphone"></i>
+                        My Devices
+                    </h2>
+                    <p class="page-subtitle mb-0">Manage your registered devices for QR code attendance</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Device List -->
+        <div class="device-list">
+            <h2>Registered Devices</h2>
+            <?php
+            // Fetch registered devices for the student
+            $registeredDevicesStmt = $conn->prepare("
+                SELECT DeviceID, DeviceName, DeviceInfo, RegisteredAt 
+                FROM student_devices 
+                WHERE StudentID = ? AND IsActive = TRUE
+            ");
+            $registeredDevicesStmt->bind_param("i", $studentID);
+            $registeredDevicesStmt->execute();
+            $registeredDevicesResult = $registeredDevicesStmt->get_result();
+
+            if ($registeredDevicesResult->num_rows > 0) {
+                while ($device = $registeredDevicesResult->fetch_assoc()) {
+                    $deviceInfo = json_decode($device['DeviceInfo'], true);
+                    $registeredAt = $device['RegisteredAt'];
+                    echo "<div class='device-item'>";
+                    echo "<h3>{$device['DeviceName']}</h3>";
+                    echo "<p>Registered on: {$registeredAt}</p>";
+                    echo "<p>User Agent: {$deviceInfo['user_agent']}</p>";
+                    echo "<button class='unregister-btn' data-device-id='{$device['DeviceID']}'>Unregister Device</button>";
+                    echo "</div>";
+                }
+            } else {
+                echo "<p>No devices registered yet.</p>";
+            }
+            ?>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const unregisterButtons = document.querySelectorAll('.unregister-btn');
+
+            unregisterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const deviceId = this.dataset.deviceId;
+                    if (confirm('Are you sure you want to unregister this device?')) {
+                        fetch(`../../api/student/unregister_device.php`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({
+                                    device_id: deviceId
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert(data.message);
+                                    location.reload(); // Refresh the page to show updated list
+                                } else {
+                                    alert('Error unregistering device: ' + data.error);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('An error occurred during unregistration.');
+                            });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

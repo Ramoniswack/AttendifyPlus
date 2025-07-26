@@ -1,0 +1,308 @@
+/* 
+ * Universal Sidebar Styles for Teacher Dashboard
+ * This file ensures consistent sidebar behavior across all teacher pages
+ * Similar to navbar_admin.css approach
+ */
+
+:root {
+  --sidebar-width: 280px;
+  --navbar-height: 60px;
+  --sidebar-transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --overlay-transition: all 0.3s ease;
+}
+
+/* ===== NAVBAR Z-INDEX FIX ===== */
+.navbar {
+  z-index: 1060;
+}
+
+/* ===== UNIVERSAL SIDEBAR (WORKS ON ALL DEVICES) ===== */
+.sidebar {
+  position: fixed;
+  top: var(--navbar-height);
+  left: calc(-1 * var(--sidebar-width));
+  width: var(--sidebar-width);
+  height: calc(100vh - var(--navbar-height));
+  background: var(--card-light);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 1051;
+  transition: var(--sidebar-transition);
+  overflow-y: auto;
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+  visibility: hidden;
+  opacity: 0;
+  transform: translateX(0);
+}
+
+body.dark-mode .sidebar {
+  background: var(--card-dark);
+  border-right-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar.active {
+  left: 0;
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ===== SIDEBAR CONTENT ===== */
+.sidebar h5 {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 25px;
+  color: var(--accent-light);
+  transition: color 0.2s ease;
+}
+
+body.dark-mode .sidebar h5 {
+  color: var(--accent-dark);
+}
+
+.sidebar .nav-link {
+  color: var(--text-light);
+  font-size: 1rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar .nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.sidebar .nav-link:hover::before {
+  left: 100%;
+}
+
+body.dark-mode .sidebar .nav-link {
+  color: var(--text-dark);
+}
+
+.sidebar .nav-link:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--accent-light);
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .sidebar .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--accent-dark);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar .nav-link.active {
+  background-color: var(--accent-light);
+  color: white;
+  transform: translateX(8px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+body.dark-mode .sidebar .nav-link.active {
+  background-color: var(--accent-dark);
+  color: black;
+  box-shadow: 0 4px 12px rgba(0, 255, 200, 0.3);
+}
+
+.sidebar hr {
+  border-color: var(--text-light);
+  opacity: 0.3;
+  margin: 20px 0;
+  transition: opacity 0.2s ease;
+}
+
+body.dark-mode .sidebar hr {
+  border-color: var(--text-dark);
+  opacity: 0.3;
+}
+
+.sidebar .nav-link.text-danger {
+  color: #dc3545 !important;
+}
+
+body.dark-mode .sidebar .nav-link.text-danger {
+  color: #ff6b6b !important;
+}
+
+.sidebar .nav-link.text-danger:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545 !important;
+  transform: translateX(5px);
+}
+
+body.dark-mode .sidebar .nav-link.text-danger:hover {
+  background-color: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b !important;
+}
+
+/* ===== SIDEBAR OVERLAY ===== */
+.sidebar-overlay {
+  position: fixed;
+  top: var(--navbar-height);
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - var(--navbar-height));
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 1050;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  pointer-events: none;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* ===== MAIN CONTENT LAYOUT ===== */
+.main-content {
+  transition: margin-left 0.3s ease;
+  width: 100%;
+  min-height: calc(100vh - var(--navbar-height));
+}
+
+/* ===== SIDEBAR STATE MANAGEMENT ===== */
+/* Default sidebar hidden */
+.sidebar {
+  left: calc(-1 * var(--sidebar-width));
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* Sidebar active state */
+.sidebar.active {
+  left: 0;
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ===== RESPONSIVE BEHAVIOR ===== */
+/* All screen sizes use overlay mode to prevent content issues */
+@media (min-width: 1200px) {
+  .sidebar {
+    width: var(--sidebar-width);
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+  .sidebar {
+    width: var(--sidebar-width);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 991.98px) {
+  .sidebar {
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  body.dark-mode .sidebar {
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@media (max-width: 767px) {
+  .sidebar {
+    width: calc(var(--sidebar-width) - 20px);
+    left: calc(-1 * (var(--sidebar-width) - 20px));
+  }
+  
+  body:not(.sidebar-open) .sidebar {
+    left: calc(-1 * (var(--sidebar-width) - 20px)) !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .sidebar {
+    width: calc(100vw - 40px);
+    left: calc(-1 * (100vw - 40px));
+  }
+  
+  body:not(.sidebar-open) .sidebar {
+    left: calc(-1 * (100vw - 40px)) !important;
+  }
+}
+
+/* ===== ENHANCED ANIMATIONS ===== */
+/* ===== ICON IMPROVEMENTS ===== */
+.sidebar .nav-link [data-lucide] {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.sidebar .nav-link:hover [data-lucide] {
+  transform: scale(1.1);
+}
+
+.sidebar .nav-link.active [data-lucide] {
+  transform: scale(1.15);
+}
+
+/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+.sidebar .nav-link:focus {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+body.dark-mode .sidebar .nav-link:focus {
+  outline-color: var(--accent-dark);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar-overlay,
+  .sidebar .nav-link,
+  .main-content {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .sidebar .nav-link:hover {
+    transform: none !important;
+  }
+  
+  .sidebar .nav-link:hover [data-lucide] {
+    transform: none !important;
+  }
+}
+
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+.sidebar {
+  will-change: transform, opacity;
+}
+
+.sidebar-overlay {
+  will-change: opacity;
+}
+
+.sidebar .nav-link {
+  will-change: transform, background-color;
+}
+
+/* Force hardware acceleration */
+.sidebar,
+.sidebar-overlay {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
