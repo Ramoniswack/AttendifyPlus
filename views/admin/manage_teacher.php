@@ -7,10 +7,36 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
 }
 
 include '../../config/db_config.php';
+include '../../helpers/helpers.php';
 
 $successMsg = '';
 $errorMsg = '';
 $errors = [];             //declare array
+
+// 1. Move validation functions to top-level scope
+function isValidFormattedName($Fullname)
+{
+  $Fullname = trim($Fullname);
+  if (!preg_match('/^[A-Za-z. ]+$/', $Fullname)) return false;
+  if (preg_match('/[.]{2,}|[ ]{2,}/', $Fullname)) return false;
+  if (!preg_match('/^[A-Z]/', $Fullname)) return false;
+  $words = explode(' ', $Fullname);
+  foreach ($words as $word) {
+    if ($word === '') continue;
+    $parts = explode('.', $word);
+    foreach ($parts as $part) {
+      if ($part === '') continue;
+      if (!preg_match('/^[A-Z][a-z]*$/', $part)) return false;
+    }
+  }
+  return true;
+}
+function validateEmail($Email)
+{
+  $Email = trim($Email);
+  if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
+  return true;
+}
 
 
 // Handle form submission for adding teacher
@@ -28,36 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   $Address = trim($_POST['Address'] ?? '');
   $PhotoURL = '';
 
-  function isValidFormattedName($Fullname)
-  {
-    $Fullname = trim($Fullname);
-    if (!preg_match('/^[A-Za-z. ]+$/', $Fullname)) return false;
-    if (preg_match('/[.]{2,}|[ ]{2,}/', $Fullname)) return false;
-    if (!preg_match('/^[A-Z]/', $Fullname)) return false;
-
-    $words = explode(' ', $Fullname);
-    foreach ($words as $word) {
-      if ($word === '') continue;
-      $parts = explode('.', $word);
-      foreach ($parts as $part) {
-        if ($part === '') continue;
-        if (!preg_match('/^[A-Z][a-z]*$/', $part)) return false;
-      }
-    }
-    return true;
-  }
-
-  function validateEmail($Email)
-  {
-    $Email = trim($Email);
-    if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
-
-    return true;
-  }
-
-
   // Assigned subjects should be treated as an array
-  $assignedSubjects = is_array($SubjectID) ? $SubjectID : [$SubjectID];
+  $SubjectIDs = is_array($SubjectID) ? $SubjectID : [$SubjectID];
 
   // VALIDATION
   if (empty($FullName)) {
@@ -90,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $errors['SemesterID'] = "Please select a semester.";
   }
 
-  if (empty($assignedSubjects) || !is_array($assignedSubjects) || empty($assignedSubjects[0])) {
+  if (empty($SubjectIDs) || !is_array($SubjectIDs) || empty($SubjectIDs[0])) {
     $errors['SubjectID'] = "Please assign at least one subject.";
   }
 
@@ -166,14 +164,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $teacherID = $conn->insert_id;
 
         // Insert subject mapping if provided
-        if (!empty($SubjectID)) {
+        if (!empty($SubjectIDs) && is_array($SubjectIDs)) {
           $stmt3 = $conn->prepare("INSERT INTO teacher_subject_map (TeacherID, SubjectID) VALUES (?, ?)");
-          $stmt3->bind_param("ii", $teacherID, $SubjectID);
-          $stmt3->execute();
+          foreach ($SubjectIDs as $subjId) {
+            $stmt3->bind_param("ii", $teacherID, $subjId);
+            $stmt3->execute();
+          }
           $stmt3->close();
         }
 
         $conn->commit();
+
+        // Create notification for new teacher registration
+        createNotification(
+          $conn,
+          null,
+          'admin',
+          "New Teacher Added",
+          "Teacher '{$FullName}' has been successfully added to the system.",
+          'user-plus',
+          'info'
+        );
+
         $_SESSION['success_message'] = "Teacher added successfully.";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -187,6 +199,142 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
     $emailCheck->close();
   } else {
+  }
+}
+
+// 2. Add backend logic for teacher update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_teacher') {
+  $teacherID = $_POST['teacher_id'] ?? '';
+  $FullName = trim($_POST['FullName'] ?? '');
+  $Email = trim($_POST['Email'] ?? '');
+  $Contact = trim($_POST['Contact'] ?? '');
+  $Address = trim($_POST['Address'] ?? '');
+  $SubjectIDs = isset($_POST['SubjectID']) ? (array)$_POST['SubjectID'] : null;
+  $errors = [];
+  // Validate
+  if (!isValidFormattedName($FullName)) {
+    $errors['FullName'] = "Only letters, spaces, and dots allowed. Each part must start with a capital letter.";
+  }
+  if (!validateEmail($Email)) {
+    $errors['Email'] = "Invalid email format. Example: example1@lagrandee.com";
+  }
+  if (!preg_match('/^\d{10}$/', $Contact)) {
+    $errors['Contact'] = "Contact number must be exactly 10 digits.";
+  }
+  if (empty($Address)) {
+    $errors['Address'] = "Address is required.";
+  }
+  if ($SubjectIDs !== null && is_array($SubjectIDs)) {
+    if (empty($SubjectIDs) || !is_array($SubjectIDs) || empty($SubjectIDs[0])) {
+      $errors['SubjectID'] = "Please assign at least one subject.";
+    }
+  }
+  // Photo upload
+  $PhotoURL = '';
+  if (isset($_FILES['PhotoFile']) && $_FILES['PhotoFile']['error'] === UPLOAD_ERR_OK) {
+    $uploadDir = '../../uploads/teachers/';
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    $fileType = $_FILES['PhotoFile']['type'];
+    if (!in_array($fileType, $allowedTypes)) {
+      $errors['Photo'] = "Only JPEG, PNG, and GIF images are allowed.";
+    } elseif ($_FILES['PhotoFile']['size'] > 5 * 1024 * 1024) {
+      $errors['Photo'] = "Image size must be less than 5MB.";
+    } else {
+      $ext = pathinfo($_FILES['PhotoFile']['name'], PATHINFO_EXTENSION);
+      $filename = uniqid('teacher_', true) . '.' . $ext;
+      $targetPath = $uploadDir . $filename;
+      if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+      }
+      if (move_uploaded_file($_FILES['PhotoFile']['tmp_name'], $targetPath)) {
+        $PhotoURL = $targetPath;
+      } else {
+        $errors['Photo'] = "Failed to upload photo.";
+      }
+    }
+  }
+  if (empty($errors)) {
+    $conn->begin_transaction();
+    try {
+      // Get current data
+      $stmt = $conn->prepare("SELECT t.*, l.Email as CurrentEmail, l.LoginID, l.Status as CurrentStatus, t.PhotoURL as CurrentPhoto FROM teachers t JOIN login_tbl l ON t.LoginID = l.LoginID WHERE t.TeacherID = ?");
+      $stmt->bind_param("i", $teacherID);
+      $stmt->execute();
+      $currentData = $stmt->get_result()->fetch_assoc();
+      $stmt->close();
+      $loginID = $currentData['LoginID'];
+      $currentStatus = $currentData['CurrentStatus'];
+      // Check for duplicate email
+      if ($Email !== $currentData['CurrentEmail']) {
+        $emailCheck = $conn->prepare("SELECT LoginID FROM login_tbl WHERE Email = ? AND LoginID != ?");
+        $emailCheck->bind_param("si", $Email, $loginID);
+        $emailCheck->execute();
+        $emailCheck->store_result();
+        if ($emailCheck->num_rows > 0) {
+          throw new Exception("This email is already registered by another user.");
+        }
+        $emailCheck->close();
+      }
+      // Update teachers table
+      $updateTeacher = $conn->prepare("UPDATE teachers SET FullName=?, Contact=?, Address=?, PhotoURL=? WHERE TeacherID=?");
+      $photoToSave = $PhotoURL ? $PhotoURL : $currentData['CurrentPhoto'];
+      $updateTeacher->bind_param("ssssi", $FullName, $Contact, $Address, $photoToSave, $teacherID);
+      $updateTeacher->execute();
+      $updateTeacher->close();
+      // Update login_tbl
+      $updateLogin = $conn->prepare("UPDATE login_tbl SET Email=?, Status=? WHERE LoginID=?");
+      $updateLogin->bind_param("ssi", $Email, $currentStatus, $loginID);
+      $updateLogin->execute();
+      $updateLogin->close();
+      // Update subject assignment (remove old, add new)
+      if ($SubjectIDs !== null && is_array($SubjectIDs)) {
+        $conn->query("DELETE FROM teacher_subject_map WHERE TeacherID = " . intval($teacherID));
+        $stmtSub = $conn->prepare("INSERT INTO teacher_subject_map (TeacherID, SubjectID) VALUES (?, ?)");
+        foreach ($SubjectIDs as $subjId) {
+          $stmtSub->bind_param("ii", $teacherID, $subjId);
+          $stmtSub->execute();
+        }
+        $stmtSub->close();
+      }
+      $conn->commit();
+      $_SESSION['success_message'] = "Teacher details updated successfully.";
+    } catch (Exception $e) {
+      $conn->rollback();
+      $_SESSION['error_message'] = "Error updating teacher: " . $e->getMessage();
+    }
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+  } else {
+    $_SESSION['error_message'] = "Please correct the following errors: " . implode(", ", $errors);
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+  }
+}
+
+// 1. Backend logic for updating teacher subjects only
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_subjects') {
+  $teacherID = $_POST['teacher_id'] ?? '';
+  $SubjectIDs = isset($_POST['SubjectID']) ? (array)$_POST['SubjectID'] : [];
+  if (!empty($teacherID)) {
+    $conn->begin_transaction();
+    try {
+      $conn->query("DELETE FROM teacher_subject_map WHERE TeacherID = " . intval($teacherID));
+      if (!empty($SubjectIDs)) {
+        $stmtSub = $conn->prepare("INSERT INTO teacher_subject_map (TeacherID, SubjectID) VALUES (?, ?)");
+        foreach ($SubjectIDs as $subjId) {
+          $stmtSub->bind_param("ii", $teacherID, $subjId);
+          $stmtSub->execute();
+        }
+        $stmtSub->close();
+      }
+      $conn->commit();
+      $_SESSION['success_message'] = "Subjects updated successfully.";
+    } catch (Exception $e) {
+      $conn->rollback();
+      $_SESSION['error_message'] = "Error updating subjects: " . $e->getMessage();
+    }
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
   }
 }
 
@@ -267,8 +415,9 @@ while ($row = $semRes->fetch_assoc()) {
   $semesters[] = $row;
 }
 
+// Fetch all subjects with department and semester info for subject assignment
 $subjects = [];
-$subRes = $conn->query("SELECT SubjectID, SubjectName, SubjectCode, DepartmentID, SemesterID FROM subjects ORDER BY SubjectName");
+$subRes = $conn->query("SELECT s.SubjectID, s.SubjectName, s.SubjectCode, s.DepartmentID, s.SemesterID, d.DepartmentName, sem.SemesterNumber FROM subjects s JOIN departments d ON s.DepartmentID = d.DepartmentID JOIN semesters sem ON s.SemesterID = sem.SemesterID ORDER BY s.SubjectName");
 while ($row = $subRes->fetch_assoc()) {
   $subjects[] = $row;
 }
@@ -285,6 +434,13 @@ foreach ($statsQueries as $key => $query) {
   $result = $conn->query($query);
   $stats[$key] = $result->fetch_assoc()['count'];
 }
+
+// Build a map of SubjectID => TeacherID for all assigned subjects
+$assignedSubjectToTeacher = [];
+$assignedRes = $conn->query("SELECT SubjectID, TeacherID FROM teacher_subject_map");
+while ($row = $assignedRes->fetch_assoc()) {
+  $assignedSubjectToTeacher[$row['SubjectID']] = $row['TeacherID'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -295,10 +451,67 @@ foreach ($statsQueries as $key => $query) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manage Teachers | Attendify+</title>
   <link rel="stylesheet" href="../../assets/css/manage_teacher.css" />
+  <link rel="stylesheet" href="../../assets/css/sidebar_admin.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="../../assets/js/lucide.min.js"></script>
   <script src="../../assets/js/manage_teacher.js" defer></script>
+  <script src="../../assets/js/navbar_admin.js" defer></script>
+  <style>
+    .readonly-multiselect {
+      pointer-events: none;
+      background-color: inherit !important;
+      color: inherit !important;
+      opacity: 1 !important;
+    }
+
+    .teacher-details-row.collapse:not(.show) {
+      display: none;
+    }
+
+    .teacher-details-row.collapse.show {
+      display: table-row;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .teacher-details-row.collapse.show {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100vw;
+        z-index: 1050;
+        background: var(--card-light);
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+        border-radius: 16px 16px 0 0;
+        animation: slideUpSticky 0.3s ease;
+      }
+
+      @keyframes slideUpSticky {
+        from {
+          opacity: 0;
+          transform: translateY(100%);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -572,91 +785,218 @@ foreach ($statsQueries as $key => $query) {
             <div class="modal-header">
               <h5 class="modal-title">
                 <i data-lucide="user"></i>
-                Teacher Profile - <?= htmlspecialchars($teacher['FullName']) ?>
+                Edit Teacher - <?= htmlspecialchars($teacher['FullName']) ?>
               </h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-              <div class="row">
-                <div class="col-md-4 text-center">
-                  <?php if (!empty($teacher['PhotoURL']) && file_exists($teacher['PhotoURL'])): ?>
-                    <img src="<?= htmlspecialchars($teacher['PhotoURL']) ?>"
-                      alt="<?= htmlspecialchars($teacher['FullName']) ?>"
-                      class="teacher-photo-large mb-3">
-                  <?php else: ?>
-                    <div class="teacher-placeholder-large mb-3">
-                      <i data-lucide="user"></i>
+            <form method="POST" action="" enctype="multipart/form-data" class="update-teacher-form">
+              <input type="hidden" name="action" value="update_teacher">
+              <input type="hidden" name="teacher_id" value="<?= $teacher['TeacherID'] ?>">
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-md-4 text-center">
+                    <?php if (!empty($teacher['PhotoURL']) && file_exists($teacher['PhotoURL'])): ?>
+                      <img src="<?= htmlspecialchars($teacher['PhotoURL']) ?>"
+                        alt="<?= htmlspecialchars($teacher['FullName']) ?>"
+                        class="teacher-photo-large mb-3">
+                    <?php else: ?>
+                      <div class="teacher-placeholder-large mb-3">
+                        <i data-lucide="user"></i>
+                      </div>
+                    <?php endif; ?>
+                    <div class="mb-3">
+                      <label class="form-label">Update Photo</label>
+                      <input type="file" name="PhotoFile" class="form-control" accept="image/*">
                     </div>
-                  <?php endif; ?>
-                  <h5><?= htmlspecialchars($teacher['FullName']) ?></h5>
-                  <span class="badge <?= $teacher['Status'] === 'active' ? 'bg-success' : 'bg-danger' ?> mb-2">
-                    <?= ucfirst($teacher['Status']) ?>
-                  </span>
-                </div>
-                <div class="col-md-8">
-                  <table class="table table-borderless">
-                    <tr>
-                      <th width="40%">Teacher ID:</th>
-                      <td><?= $teacher['TeacherID'] ?></td>
-                    </tr>
-                    <tr>
-                      <th>Email:</th>
-                      <td><?= htmlspecialchars($teacher['Email']) ?></td>
-                    </tr>
-                    <tr>
-                      <th>Contact:</th>
-                      <td><?= htmlspecialchars($teacher['Contact'] ?: 'Not provided') ?></td>
-                    </tr>
-                    <tr>
-                      <th>Address:</th>
-                      <td><?= htmlspecialchars($teacher['Address'] ?: 'Not provided') ?></td>
-                    </tr>
-                    <tr>
-                      <th>Subjects Assigned:</th>
-                      <td><?= $teacher['SubjectCount'] ?> Subject<?= $teacher['SubjectCount'] != 1 ? 's' : '' ?></td>
-                    </tr>
-                    <tr>
-                      <th>Joined Date:</th>
-                      <td><?= date('F j, Y', strtotime($teacher['CreatedDate'])) ?></td>
-                    </tr>
-                  </table>
-
-                  <?php if (isset($teacherSubjects[$teacher['TeacherID']])): ?>
-                    <div class="mt-3">
-                      <h6>Assigned Subjects:</h6>
-                      <div class="row g-2">
-                        <?php foreach ($teacherSubjects[$teacher['TeacherID']] as $subject): ?>
-                          <div class="col-md-6">
-                            <div class="subject-card">
-                              <div class="subject-code"><?= htmlspecialchars($subject['SubjectCode']) ?></div>
-                              <div class="subject-name"><?= htmlspecialchars($subject['SubjectName']) ?></div>
-                              <small class="text-muted">
-                                <?= htmlspecialchars($subject['DepartmentName']) ?> -
-                                Semester <?= $subject['SemesterNumber'] ?>
-                              </small>
-                            </div>
-                          </div>
-                        <?php endforeach; ?>
+                  </div>
+                  <div class="col-md-8">
+                    <div class="row g-3">
+                      <div class="col-md-12">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="FullName" class="form-control"
+                          value="<?= htmlspecialchars($teacher['FullName']) ?>" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="Email" class="form-control"
+                          value="<?= htmlspecialchars($teacher['Email']) ?>" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Contact</label>
+                        <input type="text" name="Contact" class="form-control"
+                          value="<?= htmlspecialchars($teacher['Contact']) ?>" required>
+                      </div>
+                      <div class="col-md-12">
+                        <label class="form-label">Address</label>
+                        <textarea name="Address" class="form-control" rows="2" required><?= htmlspecialchars($teacher['Address']) ?></textarea>
+                      </div>
+                      <?php
+                      // Determine default DepartmentID and SemesterID for the teacher (first assigned subject)
+                      $defaultDepartmentID = '';
+                      $defaultSemesterID = '';
+                      if (isset($teacherSubjects[$teacher['TeacherID']]) && count($teacherSubjects[$teacher['TeacherID']]) > 0) {
+                        $defaultDepartmentID = $teacherSubjects[$teacher['TeacherID']][0]['DepartmentID'] ?? '';
+                        $defaultSemesterID = $teacherSubjects[$teacher['TeacherID']][0]['SemesterID'] ?? '';
+                      }
+                      ?>
+                      <div class="col-md-6">
+                        <label class="form-label">Department</label>
+                        <select name="DepartmentID" class="form-select">
+                          <option value="">Select Department</option>
+                          <?php foreach ($departments as $d): ?>
+                            <option value="<?= $d['DepartmentID'] ?>" <?= ($defaultDepartmentID == $d['DepartmentID']) ? 'selected' : '' ?>><?= htmlspecialchars($d['DepartmentName']) ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Semester</label>
+                        <select name="SemesterID" class="form-select">
+                          <option value="">Select Semester</option>
+                          <?php foreach ($semesters as $s): ?>
+                            <option value="<?= $s['SemesterID'] ?>" <?= ($defaultSemesterID == $s['SemesterID']) ? 'selected' : '' ?>>Semester <?= $s['SemesterNumber'] ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Subject Assignment</label>
+                        <select name="SubjectID[]" class="form-select readonly-multiselect" multiple>
+                          <?php
+                          // Only show subjects currently assigned to the teacher by default
+                          if (isset($teacherSubjects[$teacher['TeacherID']]) && count($teacherSubjects[$teacher['TeacherID']]) > 0) {
+                            foreach ($teacherSubjects[$teacher['TeacherID']] as $assignedSubj) {
+                              $subjId = $assignedSubj['SubjectID'];
+                              $subjCode = htmlspecialchars($assignedSubj['SubjectCode'] ?? '');
+                              $subjName = htmlspecialchars($assignedSubj['SubjectName'] ?? '');
+                              $deptName = htmlspecialchars($assignedSubj['DepartmentName'] ?? '');
+                              $semNum = htmlspecialchars($assignedSubj['SemesterNumber'] ?? '');
+                              echo "<option value=\"$subjId\" selected>$subjCode - $subjName ($deptName, Sem $semNum)</option>";
+                            }
+                          }
+                          ?>
+                        </select>
+                        <small class="form-text text-muted">Currently assigned subjects. To add or remove, use the form below.</small>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#assignSubjectsModal<?= $teacher['TeacherID'] ?>">
+                          Assign New Subjects
+                        </button>
                       </div>
                     </div>
-                  <?php else: ?>
-                    <div class="alert alert-info mt-3">
-                      <i data-lucide="info" class="me-2"></i>
-                      No subjects assigned yet.
-                    </div>
-                  <?php endif; ?>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                <i data-lucide="x" class="me-1"></i>
-                Close
-              </button>
-            </div>
+              <div class="modal-footer d-flex justify-content-between">
+                <div>
+                  <button type="button"
+                    class="btn <?= $teacher['Status'] === 'active' ? 'btn-danger' : 'btn-success' ?>"
+                    onclick="changeTeacherStatus(<?= $teacher['TeacherID'] ?>, '<?= $teacher['Status'] === 'active' ? 'inactive' : 'active' ?>')">
+                    <i data-lucide="<?= $teacher['Status'] === 'active' ? 'user-x' : 'user-check' ?>" class="me-1"></i>
+                    <?= $teacher['Status'] === 'active' ? 'Deactivate Account' : 'Activate Account' ?>
+                  </button>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary update-btn">
+                    <i data-lucide="save" class="me-1"></i>
+                    Update Changes
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </div>
+      <!-- Add the assign subjects modal for each teacher (at the end of the edit modal): -->
+      <div class="modal fade" id="assignSubjectsModal<?= $teacher['TeacherID'] ?>" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="POST" action="" class="assign-subjects-form">
+              <input type="hidden" name="action" value="update_subjects">
+              <input type="hidden" name="teacher_id" value="<?= $teacher['TeacherID'] ?>">
+              <div class="modal-header">
+                <h5 class="modal-title">Assign Subjects to <?= htmlspecialchars($teacher['FullName']) ?></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label">Department</label>
+                  <select name="DepartmentID" class="form-select department-select" required onchange="filterSemesters<?= $teacher['TeacherID'] ?>()">
+                    <option value="">Select Department</option>
+                    <?php foreach ($departments as $d): ?>
+                      <option value="<?= $d['DepartmentID'] ?>"><?= htmlspecialchars($d['DepartmentName']) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Semester</label>
+                  <select name="SemesterID" class="form-select semester-select" required onchange="filterSubjects<?= $teacher['TeacherID'] ?>()">
+                    <option value="">Select Semester</option>
+                    <?php foreach ($semesters as $s): ?>
+                      <option value="<?= $s['SemesterID'] ?>">Semester <?= $s['SemesterNumber'] ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Subjects</label>
+                  <select name="SubjectID[]" class="form-select subject-select" multiple required style="min-height: 200px;">
+                    <!-- Options will be populated by JS -->
+                  </select>
+                  <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple subjects.</small>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Assign</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <script>
+        // JS for filtering semesters and subjects in the assign subjects modal
+        const allSubjects<?= $teacher['TeacherID'] ?> = <?php echo json_encode($subjects); ?>;
+        const teacherAssignedSubjects<?= $teacher['TeacherID'] ?> = <?php echo json_encode(
+                                                                      isset($teacherSubjects[$teacher['TeacherID']]) ? array_column($teacherSubjects[$teacher['TeacherID']], 'SubjectID') : []
+                                                                    ); ?>;
+
+        // Build a map of SubjectID => TeacherID for all assigned subjects
+        const assignedSubjectToTeacher<?= $teacher['TeacherID'] ?> = <?php echo json_encode($assignedSubjectToTeacher); ?>;
+
+        function filterSemesters<?= $teacher['TeacherID'] ?>() {
+          // Optionally, you can filter semesters based on department if needed
+          filterSubjects<?= $teacher['TeacherID'] ?>();
+        }
+
+        function filterSubjects<?= $teacher['TeacherID'] ?>() {
+          const deptSelect = document.querySelector('#assignSubjectsModal<?= $teacher['TeacherID'] ?> .department-select');
+          const semSelect = document.querySelector('#assignSubjectsModal<?= $teacher['TeacherID'] ?> .semester-select');
+          const subjSelect = document.querySelector('#assignSubjectsModal<?= $teacher['TeacherID'] ?> .subject-select');
+          const deptId = deptSelect.value;
+          const semId = semSelect.value;
+          subjSelect.innerHTML = '';
+          if (!deptId || !semId) return;
+          allSubjects<?= $teacher['TeacherID'] ?>.forEach(sub => {
+            // Only show if not assigned to another teacher, or already assigned to this teacher
+            if (sub.DepartmentID == deptId && sub.SemesterID == semId &&
+              (!assignedSubjectToTeacher<?= $teacher['TeacherID'] ?>[sub.SubjectID] || assignedSubjectToTeacher<?= $teacher['TeacherID'] ?>[sub.SubjectID] == <?= $teacher['TeacherID'] ?>)) {
+              const opt = document.createElement('option');
+              opt.value = sub.SubjectID;
+              opt.textContent = `${sub.SubjectCode} - ${sub.SubjectName} (${sub.DepartmentName}, Sem ${sub.SemesterNumber})`;
+              if (teacherAssignedSubjects<?= $teacher['TeacherID'] ?>.includes(sub.SubjectID)) {
+                opt.selected = true;
+              }
+              subjSelect.appendChild(opt);
+            }
+          });
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+          // Reset modal fields on open
+          const modal = document.getElementById('assignSubjectsModal<?= $teacher['TeacherID'] ?>');
+          modal.addEventListener('show.bs.modal', () => {
+            modal.querySelector('.department-select').value = '';
+            modal.querySelector('.semester-select').value = '';
+            modal.querySelector('.subject-select').innerHTML = '';
+          });
+        });
+      </script>
     <?php endforeach; ?>
 
     <!-- Add Teacher Modal -->
@@ -755,7 +1095,7 @@ foreach ($statsQueries as $key => $query) {
               </div>
               <div class="col-12">
                 <label class="form-label">Subject Assignment</label>
-                <select name="SubjectID" id="subjectSelect" class="form-select">
+                <select name="SubjectID[]" id="subjectSelect" class="form-select" multiple required>
                   <option value="">Select Department & Semester First</option>
                 </select>
                 <span class="error text-danger"><?php echo $errors['SubjectID'] ?? ''; ?></span>
@@ -939,6 +1279,20 @@ foreach ($statsQueries as $key => $query) {
         bsAlert.close();
       });
     }, 5000);
+  </script>
+  <form id="teacherStatusForm" method="POST" style="display:none;">
+    <input type="hidden" name="action" value="update_status">
+    <input type="hidden" name="teacher_id" id="statusTeacherId" value="">
+    <input type="hidden" name="new_status" id="statusTeacherNewStatus" value="">
+  </form>
+  <script>
+    function changeTeacherStatus(teacherId, newStatus) {
+      if (confirm('Are you sure you want to ' + (newStatus === 'active' ? 'activate' : 'deactivate') + ' this teacher?')) {
+        document.getElementById('statusTeacherId').value = teacherId;
+        document.getElementById('statusTeacherNewStatus').value = newStatus;
+        document.getElementById('teacherStatusForm').submit();
+      }
+    }
   </script>
 </body>
 

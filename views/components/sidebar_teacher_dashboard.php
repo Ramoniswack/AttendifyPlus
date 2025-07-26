@@ -25,9 +25,9 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </a>
 
       <!-- Assignments -->
-        <!-- Attendance Reports -->
+      <!-- Attendance Reports -->
       <a class="nav-link <?= ($currentPage == 'assignments.php') ? 'active' : '' ?>" href="assignments.php">
-        <i data-lucide="bar-chart-3" class="me-2"></i>Assignments
+        <i data-lucide="clipboard-list" class="me-2"></i>Assignments
       </a>
 
       <!-- Attendance Reports -->

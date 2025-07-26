@@ -419,12 +419,10 @@ body.dark-mode .text-primary {
   color: var(--accent-dark) !important;
 }
 
-/* NAVBAR Z-INDEX FIX */
-.navbar {
-  z-index: 1060;
-}
+/* SIDEBAR STYLES NOW IN SIDEBAR_TEACHER.CSS */
+/* Sidebar styles moved to dedicated file for consistency across all teacher pages */
 
-/* UNIVERSAL SIDEBAR (WORKS ON ALL DEVICES) */
+/* RESPONSIVE ADJUSTMENTS FOR DASHBOARD CONTENT */
 .sidebar {
   position: fixed;
   top: var(--navbar-height, 60px);

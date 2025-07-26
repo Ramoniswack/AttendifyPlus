@@ -1,1060 +1,1852 @@
 :root {
-  --teams-purple: #464775;
-  --teams-blue: #6264a7;
-  --teams-light-blue: #e1e5f2;
-  --teams-green: #237b4b;
-  --teams-red: #c4314b;
-  --teams-orange: #c19c00;
-  --teams-light-gray: #f3f2f1;
-  --teams-medium-gray: #8a8886;
-  --teams-dark-gray: #323130;
-  --teams-white: #ffffff;
-  --teams-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --teams-shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.15);
+  --bg-light: linear-gradient(to right, #f0f4f8, #e8f0fe);
+  --bg-dark: #121212;
+  --card-light: #ffffff;
+  --card-dark: #1f1f1f;
+  --text-light: #333;
+  --text-dark: #eee;
+  --accent-light: #1A73E8;
+  --accent-dark: #00ffc8;
+  --navbar-light: var(--accent-light);
+  --navbar-dark: var(--accent-dark);
+  --text-muted-light: #6c757d;
+  --text-muted-dark: #a0a0a0;
+  --border-light: #f8f9fa;
+  --border-dark: #333;
+  --shadow-light: rgba(0, 0, 0, 0.1);
+  --shadow-dark: rgba(0, 0, 0, 0.3);
+  --primary-color: #1A73E8;
+  --primary-dark: #0c47a1;
+  --bg-glass: rgba(255, 255, 255, 0.1);
+  --border-color: rgba(0, 0, 0, 0.1);
+  
+  /* Theme-aware variables for student submissions */
+  --text-primary: var(--text-light);
+  --text-secondary: var(--text-muted-light);
+  --bg-table-header: #f8f9fa;
+  --bg-table-hover: rgba(0, 0, 0, 0.05);
+  --summary-card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+  --summary-card-hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* Base Styles */
+/* GENERAL RESET - MATCHING DASHBOARD_TEACHER.CSS EXACTLY */
 body {
-  font-family: 'Segoe UI', 'Poppins', sans-serif;
-  background: var(--teams-light-gray);
-  color: var(--teams-dark-gray);
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg-light);
+  color: var(--text-light);
+  margin: 0;
+  transition: all 0.3s ease;
+  overflow-x: hidden;
 }
 
 body.dark-mode {
-  background: #1f1f1f;
-  color: #ffffff;
-  --teams-white: #2d2d2d;
-  --teams-light-gray: #1f1f1f;
-  --teams-medium-gray: #a0a0a0;
-  --teams-dark-gray: #ffffff;
+  background: var(--bg-dark);
+  color: var(--text-dark);
+  
+  /* Dark mode overrides for student submissions */
+  --text-primary: var(--text-dark);
+  --text-secondary: var(--text-muted-dark);
+  --bg-glass: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --bg-table-header: #2a2a2a;
+  --bg-table-hover: rgba(255, 255, 255, 0.05);
+  --summary-card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  --summary-card-hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
-/* Header Styles */
-.assignments-header {
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e1dfdd;
+.container {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
-body.dark-mode .assignments-header {
-  border-bottom-color: #404040;
-}
-
-.assignments-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: var(--teams-dark-gray);
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.assignments-subtitle {
-  color: var(--teams-medium-gray);
-  font-size: 1rem;
-  margin: 0;
-}
-
-.header-actions {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-/* Search Styles */
-.search-container {
-  position: relative;
-  min-width: 250px;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  border: 1px solid #e1dfdd;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  background: var(--teams-white);
-  color: var(--teams-dark-gray);
-}
-
-body.dark-mode .search-input {
-  background: #2d2d2d;
-  border-color: #404040;
-  color: #ffffff;
-}
-
-.search-input:focus {
-  border-color: var(--teams-blue);
-  box-shadow: 0 0 0 2px rgba(98, 100, 167, 0.2);
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--teams-medium-gray);
-  width: 18px;
-  height: 18px;
-}
-
-.filter-select {
-  min-width: 150px;
-  border: 1px solid #e1dfdd;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  background: var(--teams-white);
-  color: var(--teams-dark-gray);
-}
-
-body.dark-mode .filter-select {
-  background: #2d2d2d;
-  border-color: #404040;
-  color: #ffffff;
-}
-
-/* Tabs Styles */
-.assignments-tabs {
-  margin-bottom: 2rem;
-}
-
-.assignments-tabs .nav-tabs {
-  border-bottom: 2px solid #e1dfdd;
-}
-
-body.dark-mode .assignments-tabs .nav-tabs {
-  border-bottom-color: #404040;
-}
-
-.assignments-tabs .nav-link {
-  color: var(--teams-medium-gray);
-  border: none;
-  border-bottom: 3px solid transparent;
-  font-weight: 500;
-  padding: 1rem 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: none;
-}
-
-.assignments-tabs .nav-link:hover {
-  border-color: var(--teams-blue);
-  color: var(--teams-blue);
-  background: none;
-}
-
-.assignments-tabs .nav-link.active {
-  color: var(--teams-blue);
-  border-bottom-color: var(--teams-blue);
-  background: none;
-}
-
-.assignments-tabs .badge {
-  font-size: 0.75rem;
-  border-radius: 10px;
-}
-
-/* Assignment Grid */
-.assignments-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 1.5rem;
-}
-
-@media (max-width: 768px) {
-  .assignments-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-/* Assignment Cards */
-.assignment-card {
-  background: var(--teams-white);
-  border-radius: 8px;
-  box-shadow: var(--teams-shadow);
-  transition: all 0.3s ease;
-  overflow: hidden;
-  border-left: 4px solid transparent;
-  position: relative;
-}
-
-body.dark-mode .assignment-card {
-  background: #2d2d2d;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.assignment-card:hover {
-  box-shadow: var(--teams-shadow-hover);
-  transform: translateY(-2px);
-}
-
-/* Card Status Styling */
-.assignment-card.active-card {
-  border-left-color: var(--teams-green);
-}
-
-.assignment-card.draft-card {
-  border-left-color: var(--teams-orange);
-}
-
-.assignment-card.graded-card {
-  border-left-color: var(--teams-blue);
-}
-
-/* Card Header */
-.assignment-header {
-  padding: 1.25rem 1.25rem 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.assignment-meta {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  flex-wrap: wrap;
-  flex: 1;
-}
-
-.subject-code {
-  background: var(--teams-light-blue);
-  color: var(--teams-blue);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-body.dark-mode .subject-code {
-  background: rgba(98, 100, 167, 0.2);
-  color: #a0b3ff;
-}
-
-.points {
-  color: var(--teams-medium-gray);
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.assignment-actions {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.assignment-card:hover .assignment-actions {
-  opacity: 1;
-}
-
-/* Card Content */
-.assignment-content {
-  padding: 1.25rem;
-}
-
-.assignment-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--teams-dark-gray);
-  margin-bottom: 0.5rem;
-  line-height: 1.4;
-}
-
-.assignment-subject {
-  color: var(--teams-blue);
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
-.assignment-description {
-  color: var(--teams-medium-gray);
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin-bottom: 1rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Assignment Details */
-.assignment-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.due-info, .created-info, .submissions-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--teams-medium-gray);
-}
-
-.submissions-info {
-  color: var(--teams-green);
-  font-weight: 500;
-}
-
-/* Card Footer */
-.assignment-footer {
-  padding: 0 1.25rem 1.25rem;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-action {
-  flex: 1;
-  font-weight: 500;
-  border-radius: 4px;
-  padding: 0.75rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.btn-primary {
-  background: var(--teams-blue);
-  border-color: var(--teams-blue);
-}
-
-.btn-primary:hover {
-  background: var(--teams-purple);
-  border-color: var(--teams-purple);
-}
-
-.btn-outline-secondary {
-  border-color: #e1dfdd;
-  color: var(--teams-medium-gray);
-}
-
-.btn-outline-secondary:hover {
-  background: var(--teams-light-gray);
-  border-color: var(--teams-medium-gray);
-  color: var(--teams-dark-gray);
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: var(--teams-medium-gray);
-}
-
-.empty-icon {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.empty-state h4 {
-  color: var(--teams-dark-gray);
-  margin-bottom: 0.5rem;
-}
-
-/* Create Assignment Button */
-.create-assignment-btn {
-  background: var(--teams-green);
-  border: none;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* DASHBOARD CONTAINER - MATCHING DASHBOARD_TEACHER.CSS EXACTLY */
+.dashboard-container {
+  padding: 2rem;
   transition: all 0.3s ease;
 }
 
-.create-assignment-btn:hover {
-  background: #1e6b3f;
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: var(--teams-shadow-hover);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .assignments-header {
-    text-align: center;
-  }
-  
-  .header-actions {
-    justify-content: center;
-    width: 100%;
-    margin-top: 1rem;
-  }
-  
-  .search-container {
-    min-width: 200px;
-  }
-  
-  .assignments-tabs .nav-link {
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-  }
-  
-  .assignment-card {
-    margin-bottom: 1rem;
-  }
-  
-  .assignment-header {
-    padding: 1rem 1rem 0;
-  }
-  
-  .assignment-content {
-    padding: 1rem;
-  }
-  
-  .assignment-footer {
-    padding: 0 1rem 1rem;
-    flex-direction: column;
-  }
-  
-  .btn-action {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-  
-  .btn-action:last-child {
-    margin-bottom: 0;
+@media (max-width: 767.98px) {
+  .dashboard-container {
+    padding: 1.5rem;
   }
 }
 
 @media (max-width: 576px) {
-  .assignments-title {
-    font-size: 1.5rem;
+  .dashboard-container {
+    padding: 1rem;
+  }
+}
+
+/* PAGE HEADER - MATCHING DASHBOARD_TEACHER.CSS EXACTLY */
+.page-header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-title {
+   font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+body.dark-mode .page-title {
+  color: var(--text-dark);
+}
+
+/* Text Muted - Dark Mode Support - MATCHING DASHBOARD_TEACHER.CSS EXACTLY */
+.text-muted {
+  color: var(--text-muted-light) !important;
+}
+
+body.dark-mode .text-muted {
+  color: var(--text-muted-dark) !important;
+}
+
+/* ===== STATISTICS CARDS - COPIED EXACTLY FROM DASHBOARD_TEACHER.CSS ===== */
+.stats-card,
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stats-card:hover,
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.stats-card.assignments-card,
+.stat-card.teachers {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.stats-card.assignments-card:hover,
+.stat-card.teachers:hover {
+  box-shadow: 0 8px 25px rgba(17, 153, 142, 0.3);
+}
+
+.stats-card.recent-card,
+.stat-card.admins {
+  background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
+}
+
+.stats-card.recent-card:hover,
+.stat-card.admins:hover {
+  box-shadow: 0 8px 25px rgba(252, 70, 107, 0.3);
+}
+
+.stat-card.activities {
+  background: linear-gradient(135deg, #ffa726 0%, #ffcc02 100%);
+}
+
+.stat-card.activities:hover {
+  box-shadow: 0 8px 25px rgba(255, 167, 38, 0.3);
+}
+
+body.dark-mode .stats-card,
+body.dark-mode .stat-card {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .stats-card:hover,
+body.dark-mode .stat-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+}
+
+body.dark-mode .stats-card.assignments-card,
+body.dark-mode .stat-card.teachers {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+}
+
+body.dark-mode .stats-card.recent-card,
+body.dark-mode .stat-card.admins {
+  background: linear-gradient(135deg, #7c2d12 0%, #b91c1c 100%);
+}
+
+body.dark-mode .stat-card.activities {
+  background: linear-gradient(135deg, #92400e 0%, #d97706 100%);
+}
+
+.stats-number,
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.stats-icon,
+.stat-icon {
+  font-size: 2.5rem;
+  opacity: 0.8;
+}
+
+.stats-icon i,
+.stat-icon i {
+  width: 40px;
+  height: 40px;
+}
+
+/* MOBILE RESPONSIVE STATISTICS CARDS - MATCHING DASHBOARD_TEACHER.CSS EXACTLY */
+@media (max-width: 767px) {
+  .stat-card {
+    padding: 1.5rem;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+  }
+
+  .page-title {
+    font-size: 1.6rem;
   }
   
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .stat-card {
+    margin-bottom: 1rem;
+    padding: 1.25rem;
+  }
+
+  .stat-number {
+    font-size: 1.6rem;
+  }
+
+  .stats-icon {
+    font-size: 2rem;
+  }
+  
+  .page-title {
+    font-size: 1.4rem;
+  }
+}
+
+/* ===== END STATISTICS CARDS FROM DASHBOARD_TEACHER.CSS ===== */
+
+/* CARD STYLING - MATCHING DASHBOARD_TEACHER.CSS */
+.card {
+  background: var(--card-light);
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 4px 15px var(--shadow-light);
+  border-radius: 15px;
+}
+
+body.dark-mode .card {
+  background: var(--card-dark);
+  color: var(--text-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+/* BUTTON STYLES - MATCHING DASHBOARD_TEACHER.CSS */
+.btn-primary {
+  background-color: var(--accent-light);
+  border: none;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-light);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(26, 115, 232, 0.3);
+}
+
+body.dark-mode .btn-primary {
+  background-color: var(--accent-dark);
+  color: #000;
+}
+
+body.dark-mode .btn-primary:hover {
+  background-color: var(--accent-dark);
+  color: #000;
+}
+
+.btn-outline-primary {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+  border-color: var(--accent-light);
+  color: var(--accent-light);
+}
+
+body.dark-mode .btn-outline-primary {
+  border-color: var(--accent-dark);
+  color: var(--accent-dark);
+}
+
+.btn-outline-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
+  background-color: var(--accent-light);
+  border-color: var(--accent-light);
+  color: white;
+}
+
+body.dark-mode .btn-outline-primary:hover {
+  box-shadow: 0 5px 15px rgba(0, 255, 200, 0.2);
+  background-color: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: black;
+}
+
+/* TEXT COLORS - MATCHING DASHBOARD_TEACHER.CSS */
+.text-success {
+  color: #28a745 !important;
+}
+
+body.dark-mode .text-success {
+  color: #40d962 !important;
+}
+
+.text-info {
+  color: #17a2b8 !important;
+}
+
+body.dark-mode .text-info {
+  color: #20c997 !important;
+}
+
+.text-primary {
+  color: var(--accent-light) !important;
+}
+
+body.dark-mode .text-primary {
+  color: var(--accent-dark) !important;
+}
+
+/* BADGE STYLES - MATCHING DASHBOARD_TEACHER.CSS */
+.badge {
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .bg-success {
+  background-color: #28a745 !important;
+}
+
+body.dark-mode .bg-secondary {
+  background-color: #6c757d !important;
+}
+
+body.dark-mode .bg-primary {
+  background-color: var(--accent-dark) !important;
+  color: black !important;
+}
+
+body.dark-mode .bg-warning {
+  background-color: #ffc107 !important;
+  color: black !important;
+}
+
+/* ===== SIDEBAR STYLES NOW HANDLED BY SIDEBAR_TEACHER.CSS ===== */
+/* All sidebar styles moved to dedicated sidebar_teacher.css for consistency */
+
+/* ===== ASSIGNMENTS GRID AND CARD LAYOUT ===== */
+
+/* Main Assignments Grid */
+.assignments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-top: 1.5rem;
+  padding: 0.5rem;
+}
+
+/* Assignment Cards */
+.assignment-card {
+  background: linear-gradient(135deg, #f8fafc 80%, #e8f0fe 100%); /* subtle blue/white gradient for contrast */
+  box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+  border: 1px solid #e3e8ee;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px var(--shadow-light);
+  border: none;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  height: auto;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+body.dark-mode .assignment-card {
+  background: var(--card-dark);
+  color: var(--text-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+.assignment-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+body.dark-mode .assignment-card:hover {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+}
+
+/* Assignment Card Header */
+.assignment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.subject-code {
+  background: linear-gradient(135deg, var(--accent-light) 0%, #0056b3 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+body.dark-mode .subject-code {
+  background: linear-gradient(135deg, var(--accent-dark) 0%, #00a085 100%);
+  color: black;
+}
+
+.points {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+body.dark-mode .points {
+  background: rgba(40, 167, 69, 0.2);
+  color: #40d962;
+}
+
+/* Assignment Card Content */
+.assignment-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+body.dark-mode .assignment-title {
+  color: var(--text-dark);
+}
+
+.assignment-description {
+  color: var(--text-muted-light);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+body.dark-mode .assignment-description {
+  color: var(--text-muted-dark);
+}
+
+/* Assignment Card Footer */
+.assignment-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+body.dark-mode .assignment-footer {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Assignment actions - always visible */
+.assignment-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.assignment-actions .btn {
+  font-size: 0.8rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.3s ease;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* --- Make assignment action buttons always visible and high-contrast in light mode --- */
+.assignment-actions .btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  filter: none !important;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+
+/* --- Improve assignment card background for visibility in light mode --- */
+.assignment-card {
+  background: linear-gradient(135deg, #f8fafc 80%, #e8f0fe 100%); /* subtle blue/white gradient for contrast */
+  box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+  border: 1px solid #e3e8ee;
+}
+
+/* Keep dark mode as is */
+body.dark-mode .assignment-card {
+  background: var(--card-dark);
+  color: var(--text-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+  border: none;
+}
+
+/* --- Ensure View and Submit buttons are always visible and have good contrast --- */
+.assignment-actions .btn-outline-primary,
+.assignment-actions .btn-primary {
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+  background: #fff;
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+.assignment-actions .btn-outline-primary:hover,
+.assignment-actions .btn-outline-primary:focus,
+.assignment-actions .btn-primary:hover,
+.assignment-actions .btn-primary:focus {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}
+body.dark-mode .assignment-actions .btn-outline-primary,
+body.dark-mode .assignment-actions .btn-primary {
+  background: var(--accent-dark);
+  color: #222;
+  border-color: var(--accent-dark);
+}
+body.dark-mode .assignment-actions .btn-outline-primary:hover,
+body.dark-mode .assignment-actions .btn-outline-primary:focus,
+body.dark-mode .assignment-actions .btn-primary:hover,
+body.dark-mode .assignment-actions .btn-primary:focus {
+  background: var(--accent-dark);
+  color: #222;
+  border-color: var(--accent-dark);
+}
+
+/* Assignment grid responsive breakpoints */
+@media (max-width: 1400px) {
+  .assignments-grid {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .assignments-grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .assignments-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .assignments-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding: 0.25rem;
+  }
+}
+
+@media (max-width: 576px) {
   .assignments-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0;
   }
   
-  .assignment-meta {
+  .assignment-card {
+    padding: 1.25rem;
+    min-height: 180px;
+  }
+}
+
+/* Mobile responsive styles */
+@media (max-width: 767px) {
+  .page-header .d-flex {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .page-header .d-flex .d-flex {
+    justify-content: stretch;
+  }
+
+  .page-header .btn {
+    flex: 1;
+  }
+  
+  .assignment-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .assignment-actions {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .assignment-actions .btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+}
+
+/* Mobile responsive breakpoints matching dashboard_teacher.css */
+@media (max-width: 576px) {
+  .row .col-lg-3 {
+    margin-bottom: 1rem;
+  }
+  
+  .assignment-actions {
+    flex-direction: column;
     gap: 0.5rem;
   }
   
-  .assignments-tabs .nav-link {
-    padding: 0.5rem 0.75rem;
-  }
-  
-  .search-container {
-    min-width: 150px;
-  }
-  
-  .filter-select {
-    min-width: 120px;
-  }
-  
-  .create-assignment-btn {
+  .assignment-actions .btn {
     width: 100%;
     justify-content: center;
   }
 }
 
-/* Dark Mode Form Controls */
-body.dark-mode .form-control,
-body.dark-mode .form-select {
-  background: #404040;
-  border-color: #555555;
-  color: #ffffff;
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .assignment-card:hover {
+    transform: none;
+  }
+
+  .assignment-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  .btn:hover {
+    transform: none;
+  }
+
+  .btn:active {
+    transform: scale(0.95);
+  }
+
+  .stat-card:hover {
+    transform: none;
+  }
 }
 
-body.dark-mode .form-control:focus,
-body.dark-mode .form-select:focus {
-  background: #404040;
-  border-color: var(--teams-blue);
-  color: #ffffff;
-  box-shadow: 0 0 0 2px rgba(98, 100, 167, 0.2);
+/* ===== ENHANCED ANIMATIONS AND EFFECTS ===== */
+
+@keyframes fadeInUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(40px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 
-/* Status Badges */
-.status-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
-.status-active {
-  background: rgba(35, 123, 75, 0.1);
-  color: var(--teams-green);
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(0, 115, 232, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 115, 232, 0.6);
+  }
 }
 
-.status-draft {
-  background: rgba(193, 156, 0, 0.1);
-  color: var(--teams-orange);
+/* Empty State Animation */
+.empty-state {
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  text-align: center;
+  padding: 3rem;
 }
 
-.status-graded {
-  background: rgba(98, 100, 167, 0.1);
-  color: var(--teams-blue);
+.empty-state-icon {
+  width: 48px !important;
+  height: 48px !important;
+  font-size: 3rem;
+  color: var(--text-muted-light);
+  margin-bottom: 1rem;
+  opacity: 0.6;
 }
 
-/* Quick Stats */
-.quick-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+body.dark-mode .empty-state-icon {
+  color: var(--text-muted-dark);
 }
 
+/* Statistics cards entrance animation */
 .stat-card {
-  background: var(--teams-white);
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: var(--teams-shadow);
-  border-left: 4px solid var(--teams-blue);
+  animation: fadeInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-body.dark-mode .stat-card {
-  background: #2d2d2d;
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* Assignment cards entrance animation */
+.assignment-card {
+  animation: fadeInUp 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.stat-number {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--teams-blue);
-  margin-bottom: 0.5rem;
+.assignment-card:nth-child(1) { animation-delay: 0.1s; }
+.assignment-card:nth-child(2) { animation-delay: 0.2s; }
+.assignment-card:nth-child(3) { animation-delay: 0.3s; }
+.assignment-card:nth-child(4) { animation-delay: 0.4s; }
+.assignment-card:nth-child(5) { animation-delay: 0.5s; }
+.assignment-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* ===== LUCIDE ICON FIXES FOR TEXT OVERLAP ===== */
+
+/* Fix for all Lucide icons in assignments page */
+[data-lucide] {
+  width: 20px !important;
+  height: 20px !important;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
 }
 
-.stat-label {
-  color: var(--teams-medium-gray);
-  font-size: 0.9rem;
-  margin: 0;
+/* Specific icon sizes for different contexts */
+.page-title [data-lucide] {
+  width: 24px !important;
+  height: 24px !important;
+  margin-right: 8px;
 }
 
-
-
-/* Navbar Styles - Teacher Panel */
-.admin-navbar {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 0.75rem 0;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1040;
-    height: 60px;
+.stats-icon [data-lucide],
+.stat-icon [data-lucide] {
+  width: 32px !important;
+  height: 32px !important;
 }
 
-body.dark-mode .admin-navbar {
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+.assignment-card [data-lucide] {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0;
 }
 
-/* Navbar Toggle Button */
-.navbar-toggle-btn {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
+.nav-link [data-lucide] {
+  width: 18px !important;
+  height: 18px !important;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+/* Button icons */
+.btn [data-lucide] {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+/* Tab icons */
+.nav-tabs .nav-link [data-lucide] {
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+/* Prevent icon text overlap in dropdowns */
+.dropdown-item [data-lucide] {
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+/* Assignment detail icons */
+.detail-item [data-lucide] {
+  width: 14px !important;
+  height: 14px !important;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+/* Ensure SVG elements don't override our sizing */
+[data-lucide] svg {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* Small icon variant for tight spaces */
+.icon-sm [data-lucide] {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Large icon variant for emphasis */
+.icon-lg [data-lucide] {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* ===== ASSIGNMENT CREATION FORM STYLES ===== */
+
+/* Assignment Form Section */
+.assignment-form-section {
+    background: var(--card-light);
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 15px var(--shadow-light);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: none;
+    animation: slideDown 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+body.dark-mode .assignment-form-section {
+    background: var(--card-dark);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.navbar-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.3);
-    color: white;
-    transform: translateY(-1px);
+body.dark-mode .form-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
-.navbar-icon {
-    width: 18px;
-    height: 18px;
-}
-
-/* Brand */
-.navbar-brand {
-    color: white !important;
+.form-title {
+    font-size: 1.5rem;
     font-weight: 600;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.brand-text {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
-}
-
-.brand-main {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: white;
-}
-
-.brand-sub {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.8);
-    font-weight: 500;
-}
-
-/* Welcome Text */
-.welcome-text {
-    margin-right: 1rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.9rem;
-}
-
-.welcome-label {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.welcome-name {
-    font-weight: 600;
-    color: white;
-}
-
-/* Navbar Buttons */
-.navbar-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
+    color: var(--accent-light);
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+body.dark-mode .form-title {
+    color: var(--accent-dark);
+}
+
+.form-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted-light);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
     transition: all 0.3s ease;
-    font-size: 0.875rem;
-    position: relative;
 }
 
-.navbar-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
-    color: white;
-    transform: translateY(-1px);
+body.dark-mode .form-close-btn {
+    color: var(--text-muted-dark);
 }
 
-.navbar-btn-mobile {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
+.form-close-btn:hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    transform: rotate(90deg);
+}
+
+/* Form Controls */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 0.25rem;
+}
+
+body.dark-mode .form-label {
+    color: var(--text-dark);
+}
+
+.form-label .required {
+    color: #dc3545;
+}
+
+.assignment-form-section .form-control, 
+.assignment-form-section .form-select {
+    background: var(--card-light);
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 0.75rem;
+    color: var(--text-light);
     transition: all 0.3s ease;
-    position: relative;
 }
 
-.navbar-btn-mobile:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+body.dark-mode .assignment-form-section .form-control,
+body.dark-mode .assignment-form-section .form-select {
+    background: var(--card-dark);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-dark);
 }
 
-/* Theme Toggle */
-.theme-toggle-btn {
+.assignment-form-section .form-control:focus,
+.assignment-form-section .form-select:focus {
+    border-color: var(--accent-light);
+    box-shadow: 0 0 0 0.25rem rgba(26, 115, 232, 0.25);
+    background: var(--card-light);
+}
+
+body.dark-mode .assignment-form-section .form-control:focus,
+body.dark-mode .assignment-form-section .form-select:focus {
+    border-color: var(--accent-dark);
+    box-shadow: 0 0 0 0.25rem rgba(0, 255, 200, 0.25);
+    background: var(--card-dark);
+}
+
+/* File Upload */
+.file-upload-area {
+    border: 2px dashed rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.02);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+body.dark-mode .file-upload-area {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.file-upload-area:hover {
+    border-color: var(--accent-light);
+    background: rgba(26, 115, 232, 0.05);
+    transform: translateY(-2px);
+}
+
+body.dark-mode .file-upload-area:hover {
+    border-color: var(--accent-dark);
+    background: rgba(0, 255, 200, 0.05);
+}
+
+.file-upload-area.dragover {
+    border-color: var(--accent-light);
+    background: rgba(26, 115, 232, 0.15);
+    transform: scale(1.02);
+}
+
+body.dark-mode .file-upload-area.dragover {
+    border-color: var(--accent-dark);
+    background: rgba(0, 255, 200, 0.15);
+}
+
+.file-upload-area.success {
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+    animation: pulseSuccess 0.6s ease-in-out;
+}
+
+@keyframes pulseSuccess {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.file-upload-icon {
+    font-size: 3rem;
+    color: var(--text-muted-light);
+    margin-bottom: 1rem;
+}
+
+body.dark-mode .file-upload-icon {
+    color: var(--text-muted-dark);
+}
+
+.file-info {
+    display: none;
+    background: linear-gradient(145deg, rgba(40, 167, 69, 0.15), rgba(40, 167, 69, 0.08));
+    border: 2px solid rgba(40, 167, 69, 0.4);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 
-.theme-icon {
-    width: 16px;
-    height: 16px;
-    transition: all 0.3s ease;
-}
-
-.dark-icon {
-    display: none;
-}
-
-body.dark-mode .light-icon {
-    display: none;
-}
-
-body.dark-mode .dark-icon {
-    display: block;
-}
-
-/* Notification Button */
-.notification-btn {
-    position: relative;
-}
-
-.notification-badge,
-.mobile-notification-badge {
+.file-info::before {
+    content: '';
     position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ff4757;
-    color: white;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 0.65rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    border: 2px solid white;
-}
-
-/* Profile Button */
-.profile-btn {
-    position: relative;
-}
-
-.profile-avatar,
-.profile-avatar-small {
-    width: 24px;
-    height: 24px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.dropdown-arrow {
-    width: 14px;
-    height: 14px;
-    margin-left: 0.25rem;
-    transition: transform 0.3s ease;
-}
-
-.profile-btn[aria-expanded="true"] .dropdown-arrow {
-    transform: rotate(180deg);
-}
-
-/* Dropdown Menus */
-.notification-dropdown,
-.profile-dropdown {
-    background: white;
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    padding: 0.5rem 0;
-    min-width: 280px;
-    margin-top: 0.5rem;
-}
-
-body.dark-mode .notification-dropdown,
-body.dark-mode .profile-dropdown {
-    background: #2d3748;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-}
-
-.mobile-dropdown {
-    min-width: 240px;
-}
-
-/* Dropdown Header */
-.dropdown-header {
-    padding: 0.75rem 1rem;
-    font-weight: 600;
-    color: #495057;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: #f8f9fa;
-    margin-bottom: 0;
-}
-
-body.dark-mode .dropdown-header {
-    color: #e2e8f0;
-    background: #1a202c;
-}
-
-/* Profile Info in Dropdown */
-.profile-info,
-.profile-info-mobile {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-}
-
-.profile-avatar-large,
-.profile-avatar-medium {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-}
-
-body.dark-mode .profile-avatar-large,
-body.dark-mode .profile-avatar-medium {
-    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-}
-
-.profile-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-}
-
-.profile-name {
-    font-weight: 600;
-    color: #1a202c;
-    font-size: 0.9rem;
-}
-
-.profile-role {
-    font-size: 0.75rem;
-    color: #718096;
-    font-weight: 500;
-}
-
-body.dark-mode .profile-name {
-    color: #e2e8f0;
-}
-
-body.dark-mode .profile-role {
-    color: #a0aec0;
-}
-
-/* Dropdown Items */
-.dropdown-item {
-    padding: 0.5rem 1rem;
-    color: #495057;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
-}
-
-.dropdown-item:hover {
-    background: #f8f9fa;
-    color: #212529;
-}
-
-body.dark-mode .dropdown-item {
-    color: #e2e8f0;
-}
-
-body.dark-mode .dropdown-item:hover {
-    background: #4a5568;
-    color: white;
-}
-
-.dropdown-item i {
-    width: 16px;
-    height: 16px;
-}
-
-/* Notification Items */
-.notification-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0;
-}
-
-.notification-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    flex-shrink: 0;
-}
-
-.notification-icon.bg-info {
-    background: #17a2b8;
-}
-
-.notification-icon.bg-success {
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
     background: #28a745;
 }
 
-.notification-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
+.file-info.show {
+    display: block;
+    animation: slideInFile 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.notification-title {
-    font-weight: 500;
-    color: #212529;
-    font-size: 0.85rem;
-}
-
-.notification-time {
-    font-size: 0.75rem;
-    color: #6c757d;
-}
-
-body.dark-mode .notification-title {
-    color: #e2e8f0;
-}
-
-body.dark-mode .notification-time {
-    color: #a0aec0;
-}
-
-/* Responsive Design */
-@media (max-width: 991px) {
-    .navbar-brand {
-        font-size: 1rem;
+@keyframes slideInFile {
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
     }
-    
-    .brand-main {
-        font-size: 1.1rem;
-    }
-    
-    .brand-sub {
-        font-size: 0.7rem;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-@media (max-width: 768px) {
-    .admin-navbar {
-        padding: 0.5rem 0;
-    }
-    
-    .navbar-toggle-btn {
-        width: 36px;
-        height: 36px;
-    }
-    
-    .navbar-icon {
-        width: 16px;
-        height: 16px;
-    }
-    
-    .brand-main {
-        font-size: 1rem;
-    }
-    
-    .brand-sub {
-        font-size: 0.65rem;
-    }
+.file-info .file-name {
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+    font-size: 1rem;
 }
 
-/* Sidebar Styles */
-.sidebar {
-    position: fixed;
-    top: 60px;
-    left: -280px;
-    width: 280px;
-    height: calc(100vh - 60px);
-    background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
-    transition: left 0.3s ease;
-    z-index: 1030;
-    overflow-y: auto;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+.file-info .file-size {
+    color: var(--text-muted-light);
+    font-size: 0.875rem;
 }
 
-.sidebar.sidebar-open {
-    left: 0;
-}
-
-.sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1025;
-    opacity: 0;
-    visibility: hidden;
+.file-info .btn {
     transition: all 0.3s ease;
 }
 
-.sidebar-overlay.show {
-    opacity: 1;
-    visibility: visible;
+.file-info .btn:hover {
+    transform: translateY(-1px);
 }
 
-.sidebar-title {
-    color: white;
-    font-weight: 600;
-    font-size: 1.1rem;
+/* Dark mode file info */
+body.dark-mode .file-info {
+    background: linear-gradient(145deg, rgba(0, 255, 200, 0.15), rgba(0, 255, 200, 0.08));
+    border-color: rgba(0, 255, 200, 0.4);
+}
+
+body.dark-mode .file-info::before {
+    background: var(--accent-dark);
+}
+
+body.dark-mode .file-info .file-name {
+    color: var(--text-dark);
+}
+
+body.dark-mode .file-info .file-size {
+    color: var(--text-muted-dark);
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .form-actions {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Form */
+@media (max-width: 768px) {
+    .assignment-form-section {
+        margin: 1rem 0;
+        padding: 1.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+
+/* Form Validation */
+.assignment-form-section .form-control.is-invalid,
+.assignment-form-section .form-select.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: none;
+}
+
+/* Success Message */
+.alert-success {
+    background: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    color: #155724;
+    padding: 1rem;
+    border-radius: 8px;
     margin-bottom: 1rem;
 }
 
-.sidebar .nav-link {
-    color: rgba(255, 255, 255, 0.8);
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.25rem;
+body.dark-mode .alert-success {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+}
+
+/* ===== END ASSIGNMENT FORM STYLES ===== */
+
+/* Assignment Card Badges */
+.draft-badge {
+    background: linear-gradient(135deg, #ffa726 0%, #ffcc02 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(255, 167, 38, 0.3);
+}
+
+.graded-badge {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+body.dark-mode .draft-badge {
+    background: linear-gradient(135deg, #92400e 0%, #d97706 100%);
+    box-shadow: 0 2px 4px rgba(146, 64, 14, 0.4);
+}
+
+body.dark-mode .graded-badge {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    box-shadow: 0 2px 4px rgba(6, 95, 70, 0.4);
+}
+
+/* Draft Card Styling */
+.assignment-card.draft-card {
+    border-left: 4px solid #ffa726;
+    background: linear-gradient(135deg, rgba(255, 167, 38, 0.05) 0%, rgba(255, 204, 2, 0.05) 100%);
+}
+
+body.dark-mode .assignment-card.draft-card {
+    border-left-color: #d97706;
+    background: linear-gradient(135deg, rgba(146, 64, 14, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%);
+}
+
+/* Graded Card Styling */
+.assignment-card.graded-card {
+    border-left: 4px solid #28a745;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.05) 0%, rgba(32, 201, 151, 0.05) 100%);
+}
+
+body.dark-mode .assignment-card.graded-card {
+    border-left-color: #047857;
+    background: linear-gradient(135deg, rgba(6, 95, 70, 0.1) 0%, rgba(4, 120, 87, 0.1) 100%);
+}
+
+/* Tab Header Styles */
+.tab-pane h4 {
+  color: var(--text-light);
+  font-weight: 600;
+  margin: 0;
+}
+
+body.dark-mode .tab-pane h4 {
+  color: var(--text-dark);
+}
+
+.tab-header-buttons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+@media (max-width: 767.98px) {
+  .tab-header-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  .tab-header-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* Assignment Analytics */
+.assignment-analytics {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(26, 115, 232, 0.05);
     border-radius: 8px;
+    border: 1px solid rgba(26, 115, 232, 0.15);
     transition: all 0.3s ease;
+}
+
+body.dark-mode .assignment-analytics {
+    background: rgba(0, 255, 200, 0.05);
+    border-color: rgba(0, 255, 200, 0.15);
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.analytic-item {
     display: flex;
     align-items: center;
-    font-weight: 500;
+    gap: 0.5rem;
+}
+
+.analytic-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-light);
+    flex-shrink: 0;
+}
+
+body.dark-mode .analytic-icon {
+    color: var(--accent-dark);
+}
+
+.analytic-icon.submitted {
+    color: #28a745;
+}
+
+.analytic-icon.viewed {
+    color: #17a2b8;
+}
+
+.analytic-icon.pending {
+    color: #ffc107;
+}
+
+.analytic-content {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.analytic-number {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-light);
+}
+
+body.dark-mode .analytic-number {
+    color: var(--text-dark);
+}
+
+.analytic-label {
+    font-size: 0.75rem;
+    color: var(--text-muted-light);
+}
+
+body.dark-mode .analytic-label {
+    color: var(--text-muted-dark);
+}
+
+@media (max-width: 768px) {
+    .analytics-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .assignment-analytics {
+        padding: 0.75rem;
+        margin: 0.75rem 0;
+    }
+}
+
+/* Student Submissions Styles */
+.assignment-selector {
+    display: flex;
+    align-items: center;
+}
+
+.assignment-selector .form-select {
+    min-width: 250px;
+    background: var(--card-light);
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .assignment-selector .form-select {
+    background: var(--card-dark);
+    color: var(--text-dark);
+    border: 1px solid var(--border-dark);
+}
+
+.assignment-selector .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25);
+}
+
+.submissions-summary {
+    background: var(--bg-glass);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--border-color);
+}
+
+.summary-card {
+    background: var(--summary-card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--summary-card-hover-shadow);
+}
+
+.summary-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.summary-card.total .summary-icon {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+}
+
+.summary-card.submitted .summary-icon {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.summary-card.viewed .summary-icon {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.summary-card.pending .summary-icon {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.summary-icon i {
+    width: 24px;
+    height: 24px;
+    color: white;
+}
+
+.summary-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.submissions-table-container {
+    background: var(--bg-glass);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.submissions-table {
+    margin-bottom: 0;
+}
+
+.submissions-table thead th {
+    background: var(--bg-table-header);
+    color: var(--text-primary);
+    border: none;
+    padding: 16px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.submissions-table tbody td {
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.submissions-table tbody tr:hover {
+    background: var(--bg-table-hover);
+}
+
+.student-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.student-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.student-number {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-badge.submitted {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge.viewed {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.status-badge.pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.submission-date {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.grade-display {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.grade-display.high {
+    color: #22c55e;
+}
+
+.grade-display.medium {
+    color: #f59e0b;
+}
+
+.grade-display.low {
+    color: #ef4444;
+}
+
+.file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.file-name {
+    font-size: 0.875rem;
+    color: var(--text-primary);
     text-decoration: none;
 }
 
-.sidebar .nav-link:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    transform: translateX(5px);
+.file-name:hover {
+    color: var(--primary-color);
 }
 
-.sidebar .nav-link.active {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border-left: 3px solid white;
+.file-size {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
 }
 
-.sidebar .nav-link i {
-    width: 18px;
-    height: 18px;
-    margin-right: 0.75rem;
+.view-count {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
 }
 
-/* Dashboard Container */
-.dashboard-container {
-    margin-top: 60px;
-    padding: 1.5rem;
-    min-height: calc(100vh - 60px);
+.view-count i {
+    width: 16px;
+    height: 16px;
 }
 
-@media (min-width: 992px) {
-    .sidebar {
-        left: 0;
+.submission-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.submission-actions .btn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+}
+
+.loading-state {
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+.loading-state .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+.empty-submissions {
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-submissions h5 {
+    color: var(--text-primary);
+}
+
+/* Responsive design for submissions table */
+@media (max-width: 768px) {
+    .assignment-selector {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
     }
     
-    .dashboard-container {
-        margin-left: 280px;
-        padding: 2rem;
+    .assignment-selector .form-select {
+        min-width: auto;
     }
     
-    .sidebar-overlay {
-        display: none;
+    .submissions-summary .row {
+        --bs-gutter-x: 0.75rem;
+    }
+    
+    .summary-card {
+        padding: 16px;
+        gap: 12px;
+    }
+    
+    .summary-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .summary-icon i {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .summary-number {
+        font-size: 1.5rem;
+    }
+    
+    .submissions-table {
+        font-size: 0.875rem;
+    }
+    
+    .submissions-table thead th,
+    .submissions-table tbody td {
+        padding: 12px 8px;
+    }
+    
+    .submission-actions {
+        flex-direction: column;
+        gap: 4px;
     }
 }
 
-/* Dark Mode Adjustments */
-body.dark-mode {
-    background: #1a202c;
-    color: white;
+/* ===== NAVBAR ICON ALIGNMENT FIXES ===== */
+
+/* Navbar button icons */
+.navbar .btn [data-lucide] {
+  width: 18px !important;
+  height: 18px !important;
+  margin-right: 0 !important;
+  flex-shrink: 0;
+  vertical-align: middle;
 }
 
-body.dark-mode .sidebar {
-    background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
-    border-right-color: rgba(255, 255, 255, 0.05);
+/* Navbar toggle button specifically */
+.navbar-toggle-btn [data-lucide] {
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  vertical-align: middle;
+}
+
+/* Theme toggle icons */
+.theme-toggle [data-lucide] {
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+  transition: transform 0.2s ease;
+}
+
+/* Dropdown icons */
+.navbar .dropdown-toggle [data-lucide] {
+  width: 20px !important;
+  height: 20px !important;
+  margin-right: 6px !important;
+  vertical-align: middle;
+}
+
+/* Brand/logo icons */
+.navbar-brand [data-lucide] {
+  width: 24px !important;
+  height: 24px !important;
+  margin-right: 8px !important;
+  vertical-align: middle;
+}
+
+/* Print styles */
+@media print {
+  .sidebar,
+  .navbar,
+  .btn,
+  .dropdown {
+    display: none !important;
+  }
+
+  .dashboard-container {
+    padding: 0;
+  }
+
+  .assignment-card {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.3s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.3s !important;
+  }
+  
+  .stat-card,
+  .assignment-card {
+    animation: none !important;
+  }
+}
+
+/* Minimal container for assignments grid */
+.assignments-container {
+  background: #f7fafd;
+  border-radius: 14px;
+  border: 1.5px solid #e0e6ef;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 1.75rem 1.25rem;
+  margin-bottom: 2.5rem;
+}
+body.dark-mode .assignments-container {
+  background: var(--card-dark);
+  border: 1px solid var(--border-dark);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+/* Ensure View button is always visible and has good contrast */
+.assignment-actions .btn-outline-primary {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: transparent;
+}
+.assignment-actions .btn-outline-primary:hover,
+.assignment-actions .btn-outline-primary:focus {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}
+body.dark-mode .assignment-actions .btn-outline-primary {
+  border-color: var(--accent-dark);
+  color: var(--accent-dark);
+}
+body.dark-mode .assignment-actions .btn-outline-primary:hover,
+body.dark-mode .assignment-actions .btn-outline-primary:focus {
+  background: var(--accent-dark);
+  color: #222;
+  border-color: var(--accent-dark);
+}
+
+/* Past due assignment card styling */
+.past-due-card {
+  background: linear-gradient(135deg, #fff5f5 0%, #fffbeb 100%);
+  border: 1.5px solid #fbbf24;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.past-due-card .assignment-actions {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Submit Late button styling - always visible */
+.past-due-card .btn.btn-warning,
+.past-due-card .btn-submit,
+.past-due-card .assignment-actions .btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-flex !important;
+  pointer-events: auto !important;
+  background: #fff !important;
+  color: #d97706 !important;
+  border: 1.5px solid #fbbf24 !important;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.past-due-card .btn.btn-warning:hover,
+.past-due-card .btn-submit:hover,
+.past-due-card .assignment-actions .btn:hover {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  border-color: #d97706 !important;
+  transform: translateY(-1px);
+}
+
+/* Dark mode overrides */
+body.dark-mode .past-due-card {
+  background: linear-gradient(135deg, #292524 0%, #1c1917 100%);
+  border-color: #d97706;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+}
+
+body.dark-mode .past-due-card .btn.btn-warning,
+body.dark-mode .past-due-card .btn-submit,
+body.dark-mode .past-due-card .assignment-actions .btn {
+  background: #292524 !important;
+  color: #fbbf24 !important;
+  border-color: #d97706 !important;
+}
+
+body.dark-mode .past-due-card .btn.btn-warning:hover,
+body.dark-mode .past-due-card .btn-submit:hover,
+body.dark-mode .past-due-card .assignment-actions .btn:hover {
+  background: #1c1917 !important;
+  color: #fef3c7 !important;
+  border-color: #fbbf24 !important;
 }

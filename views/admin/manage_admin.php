@@ -8,10 +8,38 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
 }
 
 include '../../config/db_config.php';
+include '../../helpers/helpers.php';
 
 $successMsg = '';
 $errorMsg = '';
 $errors = [];             //declare array
+
+// Move these functions to the top so they are available everywhere
+function isValidFormattedName($Fullname)
+{
+    $Fullname = trim($Fullname);
+    if (!preg_match('/^[A-Za-z. ]+$/', $Fullname)) return false;
+    if (preg_match('/[.]{2,}|[ ]{2,}/', $Fullname)) return false;
+    if (!preg_match('/^[A-Z]/', $Fullname)) return false;
+
+    $words = explode(' ', $Fullname);
+    foreach ($words as $word) {
+        if ($word === '') continue;
+        $parts = explode('.', $word);
+        foreach ($parts as $part) {
+            if ($part === '') continue;
+            if (!preg_match('/^[A-Z][a-z]*$/', $part)) return false;
+        }
+    }
+    return true;
+}
+
+function validateEmail($Email)
+{
+    $Email = trim($Email);
+    if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
+    return true;
+}
 
 // Handle form submission for adding admin
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_admin') {
@@ -24,33 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $Address = trim($_POST['Address'] ?? '');
     $PhotoURL = '';
 
-    function isValidFormattedName($Fullname) {
-        $Fullname = trim($Fullname);
-        if (!preg_match('/^[A-Za-z. ]+$/', $Fullname)) return false;
-        if (preg_match('/[.]{2,}|[ ]{2,}/', $Fullname)) return false;
-        if (!preg_match('/^[A-Z]/', $Fullname)) return false;
-
-        $words = explode(' ', $Fullname);
-        foreach ($words as $word) {
-        if ($word === '') continue;
-        $parts = explode('.', $word);
-        foreach ($parts as $part) {
-            if ($part === '') continue;
-            if (!preg_match('/^[A-Z][a-z]*$/', $part)) return false;
-        }
-        }
-        return true;
-    }
-
-    function validateEmail($Email) {
-        $Email = trim($Email);
-        if (!preg_match('/^[a-zA-Z0-9._%+-]+@lagrandee\.com$/', $Email)) return false;
-
-        return true;
-    }
-
     // VALIDATION
-   if (empty($FullName)) {
+    if (empty($FullName)) {
         $errors['FullName'] = "Full name is required.";
     } elseif (!isValidFormattedName($FullName)) {
         $errors['FullName'] = "Only letters, spaces, and dots allowed. Each part must start with a capital letter.";
@@ -139,6 +142,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $stmt2->execute();
 
                 $conn->commit();
+
+                // Create notification for new admin registration
+                createNotification(
+                    $conn,
+                    null,
+                    'admin',
+                    "New Administrator Added",
+                    "Administrator '{$FullName}' has been successfully added to the system.",
+                    'user-plus',
+                    'info'
+                );
+
                 $_SESSION['success_message'] = "Admin added successfully.";
                 header("Location: " . $_SERVER['PHP_SELF']);
                 exit();
@@ -152,6 +167,137 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
         $emailCheck->close();
     }
+}
+
+// Handle admin update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_admin') {
+    error_log('[ADMIN UPDATE] Begin admin update transaction for AdminID=' . ($_POST['admin_id'] ?? ''));
+    $adminID = $_POST['admin_id'] ?? '';
+    $FullName = trim($_POST['FullName'] ?? '');
+    $Email = trim($_POST['Email'] ?? '');
+    $Contact = trim($_POST['Contact'] ?? '');
+    $Address = trim($_POST['Address'] ?? '');
+
+    // Validate inputs using existing validation functions
+    $errors = [];
+    if (!isValidFormattedName($FullName)) {
+        $errors['FullName'] = "Only letters, spaces, and dots allowed. Each part must start with a capital letter.";
+    }
+    if (!validateEmail($Email)) {
+        $errors['Email'] = "Invalid email format. Example: example1@lagrandee.com";
+    }
+    if (!preg_match('/^\d{10}$/', $Contact)) {
+        $errors['Contact'] = "Contact number must be exactly 10 digits.";
+    }
+    if (empty($Address)) {
+        $errors['Address'] = "Address is required.";
+    }
+
+    if (empty($errors)) {
+        $conn->begin_transaction();
+        try {
+            $stmt = $conn->prepare("SELECT a.*, l.Email as CurrentEmail, l.Status as CurrentStatus, l.LoginID, a.PhotoURL 
+                                  FROM admins a 
+                                  JOIN login_tbl l ON a.LoginID = l.LoginID 
+                                  WHERE a.AdminID = ?");
+            $stmt->bind_param("i", $adminID);
+            $stmt->execute();
+            $currentData = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            $currentStatus = $currentData['CurrentStatus'];
+            error_log('[ADMIN UPDATE] Current data: ' . json_encode($currentData));
+
+            if ($Email !== $currentData['CurrentEmail']) {
+                $emailCheck = $conn->prepare("SELECT LoginID FROM login_tbl WHERE Email = ? AND LoginID != ?");
+                $emailCheck->bind_param("si", $Email, $currentData['LoginID']);
+                $emailCheck->execute();
+                $emailCheck->store_result();
+                error_log('[ADMIN UPDATE] Checking for duplicate email: ' . $Email . ', found=' . $emailCheck->num_rows);
+                if ($emailCheck->num_rows > 0) {
+                    throw new Exception("This email is already registered by another user.");
+                }
+                $emailCheck->close();
+            }
+
+            $hasChanges = false;
+            if ($currentData['FullName'] !== $FullName) {
+                error_log('[ADMIN UPDATE] Updating FullName from ' . $currentData['FullName'] . ' to ' . $FullName);
+                $update = $conn->prepare("UPDATE admins SET FullName = ? WHERE AdminID = ?");
+                $update->bind_param("si", $FullName, $adminID);
+                $update->execute();
+                $update->close();
+                $hasChanges = true;
+            }
+            if ($currentData['Contact'] !== $Contact) {
+                error_log('[ADMIN UPDATE] Updating Contact from ' . $currentData['Contact'] . ' to ' . $Contact);
+                $update = $conn->prepare("UPDATE admins SET Contact = ? WHERE AdminID = ?");
+                $update->bind_param("si", $Contact, $adminID);
+                $update->execute();
+                $update->close();
+                $hasChanges = true;
+            }
+            if ($currentData['Address'] !== $Address) {
+                error_log('[ADMIN UPDATE] Updating Address from ' . $currentData['Address'] . ' to ' . $Address);
+                $update = $conn->prepare("UPDATE admins SET Address = ? WHERE AdminID = ?");
+                $update->bind_param("si", $Address, $adminID);
+                $update->execute();
+                $update->close();
+                $hasChanges = true;
+            }
+            if ($currentData['CurrentEmail'] !== $Email) {
+                error_log('[ADMIN UPDATE] Updating login_tbl Email for LoginID=' . $currentData['LoginID'] . ', NewEmail=' . $Email . ', PreservingStatus=' . $currentStatus);
+                $updateLogin = $conn->prepare("UPDATE login_tbl SET Email = ?, Status = ? WHERE LoginID = ?");
+                $updateLogin->bind_param("ssi", $Email, $currentStatus, $currentData['LoginID']);
+                $updateLogin->execute();
+                $updateLogin->close();
+                $hasChanges = true;
+            }
+            if (isset($_FILES['PhotoFile']) && $_FILES['PhotoFile']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = '../../uploads/admins/';
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                $fileType = $_FILES['PhotoFile']['type'];
+                if (!in_array($fileType, $allowedTypes)) {
+                    throw new Exception("Only JPEG, PNG, and GIF images are allowed.");
+                }
+                if ($_FILES['PhotoFile']['size'] > 5 * 1024 * 1024) {
+                    throw new Exception("Image size must be less than 5MB.");
+                }
+                $ext = pathinfo($_FILES['PhotoFile']['name'], PATHINFO_EXTENSION);
+                $filename = uniqid('admin_', true) . '.' . $ext;
+                $targetPath = $uploadDir . $filename;
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                if (move_uploaded_file($_FILES['PhotoFile']['tmp_name'], $targetPath)) {
+                    error_log('[ADMIN UPDATE] Photo uploaded for AdminID=' . $adminID . ', NewPhoto=' . $targetPath);
+                    if (!empty($currentData['PhotoURL']) && file_exists($currentData['PhotoURL'])) {
+                        unlink($currentData['PhotoURL']);
+                    }
+                    $updatePhoto = $conn->prepare("UPDATE admins SET PhotoURL = ? WHERE AdminID = ?");
+                    $updatePhoto->bind_param("si", $targetPath, $adminID);
+                    $updatePhoto->execute();
+                    $updatePhoto->close();
+                    $hasChanges = true;
+                }
+            }
+            $conn->commit();
+            error_log('[ADMIN UPDATE] Transaction committed for AdminID=' . $adminID . ', hasChanges=' . ($hasChanges ? 'true' : 'false'));
+            if ($hasChanges) {
+                $_SESSION['success_message'] = "Administrator details updated successfully.";
+            } else {
+                $_SESSION['info_message'] = "No changes were made to the administrator details.";
+            }
+        } catch (Exception $e) {
+            $conn->rollback();
+            error_log('[ADMIN UPDATE] Transaction rolled back for AdminID=' . $adminID . '. Error: ' . $e->getMessage());
+            $_SESSION['error_message'] = "Error updating administrator: " . $e->getMessage();
+        }
+    } else {
+        error_log('[ADMIN UPDATE] Validation errors: ' . json_encode($errors));
+        $_SESSION['error_message'] = "Please correct the following errors: " . implode(", ", $errors);
+    }
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
 }
 
 // Handle admin status update
@@ -168,6 +314,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $updateStmt->bind_param("si", $newStatus, $adminID);
 
         if ($updateStmt->execute()) {
+            // Create notification for admin status change
+            $statusAction = $newStatus === 'active' ? 'activated' : 'deactivated';
+            createNotification(
+                $conn,
+                null,
+                'admin',
+                "Administrator Status Updated",
+                "An administrator account has been {$statusAction}.",
+                'settings',
+                'warning'
+            );
+            
             $_SESSION['success_message'] = "Admin status updated successfully.";
         } else {
             $_SESSION['error_message'] = "Failed to update admin status.";
@@ -224,17 +382,18 @@ foreach ($statsQueries as $key => $query) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manage Admins | Attendify+</title>
     <link rel="stylesheet" href="../../assets/css/manage_admin.css" />
+    <link rel="stylesheet" href="../../assets/css/sidebar_admin.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <script src="../../assets/js/lucide.min.js"></script>
     <script src="../../assets/js/manage_teacher.js" defer></script>
+    <script src="../../assets/js/navbar_admin.js" defer></script>
 </head>
 
 <body>
-    <!-- Include sidebar and navbar -->
     <?php include '../components/sidebar_admin_dashboard.php'; ?>
     <?php include '../components/navbar_admin.php'; ?>
-    
+
     <!-- Main content -->
     <div class="container-fluid dashboard-container">
         <!-- Page Header -->
@@ -327,7 +486,7 @@ foreach ($statsQueries as $key => $query) {
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
-        
+
         <!-- Search and Filter Section -->
         <div class="card mb-4">
             <div class="card-body">
@@ -367,7 +526,7 @@ foreach ($statsQueries as $key => $query) {
                 </div>
             </div>
         </div>
-        
+
         <!-- Administrators Table -->
         <div class="card shadow-sm">
             <div class="card-header">
@@ -478,7 +637,9 @@ foreach ($statsQueries as $key => $query) {
         </div>
 
         <!-- View Admin Modals -->
-        <?php foreach ($admins as $admin): ?>
+        <?php foreach (
+            $admins as $admin
+        ): ?>
             <div class="modal fade" id="viewAdminModal<?= $admin['AdminID'] ?>" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
@@ -489,63 +650,70 @@ foreach ($statsQueries as $key => $query) {
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-4 text-center">
-                                    <?php if (!empty($admin['PhotoURL']) && file_exists($admin['PhotoURL'])): ?>
-                                        <img src="<?= htmlspecialchars($admin['PhotoURL']) ?>"
-                                            alt="<?= htmlspecialchars($admin['FullName']) ?>"
-                                            class="admin-photo-large mb-3">
-                                    <?php else: ?>
-                                        <div class="admin-placeholder-large mb-3">
-                                            <i data-lucide="shield"></i>
+                        <form method="POST" action="" enctype="multipart/form-data" class="update-admin-form">
+                            <input type="hidden" name="action" value="update_admin">
+                            <input type="hidden" name="admin_id" value="<?= $admin['AdminID'] ?>">
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-4 text-center">
+                                        <?php if (!empty($admin['PhotoURL']) && file_exists($admin['PhotoURL'])): ?>
+                                            <img src="<?= htmlspecialchars($admin['PhotoURL']) ?>"
+                                                alt="<?= htmlspecialchars($admin['FullName']) ?>"
+                                                class="admin-photo-large mb-3">
+                                        <?php else: ?>
+                                            <div class="admin-placeholder-large mb-3">
+                                                <i data-lucide="shield"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div class="mb-3">
+                                            <label class="form-label">Update Photo</label>
+                                            <input type="file" name="PhotoFile" class="form-control" accept="image/*">
                                         </div>
-                                    <?php endif; ?>
-                                    <h5><?= htmlspecialchars($admin['FullName']) ?></h5>
-                                    <span class="badge <?= $admin['Status'] === 'active' ? 'bg-success' : 'bg-danger' ?> mb-2">
-                                        <?= ucfirst($admin['Status']) ?>
-                                    </span>
-                                </div>
-                                <div class="col-md-8">
-                                    <table class="table table-borderless">
-                                        <tr>
-                                            <th width="40%">Admin ID:</th>
-                                            <td><?= $admin['AdminID'] ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Email:</th>
-                                            <td><?= htmlspecialchars($admin['Email']) ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Contact:</th>
-                                            <td><?= htmlspecialchars($admin['Contact'] ?: 'Not provided') ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Address:</th>
-                                            <td><?= htmlspecialchars($admin['Address'] ?: 'Not provided') ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Joined Date:</th>
-                                            <td><?= date('F j, Y', strtotime($admin['CreatedDate'])) ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Account Status:</th>
-                                            <td>
-                                                <span class="badge <?= $admin['Status'] === 'active' ? 'bg-success' : 'bg-danger' ?>">
-                                                    <?= ucfirst($admin['Status']) ?>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    </table>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="row g-3">
+                                            <div class="col-md-12">
+                                                <label class="form-label">Full Name</label>
+                                                <input type="text" name="FullName" class="form-control"
+                                                    value="<?= htmlspecialchars($admin['FullName']) ?>" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" name="Email" class="form-control"
+                                                    value="<?= htmlspecialchars($admin['Email']) ?>" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Contact</label>
+                                                <input type="text" name="Contact" class="form-control"
+                                                    value="<?= htmlspecialchars($admin['Contact']) ?>" required>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label">Address</label>
+                                                <textarea name="Address" class="form-control" rows="2" required><?= htmlspecialchars($admin['Address']) ?></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i data-lucide="x" class="me-1"></i>
-                                Close
-                            </button>
-                        </div>
+                            <div class="modal-footer d-flex justify-content-between">
+                                <div>
+                                    <!-- Status change button triggers JS, not a form submit -->
+                                    <button type="button"
+                                        class="btn <?= $admin['Status'] === 'active' ? 'btn-danger' : 'btn-success' ?>"
+                                        onclick="changeAdminStatus(<?= $admin['AdminID'] ?>, '<?= $admin['Status'] === 'active' ? 'inactive' : 'active' ?>')">
+                                        <i data-lucide="<?= $admin['Status'] === 'active' ? 'user-x' : 'user-check' ?>" class="me-1"></i>
+                                        <?= $admin['Status'] === 'active' ? 'Deactivate Account' : 'Activate Account' ?>
+                                    </button>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary update-btn">
+                                        <i data-lucide="save" class="me-1"></i>
+                                        Update Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -575,20 +743,20 @@ foreach ($statsQueries as $key => $query) {
                                 </label>
                                 <input name="FullName" type="text" class="form-control" required placeholder="Enter full name"
                                     value="<?php echo htmlspecialchars($_POST['FullName'] ?? ''); ?>" />
-                                 <span class="error text-danger"><?php echo $errors['FullName'] ?? ''; ?></span>
+                                <span class="error text-danger"><?php echo $errors['FullName'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">
                                     Email Address <span class="required-field">*</span>
                                 </label>
-                                <input name="Email" type="email" class="form-control" required placeholder="admin@example.com" 
+                                <input name="Email" type="email" class="form-control" required placeholder="admin@example.com"
                                     value="<?php echo htmlspecialchars($_POST['Email'] ?? ''); ?>" />
-                                 <span class="error text-danger"><?php echo $errors['Email'] ?? ''; ?></span>
+                                <span class="error text-danger"><?php echo $errors['Email'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Contact Number</label>
                                 <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx"
-                                 value="<?php echo htmlspecialchars($_POST['Contact'] ?? ''); ?>" />
+                                    value="<?php echo htmlspecialchars($_POST['Contact'] ?? ''); ?>" />
                                 <span class="error text-danger"><?php echo $errors['Contact'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
@@ -612,16 +780,16 @@ foreach ($statsQueries as $key => $query) {
                                 <label class="form-label">
                                     Password <span class="required-field">*</span>
                                 </label>
-                                <input name="Password" type="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters" 
-                                value="<?php echo htmlspecialchars($_POST['Password'] ?? ''); ?>" />
-                                 <span class="error text-danger"><?php echo $errors['Password'] ?? ''; ?></span>
+                                <input name="Password" type="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters"
+                                    value="<?php echo htmlspecialchars($_POST['Password'] ?? ''); ?>" />
+                                <span class="error text-danger"><?php echo $errors['Password'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">
                                     Confirm Password <span class="required-field">*</span>
                                 </label>
-                                <input name="ConfirmPassword" type="password" class="form-control" required placeholder="Re-enter password" 
-                                value="<?php echo htmlspecialchars($_POST['ConfirmPassword'] ?? ''); ?>" />
+                                <input name="ConfirmPassword" type="password" class="form-control" required placeholder="Re-enter password"
+                                    value="<?php echo htmlspecialchars($_POST['ConfirmPassword'] ?? ''); ?>" />
                                 <span class="error text-danger"><?php echo $errors['ConfirmPassword'] ?? ''; ?></span>
                             </div>
                         </div>
@@ -643,6 +811,11 @@ foreach ($statsQueries as $key => $query) {
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <form id="adminStatusForm" method="POST" style="display:none;">
+        <input type="hidden" name="action" value="update_status">
+        <input type="hidden" name="admin_id" id="statusAdminId" value="">
+        <input type="hidden" name="new_status" id="statusNewStatus" value="">
+    </form>
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
@@ -734,6 +907,90 @@ foreach ($statsQueries as $key => $query) {
                 bsAlert.close();
             });
         }, 5000);
+
+        // Status change handler
+        function changeAdminStatus(adminId, newStatus) {
+            if (confirm('Are you sure you want to ' + (newStatus === 'active' ? 'activate' : 'deactivate') + ' this administrator?')) {
+                document.getElementById('statusAdminId').value = adminId;
+                document.getElementById('statusNewStatus').value = newStatus;
+                document.getElementById('adminStatusForm').submit();
+            }
+        }
+    </script>
+
+    <!-- Function to check for changes in the form -->
+    <script>
+        function setupFormChangeDetection() {
+            const forms = document.querySelectorAll('.update-admin-form');
+            forms.forEach(form => {
+                const inputs = form.querySelectorAll('input:not([type="hidden"]), textarea');
+                const fileInput = form.querySelector('input[type="file"]');
+                const updateBtn = form.querySelector('.update-btn');
+                const originalValues = {};
+
+                // Store original values
+                inputs.forEach(input => {
+                    if (input.type !== 'file') {
+                        originalValues[input.name] = input.value;
+                    }
+                });
+
+                // Function to check for changes
+                function checkForChanges() {
+                    let hasChanges = false;
+                    inputs.forEach(input => {
+                        if (input.type !== 'file' && input.value !== originalValues[input.name]) {
+                            hasChanges = true;
+                        }
+                    });
+
+                    // Check file input
+                    if (fileInput && fileInput.files.length > 0) {
+                        hasChanges = true;
+                    }
+
+                    // Update button text based on changes
+                    updateBtn.innerHTML = hasChanges ?
+                        '<i data-lucide="save" class="me-1"></i>Update Changes' :
+                        '<i data-lucide="save" class="me-1"></i>Save Changes';
+
+                    // Reinitialize Lucide icons
+                    lucide.createIcons();
+                }
+
+                // Check for changes on input
+                inputs.forEach(input => {
+                    input.addEventListener('input', checkForChanges);
+                    input.addEventListener('change', checkForChanges);
+                });
+
+                // Handle file input changes
+                if (fileInput) {
+                    fileInput.addEventListener('change', checkForChanges);
+                }
+
+                // Reset form handler
+                form.addEventListener('reset', () => {
+                    setTimeout(() => {
+                        inputs.forEach(input => {
+                            if (input.type !== 'file') {
+                                originalValues[input.name] = input.value;
+                            }
+                        });
+                        checkForChanges();
+                    }, 0);
+                });
+
+                // Initial button state
+                updateBtn.innerHTML = '<i data-lucide="save" class="me-1"></i>Save Changes';
+                lucide.createIcons();
+            });
+        }
+
+        // Initialize form change detection
+        document.addEventListener('DOMContentLoaded', () => {
+            setupFormChangeDetection();
+        });
     </script>
 </body>
 

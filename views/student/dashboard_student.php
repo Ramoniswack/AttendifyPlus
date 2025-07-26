@@ -164,6 +164,7 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
 
     <!-- CSS -->
     <link rel="stylesheet" href="../../assets/css/dashboard_student.css">
+    <link rel="stylesheet" href="../../assets/css/sidebar_student.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
@@ -171,6 +172,7 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../../assets/js/lucide.min.js"></script>
     <script src="../../assets/js/dashboard_student.js" defer></script>
+    <script src="../../assets/js/navbar_student.js" defer></script>
 </head>
 
 <body>
@@ -185,8 +187,7 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
 
     <!-- Main Content -->
     <div class="container-fluid dashboard-container main-content">
-        <!-- Page Header -->
-        <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-4">
             <div>
                 <h2 class="page-title">
                     <i data-lucide="layout-dashboard"></i>
@@ -209,131 +210,118 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
                 </a>
             </div>
         </div>
-
-        <!-- Device Registration Alert -->
-        <?php if (!$hasRegisteredDevice && !$pendingToken): ?>
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                <div class="d-flex align-items-center">
-                    <i data-lucide="smartphone" class="me-2" style="width: 20px; height: 20px;"></i>
-                    <div>
-                        <strong>Device Not Registered</strong><br>
-                        <small>You need to register your device for QR code attendance. Contact your teacher to get a registration token.</small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php elseif (!$hasRegisteredDevice && $pendingToken): ?>
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <i data-lucide="clock" class="me-2" style="width: 20px; height: 20px;"></i>
-                        <div>
-                            <strong>Device Registration Available</strong><br>
-                            <small>You can now register your device for QR attendance. Expires: <?= date('M j, g:i A', strtotime($pendingToken['ExpiresAt'])) ?></small>
-                        </div>
-                    </div>
-                    <button class="btn btn-primary btn-sm ms-3" onclick="registerDevice()">
-                        <i data-lucide="smartphone" class="me-1"></i>
-                        Register Now
-                    </button>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-
-        <!-- Statistics Cards (Colorful, Responsive) -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?= $stats['attendance_percentage'] ?>%</div>
-                            <div>Overall Attendance</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="calendar-check" style="width: 14px; height: 14px;"></i>
-                                    <?= $totalAttendanceRecords ?> records
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="calendar-check"></i>
-                        </div>
-                    </div>
+        <!-- Minimal Dashboard Cards Section -->
+        <div class="row g-4 mb-4 align-items-stretch">
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="percent"></i></div>
+                    <div class="mini-stat-value"><?= $stats['attendance_percentage'] ?>%</div>
+                    <div class="mini-stat-label">Overall Attendance</div>
+                    <div class="mini-stat-desc text-muted mt-1"><i data-lucide="calendar-check" style="width: 14px; height: 14px;"></i> <?= $totalAttendanceRecords ?> records</div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card subjects-card text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?= $stats['total_subjects'] ?></div>
-                            <div>Enrolled Subjects</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
-                                    Current semester
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="book-open"></i>
-                        </div>
-                    </div>
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="book-open"></i></div>
+                    <div class="mini-stat-value"><?= $stats['total_subjects'] ?></div>
+                    <div class="mini-stat-label">Enrolled Subjects</div>
+                    <div class="mini-stat-desc text-muted mt-1">Current semester</div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card pending-card text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?= $stats['pending_assignments'] ?></div>
-                            <div>Pending Assignments</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="clipboard-list" style="width: 14px; height: 14px;"></i>
-                                    <?= $stats['completed_assignments'] ?> completed
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="clipboard-list"></i>
-                        </div>
-                    </div>
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="clipboard-list"></i></div>
+                    <div class="mini-stat-value"><?= $stats['pending_assignments'] ?></div>
+                    <div class="mini-stat-label">Pending Assignments</div>
+                    <div class="mini-stat-desc text-muted mt-1"><i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> <?= $stats['completed_assignments'] ?> completed</div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card activities text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number">
-                                <i data-lucide="<?= $hasRegisteredDevice ? 'check-circle' : 'smartphone' ?>"></i>
-                            </div>
-                            <div>Device Status</div>
-                            <div class="mt-1">
-                                <?php if ($hasRegisteredDevice): ?>
-                                    <small class="text-white-50">
-                                        <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i>
-                                        Registered
-                                    </small>
-                                <?php elseif ($pendingToken): ?>
-                                    <small class="text-white-50">
-                                        <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
-                                        Registration Available
-                                    </small>
-                                <?php else: ?>
-                                    <small class="text-white-50">
-                                        <i data-lucide="x-circle" style="width: 14px; height: 14px;"></i>
-                                        Not Registered
-                                    </small>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="smartphone"></i>
-                        </div>
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="smartphone"></i></div>
+                    <div class="mini-stat-value">
+                        <?php if ($hasRegisteredDevice): ?>
+                            <i data-lucide="check-circle"></i>
+                        <?php else: ?>
+                            <i data-lucide="x-circle"></i>
+                        <?php endif; ?>
+                    </div>
+                    <div class="mini-stat-label">Device Status</div>
+                    <div class="mini-stat-desc text-muted mt-1">
+                        <?php if ($hasRegisteredDevice): ?>
+                            <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i> Registered
+                        <?php elseif ($pendingToken): ?>
+                            <i data-lucide="clock" style="width: 14px; height: 14px;"></i> Registration Available
+                        <?php else: ?>
+                            <i data-lucide="x-circle" style="width: 14px; height: 14px;"></i> Not Registered
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Notifications and Calendar Row -->
+        <div class="row g-4 mb-4 align-items-stretch">
+            <div class="col-12 col-lg-8">
+                <div class="mini-stat-card h-100 p-4">
+                    <div class="mini-card-title mb-2">Notifications & Reminders</div>
+                    <ul class="mini-notification-list">
+                        <li><span class="mini-notification-title">Tomorrow Holiday</span><br><span class="mini-notification-desc text-muted">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur...</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="mini-stat-card h-100 p-4">
+                    <div class="mini-card-title mb-2">Calendar</div>
+                    <div class="mini-calendar-wrapper w-100 px-2 pb-2">
+                        <?php
+                        $month = date('F');
+                        $year = date('Y');
+                        $days = cal_days_in_month(CAL_GREGORIAN, date('m'), $year);
+                        $firstDay = date('w', strtotime("$year-" . date('m') . "-01"));
+                        ?>
+                        <div class="mini-calendar-header text-center mb-1"><?= $month ?> <?= $year ?></div>
+                        <table class="mini-calendar-table w-100">
+                            <thead>
+                                <tr>
+                                    <th>Su</th>
+                                    <th>Mo</th>
+                                    <th>Tu</th>
+                                    <th>We</th>
+                                    <th>Th</th>
+                                    <th>Fr</th>
+                                    <th>Sa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <?php
+                                    for ($i = 0; $i < $firstDay; $i++) echo '<td></td>';
+                                    for ($d = 1; $d <= $days; $d++) {
+                                        $today = ($d == date('j')) ? 'mini-calendar-today' : '';
+                                        echo "<td class='$today'>$d</td>";
+                                        if ((($d + $firstDay) % 7 == 0) && $d != $days) echo '</tr><tr>';
+                                    }
+                                    $remaining = (7 - (($days + $firstDay) % 7)) % 7;
+                                    for ($i = 0; $i < $remaining; $i++) echo '<td></td>';
+                                    ?>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            // Realtime clock for dashboard card
+            function updateRealtimeClock() {
+                const el = document.getElementById('realtimeClock');
+                if (!el) return;
+                const now = new Date();
+                el.textContent = now.toLocaleTimeString();
+            }
+            setInterval(updateRealtimeClock, 1000);
+            updateRealtimeClock();
+        </script>
 
         <!-- Charts Row -->
         <div class="row g-4 mb-4">
@@ -665,58 +653,58 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
 
             // Use correct path - remove '../student/' prefix
             fetch('student_devices.php', {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                console.log('Response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.text(); // Get as text first for debugging
-            })
-            .then(text => {
-                console.log('Raw response:', text);
-                try {
-                    const data = JSON.parse(text);
-                    console.log('Parsed response:', data);
-                    
-                    if (data.success) {
-                        statusDiv.innerHTML = `
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.text(); // Get as text first for debugging
+                })
+                .then(text => {
+                    console.log('Raw response:', text);
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('Parsed response:', data);
+
+                        if (data.success) {
+                            statusDiv.innerHTML = `
                             <i data-lucide="check-circle" style="width: 48px; height: 48px;" class="text-success"></i>
                             <p class="text-success mt-2 mb-0">${data.message}</p>
                         `;
-                        setTimeout(() => location.reload(), 2000);
-                    } else {
-                        statusDiv.innerHTML = `
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            statusDiv.innerHTML = `
                             <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
                             <p class="text-danger mt-2 mb-0">Error: ${data.error || data.message}</p>
                         `;
-                        modalFooter.style.display = 'flex';
-                    }
-                } catch (e) {
-                    console.error('JSON parse error:', e);
-                    statusDiv.innerHTML = `
+                            modalFooter.style.display = 'flex';
+                        }
+                    } catch (e) {
+                        console.error('JSON parse error:', e);
+                        statusDiv.innerHTML = `
                         <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
                         <p class="text-danger mt-2 mb-0">Server error: ${text}</p>
                     `;
-                    modalFooter.style.display = 'flex';
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                statusDiv.innerHTML = `
+                        modalFooter.style.display = 'flex';
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    statusDiv.innerHTML = `
                     <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
                     <p class="text-danger mt-2 mb-0">Network error: ${error.message}</p>
                 `;
-                modalFooter.style.display = 'flex';
-            })
-            .finally(() => {
-                if (typeof lucide !== "undefined") {
-                    lucide.createIcons();
-                }
-            });
+                    modalFooter.style.display = 'flex';
+                })
+                .finally(() => {
+                    if (typeof lucide !== "undefined") {
+                        lucide.createIcons();
+                    }
+                });
         }
 
         function generateDeviceFingerprint() {

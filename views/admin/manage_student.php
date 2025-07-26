@@ -6,6 +6,7 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
     exit();
 }
 include '../../config/db_config.php';
+include '../../helpers/helpers.php';
 
 $successMsg = '';
 $errorMsg = '';
@@ -188,6 +189,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 // Commit transaction
                 $conn->commit();
 
+                // Create notification for new student registration
+                createNotification(
+                    $conn,
+                    null,
+                    'admin',
+                    "New Student Added",
+                    "Student '{$FullName}' has been successfully added to the system.",
+                    'user-plus',
+                    'info'
+                );
+
                 // Success: Store success message in session and redirect
                 if ($AutoGenerateToken) {
                     $_SESSION['success_message'] = "Student added successfully with device registration token generated! Token expires in 10 minutes.";
@@ -222,6 +234,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $updateStmt->bind_param("si", $newStatus, $studentID);
 
         if ($updateStmt->execute()) {
+            // Create notification for student status change
+            $statusAction = $newStatus === 'active' ? 'activated' : 'deactivated';
+            createNotification(
+                $conn,
+                null,
+                'admin',
+                "Student Status Updated",
+                "A student account has been {$statusAction}.",
+                'settings',
+                'warning'
+            );
+
             $_SESSION['success_message'] = "Student status updated successfully.";
         } else {
             $_SESSION['error_message'] = "Failed to update student status.";
@@ -261,6 +285,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $tokenStmt->bind_param("iss", $studentID, $token, $expiresAt);
 
                 if ($tokenStmt->execute()) {
+                    // Create notification for token generation
+                    createNotification(
+                        $conn,
+                        null,
+                        'admin',
+                        "Device Token Generated",
+                        "A device registration token has been generated for a student.",
+                        'key',
+                        'info'
+                    );
+
                     $_SESSION['success_message'] = "Device registration token generated successfully! Valid for 10 minutes.";
                 } else {
                     $_SESSION['error_message'] = "Failed to generate device registration token.";
@@ -475,14 +510,15 @@ foreach ($statsQueries as $key => $query) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Manage Students | Attendify+</title>
     <link rel="stylesheet" href="../../assets/css/manage_student.css" />
+    <link rel="stylesheet" href="../../assets/css/sidebar_admin.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <script src="../../assets/js/lucide.min.js"></script>
     <script src="../../assets/js/manage_student.js" defer></script>
+    <script src="../../assets/js/navbar_admin.js" defer></script>
 </head>
 
 <body>
-    <!-- Include sidebar and navbar -->
     <?php include '../components/sidebar_admin_dashboard.php'; ?>
     <?php include '../components/navbar_admin.php'; ?>
 

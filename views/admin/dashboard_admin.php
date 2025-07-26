@@ -109,6 +109,7 @@ $monthlyDataJSON = json_encode($monthlyData);
 
     <!-- CSS -->
     <link rel="stylesheet" href="../../assets/css/dashboard_admin.css">
+    <link rel="stylesheet" href="../../assets/css/sidebar_admin.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
@@ -116,6 +117,7 @@ $monthlyDataJSON = json_encode($monthlyData);
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../../assets/js/lucide.min.js"></script>
     <script src="../../assets/js/dashboard_admin.js" defer></script>
+    <script src="../../assets/js/navbar_admin.js" defer></script>
 </head>
 
 <body>

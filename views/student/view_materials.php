@@ -107,290 +107,187 @@ $recentDownloads = 0; // Placeholder - implement if needed
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>View Materials | Attendify+</title>
-
     <!-- CSS -->
-    <link rel="stylesheet" href="../../assets/css/view_materials.css">
     <link rel="stylesheet" href="../../assets/css/dashboard_student.css">
+    <link rel="stylesheet" href="../../assets/css/sidebar_student.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/view_materials.css">
     <!-- JS Libraries -->
     <script src="../../assets/js/lucide.min.js"></script>
-    <script src="../../assets/js/view_materials.js" defer></script>
-    <script src="../../assets/js/dashboard_student.js" defer></script>
+    <script src="../../assets/js/navbar_student.js" defer></script>
 </head>
 
 <body>
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Sidebar -->
     <?php include '../components/sidebar_student_dashboard.php'; ?>
-
-    <!-- Navbar -->
     <?php include '../components/navbar_student.php'; ?>
-
-    <!-- Main Content -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <div class="container-fluid dashboard-container main-content">
-        <!-- Page Header -->
         <div class="page-header mb-4">
-            <div class="d-flex justify-content-between align-items-start flex-wrap">
-                <div>
-                    <h2 class="page-title">
+            <h2 class="page-title d-flex align-items-center gap-2">
                         <i data-lucide="folder-open"></i>
                         Course Materials
                     </h2>
                     <p class="page-subtitle mb-0">Access lecture slides, notes and resources from your teachers</p>
                 </div>
-                <div class="header-stats">
-                    <div class="stat-item">
-                        <span class="stat-number"><?= $totalMaterials ?></span>
-                        <span class="stat-label">Available</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number"><?= $materialsResult->num_rows ?></span>
-                        <span class="stat-label">Showing</span>
-                    </div>
-                </div>
+        <!-- Search Bar -->
+        <div class="mb-4" id="materialsSearchBar">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0"><i data-lucide="search"></i></span>
+                <input type="text" class="form-control" id="materialsSearchInput" placeholder="Search materials by title, subject, or tag...">
             </div>
         </div>
-
-        <!-- Search and Filter Bar -->
-        <div class="search-filter-bar mb-4">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="search-group">
-                        <div class="search-input-wrapper">
-                            <i data-lucide="search" class="search-icon"></i>
-                            <input type="text" id="searchInput" class="search-input" 
-                                   placeholder="Search materials, subjects, tags..."
-                                   value="<?= htmlspecialchars($searchTerm) ?>">
-                            <button type="button" id="clearSearch" class="clear-search-btn" style="display: none;">
-                                <i data-lucide="x"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <select id="subjectFilter" class="filter-select">
-                        <option value="">All Subjects</option>
-                        <?php
-                        $subjectsResult->data_seek(0);
-                        while ($subject = $subjectsResult->fetch_assoc()): ?>
-                            <option value="<?= $subject['SubjectID'] ?>" 
-                                    <?= $subjectFilter == $subject['SubjectID'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($subject['SubjectCode']) ?> - <?= htmlspecialchars($subject['SubjectName']) ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select id="typeFilter" class="filter-select">
-                        <option value="">All Types</option>
-                        <option value="pdf" <?= $typeFilter == 'pdf' ? 'selected' : '' ?>>PDF</option>
-                        <option value="ppt,pptx" <?= $typeFilter == 'ppt,pptx' ? 'selected' : '' ?>>PowerPoint</option>
-                        <option value="doc,docx" <?= $typeFilter == 'doc,docx' ? 'selected' : '' ?>>Word Document</option>
-                        <option value="txt" <?= $typeFilter == 'txt' ? 'selected' : '' ?>>Text File</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <div class="filter-actions">
-                        <button id="applyFilters" class="btn btn-primary">
-                            <i data-lucide="filter"></i>
-                            Apply Filters
-                        </button>
-                        <button id="clearFilters" class="btn btn-outline-secondary">
-                            <i data-lucide="x"></i>
-                            Clear
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="search-results-info mt-2">
-                <span id="resultsCount" class="results-count">
-                    Showing <?= $materialsResult->num_rows ?> of <?= $totalMaterials ?> materials
-                </span>
-            </div>
-        </div>
-
-        <!-- Materials Grid -->
-        <div class="materials-container">
+        <div class="row g-4" id="materialsCardGrid">
             <?php if ($materialsResult->num_rows > 0): ?>
-                <div class="materials-grid" id="materialsGrid">
                     <?php while ($material = $materialsResult->fetch_assoc()): ?>
-                        <div class="material-card" 
-                             data-title="<?= strtolower(htmlspecialchars($material['Title'])) ?>"
-                             data-description="<?= strtolower(htmlspecialchars($material['Description'])) ?>"
-                             data-tags="<?= strtolower(htmlspecialchars($material['Tags'])) ?>"
-                             data-subject="<?= htmlspecialchars($material['SubjectID']) ?>"
-                             data-filetype="<?= strtolower($material['FileType']) ?>">
-                            
-                            <div class="material-header">
-                                <div class="file-type-badge file-type-<?= strtolower($material['FileType']) ?>">
-                                    <i data-lucide="<?= getFileIcon($material['FileType']) ?>"></i>
-                                    <span><?= strtoupper($material['FileType']) ?></span>
-                                </div>
-                                <div class="material-actions">
-                                    <div class="dropdown">
-                                        <button class="action-btn" data-bs-toggle="dropdown">
-                                            <i data-lucide="more-horizontal"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <a class="dropdown-item" href="download_material.php?id=<?= $material['MaterialID'] ?>" target="_blank">
-                                                    <i data-lucide="download"></i>
-                                                    Download
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="#" onclick="previewMaterial(<?= $material['MaterialID'] ?>)">
-                                                    <i data-lucide="eye"></i>
-                                                    Preview
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="#" onclick="shareMaterial(<?= $material['MaterialID'] ?>)">
-                                                    <i data-lucide="share-2"></i>
-                                                    Share
-                                                </a>
-                                            </li>
-                                        </ul>
+                    <div class="col-md-6 col-lg-4 material-card-item" data-title="<?= strtolower(htmlspecialchars($material['Title'])) ?>" data-subject="<?= strtolower(htmlspecialchars($material['SubjectCode'])) ?>" data-tags="<?= strtolower(htmlspecialchars($material['Tags'])) ?>">
+                        <div class="teams-card p-4 d-flex flex-column gap-2 h-100">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <span class="teams-file-icon" data-lucide="file"></span>
+                                <div>
+                                    <div class="fw-semibold teams-file-name" style="font-size:1.1rem;"> <?= htmlspecialchars($material['Title']) ?> </div>
+                                    <div class="teams-file-meta" style="font-size:0.92rem;">
+                                        <?= htmlspecialchars($material['SubjectCode']) ?> &bull; <?= htmlspecialchars($material['TeacherName']) ?>
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="material-content">
-                                <h5 class="material-title"><?= htmlspecialchars($material['Title']) ?></h5>
-                                
-                                <div class="material-meta">
-                                    <span class="subject-badge">
-                                        <i data-lucide="book"></i>
-                                        <?= htmlspecialchars($material['SubjectCode']) ?>
-                                    </span>
-                                    <span class="teacher-info">
-                                        <i data-lucide="user"></i>
-                                        <?= htmlspecialchars($material['TeacherName']) ?>
-                                    </span>
+                            <?php if (!empty($material['Description'])): ?>
+                                <div class="text-muted mb-2" style="font-size:0.95rem;">
+                                    <?= htmlspecialchars(strlen($material['Description']) > 80 ? substr($material['Description'], 0, 80) . '...' : $material['Description']) ?>
                                 </div>
-
-                                <?php if (!empty($material['Description'])): ?>
-                                    <p class="material-description">
-                                        <?= htmlspecialchars(strlen($material['Description']) > 100 ? 
-                                            substr($material['Description'], 0, 100) . '...' : 
-                                            $material['Description']) ?>
-                                    </p>
                                 <?php endif; ?>
-
-                                <?php if (!empty($material['Tags'])): ?>
-                                    <div class="material-tags">
-                                        <?php
-                                        $tags = explode(',', $material['Tags']);
-                                        foreach (array_slice($tags, 0, 3) as $tag): ?>
-                                            <span class="tag"><?= htmlspecialchars(trim($tag)) ?></span>
-                                        <?php endforeach; ?>
-                                        <?php if (count($tags) > 3): ?>
-                                            <span class="tag more-tags">+<?= count($tags) - 3 ?> more</span>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <div class="material-footer">
-                                <div class="material-info">
-                                    <span class="file-size">
-                                        <i data-lucide="hard-drive"></i>
-                                        <?= formatFileSize($material['FileSize']) ?>
-                                    </span>
-                                    <span class="upload-date">
-                                        <i data-lucide="calendar"></i>
-                                        <?= date('M j, Y', strtotime($material['UploadDateTime'])) ?>
-                                    </span>
-                                </div>
-                                <div class="material-actions-primary">
-                                    <a href="download_material.php?id=<?= $material['MaterialID'] ?>" 
-                                       class="btn btn-primary btn-sm" target="_blank">
-                                        <i data-lucide="download"></i>
-                                        Download
-                                    </a>
+                            <div class="d-flex gap-2 mt-auto">
+                                <button class="btn btn-outline-primary btn-sm preview-btn" data-id="<?= $material['MaterialID'] ?>" data-type="<?= strtolower($material['FileType']) ?>" data-file="<?= htmlspecialchars($material['FileName']) ?>">Preview</button>
+                                <a class="btn btn-primary btn-sm download-btn" href="download_material.php?id=<?= $material['MaterialID'] ?>" data-id="<?= $material['MaterialID'] ?>" target="_blank" download>Download</a>
                                 </div>
                             </div>
                         </div>
                     <?php endwhile; ?>
-                </div>
             <?php else: ?>
-                <!-- Empty State -->
-                <div class="empty-state">
-                    <div class="empty-state-icon">
-                        <i data-lucide="folder-x"></i>
-                    </div>
-                    <h4 class="empty-state-title">No Materials Found</h4>
-                    <p class="empty-state-text">
-                        <?php if (!empty($searchTerm) || !empty($subjectFilter) || !empty($typeFilter)): ?>
-                            No materials match your search criteria. Try adjusting your filters.
-                        <?php else: ?>
-                            Your teachers haven't uploaded any materials yet. Check back later!
-                        <?php endif; ?>
-                    </p>
-                    <?php if (!empty($searchTerm) || !empty($subjectFilter) || !empty($typeFilter)): ?>
-                        <button id="clearAllFilters" class="btn btn-outline-primary">
-                            <i data-lucide="refresh-cw"></i>
-                            Clear All Filters
-                        </button>
-                    <?php endif; ?>
+                <div class="text-center text-muted py-5">
+                    <i data-lucide="file-x" style="font-size:2.5rem;"></i>
+                    <div class="fw-semibold mt-3" style="font-size:1.2rem;">No materials found</div>
+                    <div class="text-muted mt-2">Your teachers haven't uploaded any materials yet. Check back later!</div>
                 </div>
             <?php endif; ?>
         </div>
-
-        <!-- Load More Button (if needed) -->
-        <?php if ($materialsResult->num_rows >= 50): ?>
-            <div class="load-more-container text-center mt-4">
-                <button id="loadMoreBtn" class="btn btn-outline-primary">
-                    <i data-lucide="plus"></i>
-                    Load More Materials
-                </button>
-            </div>
-        <?php endif; ?>
     </div>
-
-    <!-- Material Preview Modal -->
+    <!-- Preview Modal -->
     <div class="modal fade" id="previewModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i data-lucide="eye"></i>
-                        Material Preview
+                    <h5 class="modal-title d-flex align-items-center gap-2" id="previewModalTitle">
+                        <i data-lucide="eye"></i> <span>Material Preview</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div id="previewContent" class="text-center">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" id="downloadFromPreview" class="btn btn-primary">
-                        <i data-lucide="download"></i>
-                        Download
-                    </button>
+                <div class="modal-body" id="previewBody">
+                    <div class="text-center text-muted">Loading preview...</div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/dashboard_student.js" defer></script>
     <script>
-        // Initialize icons
         lucide.createIcons();
-
-        // Page-specific initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeMaterialsPage();
+        // Live search filter
+        const searchInput = document.getElementById('materialsSearchInput');
+        const cardGrid = document.getElementById('materialsCardGrid');
+        if (searchInput && cardGrid) {
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                cardGrid.querySelectorAll('.material-card-item').forEach(card => {
+                    const title = card.getAttribute('data-title') || '';
+                    const subject = card.getAttribute('data-subject') || '';
+                    const tags = card.getAttribute('data-tags') || '';
+                    card.style.display = (title.includes(term) || subject.includes(term) || tags.includes(term)) ? '' : 'none';
+                });
+            });
+        }
+        // Preview functionality
+        const previewBtns = document.querySelectorAll('.preview-btn');
+        previewBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const type = this.getAttribute('data-type');
+                const file = this.getAttribute('data-file');
+                const title = this.closest('.teams-card').querySelector('.teams-file-name').textContent.trim();
+                const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+                const body = document.getElementById('previewBody');
+                const modalTitle = document.getElementById('previewModalTitle').querySelector('span');
+                if (modalTitle) modalTitle.textContent = title;
+                body.innerHTML = '<div class="text-center text-muted">Loading preview...</div>';
+                modal.show();
+                // Log preview
+                fetch('log_material_access.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `id=${id}&action=view`
+                });
+                // Device detection
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                setTimeout(() => {
+                    if (type === 'pdf') {
+                        if (isMobile) {
+                            body.innerHTML = `
+                                <div class='text-center text-muted mb-3'>PDF preview is not supported on your device.</div>
+                                <div class='text-center'>
+                                    <a href="../../uploads/materials/${file}" target="_blank" class="btn btn-primary mb-2">Open PDF in New Tab</a>
+                                </div>
+                            `;
+                        } else {
+                            body.innerHTML = `
+                                <div class='d-flex flex-column align-items-center'>
+                                    <iframe src="../../uploads/materials/${file}#toolbar=0" style="width:100%;min-height:60vh;border:none;"></iframe>
+                                    <a href="../../uploads/materials/${file}" target="_blank" class="btn btn-primary mt-3">Open PDF in New Tab</a>
+                                </div>
+                            `;
+                        }
+                    } else if (type === 'pptx' || type === 'ppt') {
+                        body.innerHTML = `
+                            <div class='d-flex flex-column align-items-center'>
+                                <iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(window.location.origin + '/uploads/materials/' + file)}" style="width:100%;min-height:60vh;border:none;"></iframe>
+                                <a href="../../uploads/materials/${file}" target="_blank" class="btn btn-primary mt-3">Open in New Tab</a>
+                            </div>
+                        `;
+                    } else {
+                        body.innerHTML = `
+                            <div class='text-center text-muted mb-3'>Preview not supported for this file type.<br>Please download to view.</div>
+                            <div class='text-center'>
+                                <a href="../../uploads/materials/${file}" target="_blank" class="btn btn-primary">Download File</a>
+                            </div>
+                        `;
+                    }
+                }, 500);
+            });
         });
+        // Download logging
+        document.querySelectorAll('.download-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                fetch('log_material_access.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `id=${id}&action=download`
+                });
+            });
+        });
+
+        // Accessibility fix: blur focused element inside modal when modal is hidden
+        const previewModal = document.getElementById('previewModal');
+        if (previewModal) {
+            previewModal.addEventListener('hidden.bs.modal', function() {
+                if (document.activeElement && previewModal.contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
+            });
+        }
     </script>
 </body>
 
@@ -398,7 +295,8 @@ $recentDownloads = 0; // Placeholder - implement if needed
 
 <?php
 // Helper functions
-function formatFileSize($bytes) {
+function formatFileSize($bytes)
+{
     if ($bytes === 0) return '0 Bytes';
     $k = 1024;
     $sizes = ['Bytes', 'KB', 'MB', 'GB'];
@@ -406,7 +304,8 @@ function formatFileSize($bytes) {
     return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
 }
 
-function getFileIcon($fileType) {
+function getFileIcon($fileType)
+{
     switch (strtolower($fileType)) {
         case 'pdf':
             return 'file-text';

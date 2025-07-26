@@ -5,6 +5,7 @@ ini_set('display_errors', 1);
 
 session_start();
 require_once(__DIR__ . '/../config/db_config.php');
+require_once(__DIR__ . '/../helpers/notification_helpers.php');
 
 // Debug logging
 error_log("=== PROCESS QR ATTENDANCE REQUEST ===");
@@ -340,6 +341,9 @@ try {
         $insertPendingStmt->close();
 
         error_log("INSERTED NEW PENDING QR SCAN: StudentID {$student['StudentID']} - new pending record created");
+        
+        // Create notification for teacher about QR scan
+        notifyQRScan($conn, $student['StudentID'], $qrSession['TeacherID'], $qrSession['SubjectID'], $qrSession['SessionID']);
     }
 
     echo json_encode([

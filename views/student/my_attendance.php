@@ -70,27 +70,29 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <title>My Attendance Analytics | Attendify+</title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="../../assets/css/my_attendance.css">
-    <link rel="stylesheet" href="../../assets/css/dashboard_student.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/dashboard_student.css">
+    <link rel="stylesheet" href="../../assets/css/sidebar_student.css">
+    <link rel="stylesheet" href="../../assets/css/my_attendance.css">
 
     <!-- JS Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../../assets/js/lucide.min.js"></script>
-    <script src="../../assets/js/my_attendance.js" defer></script>
     <script src="../../assets/js/dashboard_student.js" defer></script>
+    <script src="../../assets/js/my_attendance.js" defer></script>
+    <script src="../../assets/js/navbar_student.js" defer></script>
 </head>
 
 <body>
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
     <!-- Sidebar -->
     <?php include '../components/sidebar_student_dashboard.php'; ?>
 
     <!-- Navbar -->
     <?php include '../components/navbar_student.php'; ?>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Main Content -->
     <div class="container-fluid dashboard-container main-content">
@@ -168,10 +170,10 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                         <h3 class="metric-value"><?= $stats['current_streak'] ?></h3>
                         <p class="metric-label">Current Streak</p>
                         <div class="streak-visual">
-                            <?php for($i = 0; $i < min(10, $stats['current_streak']); $i++): ?>
+                            <?php for ($i = 0; $i < min(10, $stats['current_streak']); $i++): ?>
                                 <span class="streak-dot active"></span>
                             <?php endfor; ?>
-                            <?php for($i = $stats['current_streak']; $i < 10; $i++): ?>
+                            <?php for ($i = $stats['current_streak']; $i < 10; $i++): ?>
                                 <span class="streak-dot"></span>
                             <?php endfor; ?>
                         </div>
@@ -253,7 +255,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                 <div class="btn-group btn-group-sm" role="group">
                                     <input type="radio" class="btn-check" name="trendPeriod" id="weekly" checked>
                                     <label class="btn btn-outline-primary" for="weekly">Weekly</label>
-                                    
+
                                     <input type="radio" class="btn-check" name="trendPeriod" id="monthly">
                                     <label class="btn btn-outline-primary" for="monthly">Monthly</label>
                                 </div>
@@ -288,7 +290,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                             </div>
                             <div class="legend-item">
                                 <span class="legend-color warning"></span>
-                                <span class="legend-label">Warning (<75%)</span>
+                                <span class="legend-label">Warning (<75%)< /span>
                             </div>
                         </div>
                     </div>
@@ -309,7 +311,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </div>
                     <div class="card-body">
                         <div class="subject-analysis-list">
-                            <?php foreach($subjectData as $subject): ?>
+                            <?php foreach ($subjectData as $subject): ?>
                                 <div class="subject-item">
                                     <div class="subject-info">
                                         <div class="subject-details">
@@ -327,8 +329,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                     </div>
                                     <div class="subject-progress">
                                         <div class="progress">
-                                            <div class="progress-bar progress-bar-<?= $subject['status'] ?>" 
-                                                 style="width: <?= $subject['percentage'] ?>%">
+                                            <div class="progress-bar progress-bar-<?= $subject['status'] ?>"
+                                                style="width: <?= $subject['percentage'] ?>%">
                                             </div>
                                         </div>
                                         <div class="progress-indicators">
@@ -360,7 +362,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </div>
                     <div class="card-body">
                         <div class="activity-timeline">
-                            <?php foreach($recentActivity as $activity): ?>
+                            <?php foreach ($recentActivity as $activity): ?>
                                 <div class="timeline-item">
                                     <div class="timeline-indicator <?= $activity['status'] ?>">
                                         <i data-lucide="<?= $activity['status'] === 'present' ? 'check' : 'x' ?>"></i>
@@ -381,7 +383,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                                 <i data-lucide="clock"></i>
                                                 <?= $activity['time'] ?>
                                             </span>
-                                            <?php if($activity['method'] !== 'N/A'): ?>
+                                            <?php if ($activity['method'] !== 'N/A'): ?>
                                                 <span class="timeline-method">
                                                     <i data-lucide="<?= $activity['method'] === 'QR' ? 'qr-code' : 'edit' ?>"></i>
                                                     <?= $activity['method'] ?>
@@ -480,7 +482,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                 <span class="goal-percentage">87.5% / 90%</span>
                             </div>
                         </div>
-                        
+
                         <div class="goal-item">
                             <div class="goal-header">
                                 <span class="goal-title">Improve English to 80%</span>
@@ -493,7 +495,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                 <span class="goal-percentage">72.7% / 80%</span>
                             </div>
                         </div>
-                        
+
                         <div class="goal-item">
                             <div class="goal-header">
                                 <span class="goal-title">Perfect Attendance Week</span>
@@ -531,7 +533,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                     <small class="text-muted">High Priority</small>
                                 </div>
                             </div>
-                            
+
                             <div class="recommendation-item priority-medium">
                                 <div class="recommendation-icon">
                                     <i data-lucide="calendar"></i>
@@ -542,7 +544,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                                     <small class="text-muted">Medium Priority</small>
                                 </div>
                             </div>
-                            
+
                             <div class="recommendation-item priority-low">
                                 <div class="recommendation-icon">
                                     <i data-lucide="award"></i>

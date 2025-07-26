@@ -25,104 +25,74 @@ if (!$student) {
 }
 
 // Mock assignment data (since we don't have assignments table yet)
-$upcomingAssignments = [
-    [
-        'id' => 1,
-        'title' => 'Data Structures Implementation',
-        'subject' => 'Data Structures',
-        'subject_code' => 'BCA301',
-        'teacher' => 'Prof. Smith',
-        'due_date' => date('Y-m-d H:i:s', strtotime('+3 days')),
-        'points' => 100,
-        'description' => 'Implement Binary Search Tree with all basic operations including insertion, deletion, and traversal methods.',
-        'status' => 'upcoming',
-        'submitted' => false,
-        'file_types' => ['.java', '.cpp', '.py', '.pdf'],
-        'max_size' => '10MB'
-    ],
-    [
-        'id' => 2,
-        'title' => 'Web Development Project',
-        'subject' => 'Web Technology',
-        'subject_code' => 'BCA303',
-        'teacher' => 'Prof. Johnson',
-        'due_date' => date('Y-m-d H:i:s', strtotime('+1 week')),
-        'points' => 150,
-        'description' => 'Create a responsive web application using HTML5, CSS3, and JavaScript with proper form validation.',
-        'status' => 'upcoming',
-        'submitted' => false,
-        'file_types' => ['.html', '.css', '.js', '.zip'],
-        'max_size' => '25MB'
-    ],
-    [
-        'id' => 3,
-        'title' => 'OOP Concepts Report',
-        'subject' => 'OOP in Java',
-        'subject_code' => 'BCA302',
-        'teacher' => 'Prof. Davis',
-        'due_date' => date('Y-m-d H:i:s', strtotime('+2 days')),
-        'points' => 75,
-        'description' => 'Write a comprehensive report on Object-Oriented Programming concepts with practical examples.',
-        'status' => 'upcoming',
-        'submitted' => false,
-        'file_types' => ['.pdf', '.docx'],
-        'max_size' => '5MB'
-    ]
-];
 
-$pastDueAssignments = [
-    [
-        'id' => 4,
-        'title' => 'Database Design Assignment',
-        'subject' => 'Database Systems',
-        'subject_code' => 'BCA205',
-        'teacher' => 'Prof. Wilson',
-        'due_date' => date('Y-m-d H:i:s', strtotime('-2 days')),
-        'points' => 120,
-        'description' => 'Design an ER diagram for a library management system and convert it to relational schema.',
-        'status' => 'past_due',
-        'submitted' => false,
-        'file_types' => ['.pdf', '.jpg', '.png'],
-        'max_size' => '15MB'
-    ]
-];
+// Fetch assignments uploaded by teachers from the database
+$upcomingAssignments = [];
+$pastDueAssignments = [];
+$completedAssignments = [];
 
-$completedAssignments = [
-    [
-        'id' => 5,
-        'title' => 'C Programming Basics',
-        'subject' => 'C Programming',
-        'subject_code' => 'BCA201',
-        'teacher' => 'Prof. Brown',
-        'due_date' => date('Y-m-d H:i:s', strtotime('-1 week')),
-        'submitted_date' => date('Y-m-d H:i:s', strtotime('-1 week 2 hours')),
-        'points' => 80,
-        'earned_points' => 75,
-        'grade' => 'A-',
-        'description' => 'Write programs to demonstrate basic C programming concepts including loops, arrays, and functions.',
-        'status' => 'completed',
-        'submitted' => true,
-        'feedback' => 'Good work! Your code structure is clean and well-commented. Minor improvements needed in error handling.'
-    ],
-    [
-        'id' => 6,
-        'title' => 'Digital Logic Circuits',
-        'subject' => 'Digital Logic',
-        'subject_code' => 'BCA103',
-        'teacher' => 'Prof. Anderson',
-        'due_date' => date('Y-m-d H:i:s', strtotime('-2 weeks')),
-        'submitted_date' => date('Y-m-d H:i:s', strtotime('-2 weeks 1 day')),
-        'points' => 100,
-        'earned_points' => 92,
-        'grade' => 'A',
-        'description' => 'Design and analyze combinational logic circuits using Boolean algebra.',
-        'status' => 'completed',
-        'submitted' => true,
-        'feedback' => 'Excellent work! All circuit designs are correct and well-documented.'
-    ]
-];
+$studentID = $student['StudentID'];
 
-// Function to format time remaining
+
+
+// Only show assignments for student's department and semester
+$assignmentQuery = $conn->prepare("
+    SELECT 
+        a.AssignmentID as id, 
+        a.Title as title, 
+        s.SubjectName as subject, 
+        s.SubjectCode as subject_code, 
+        t.FullName as teacher, 
+        a.DueDate as due_date, 
+        a.MaxPoints as points, 
+        a.Description as description, 
+        a.Status as status,
+        a.AttachmentFileName,
+        a.AttachmentPath
+    FROM assignments a
+    JOIN subjects s ON a.SubjectID = s.SubjectID
+    JOIN teachers t ON a.TeacherID = t.TeacherID
+    WHERE a.IsActive = 1 
+      AND a.Status IN ('active','graded')
+      AND s.DepartmentID = ? 
+      AND s.SemesterID = ?
+    ORDER BY a.DueDate ASC
+");
+$assignmentQuery->bind_param("ii", $student['DepartmentID'], $student['SemesterID']);
+$assignmentQuery->execute();
+$result = $assignmentQuery->get_result();
+
+
+while ($row = $result->fetch_assoc()) {
+    // Check if student has submitted
+    $submissionQuery = $conn->prepare("SELECT Status, SubmittedAt, Grade, Feedback, FilePath, OriginalFileName FROM assignment_submissions WHERE AssignmentID = ? AND StudentID = ? LIMIT 1");
+    $submissionQuery->bind_param("ii", $row['id'], $studentID);
+    $submissionQuery->execute();
+    $submissionRes = $submissionQuery->get_result();
+    $submission = $submissionRes->fetch_assoc();
+    $row['submitted'] = $submission ? true : false;
+    $row['submission_status'] = $submission ? $submission['Status'] : null;
+    $row['submitted_date'] = $submission ? $submission['SubmittedAt'] : null;
+    $row['grade'] = $submission ? $submission['Grade'] : null;
+    $row['feedback'] = $submission ? $submission['Feedback'] : null;
+    $row['submission_file'] = $submission ? $submission['FilePath'] : null;
+    $row['submission_file_name'] = $submission ? $submission['OriginalFileName'] : null;
+
+    $now = new DateTime();
+    $due = new DateTime($row['due_date']);
+    if ($row['submitted']) {
+        $row['status'] = 'completed';
+        $completedAssignments[] = $row;
+    } elseif ($due < $now) {
+        $row['status'] = 'past_due';
+        $pastDueAssignments[] = $row;
+    } else {
+        $row['status'] = 'upcoming';
+        $upcomingAssignments[] = $row;
+    }
+}
+
+// Helper functions
 function getTimeRemaining($dueDate)
 {
     $now = new DateTime();
@@ -170,9 +140,16 @@ function getPriorityClass($dueDate)
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/dashboard_student.css">
+    <link rel="stylesheet" href="../../assets/css/sidebar_student.css">
     <link rel="stylesheet" href="../../assets/css/submit_assignment.css">
+
+    <!-- JS Libraries -->
+    <script src="../../assets/js/lucide.min.js"></script>
+    <script src="../../assets/js/dashboard_student.js" defer></script>
+    <script src="../../assets/js/submit_assignment.js" defer></script>
+    <script src="../../assets/js/navbar_student.js" defer></script>
 </head>
 
 <body>
@@ -182,8 +159,95 @@ function getPriorityClass($dueDate)
     <!-- Navbar -->
     <?php include '../components/navbar_student.php'; ?>
 
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Main Content -->
-    <div class="container-fluid dashboard-container">
+    <div class="container-fluid dashboard-container main-content">
+        <!-- Submission Modal (static, hidden by default) -->
+        <div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="submissionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content" style="margin-top:60px;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="submissionModalLabel" style="color: var(--accent-light, #1A73E8);">
+                            <i data-lucide="upload"></i>
+                            Submit Assignment
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="submissionForm" enctype="multipart/form-data">
+                            <input type="hidden" id="assignmentId" name="assignment_id">
+                            <div class="assignment-info-card">
+                                <h6 id="modalAssignmentTitle"></h6>
+                                <div class="d-flex gap-3 text-muted">
+                                    <span id="modalSubject"></span>
+                                    <span id="modalDueDate"></span>
+                                    <span id="modalPoints"></span>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">Assignment Description</label>
+                                <div class="description-box" id="modalDescription"></div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="submissionText" class="form-label">
+                                    <i data-lucide="type"></i>
+                                    Your Response (Optional)
+                                </label>
+                                <textarea class="form-control" id="submissionText" name="submission_text" rows="4"
+                                    placeholder="Add any comments or notes about your submission..."></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label for="fileUpload" class="form-label">
+                                    <i data-lucide="paperclip"></i>
+                                    Upload Files
+                                </label>
+                                <div class="upload-zone" onclick="document.getElementById('fileUpload').click()">
+                                    <input type="file" id="fileUpload" name="files[]" multiple style="display: none;"
+                                        accept=".pdf,.doc,.docx,.txt,.jpg,.png,.zip,.rar">
+                                    <div class="upload-content">
+                                        <i data-lucide="upload-cloud" class="upload-icon"></i>
+                                        <h6>Drop files here or click to browse</h6>
+                                        <p class="text-muted">Accepted formats: <span id="acceptedFormats"></span></p>
+                                        <p class="text-muted">Maximum size: <span id="maxFileSize"></span></p>
+                                    </div>
+                                </div>
+                                <div id="fileList" class="file-list mt-3"></div>
+                            </div>
+                            <div class="submission-checklist">
+                                <h6><i data-lucide="check-square"></i> Before you submit:</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="checkComplete">
+                                    <label class="form-check-label" for="checkComplete">
+                                        I have completed all required parts of this assignment
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="checkFiles">
+                                    <label class="form-check-label" for="checkFiles">
+                                        I have attached all necessary files
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="checkOriginal">
+                                    <label class="form-check-label" for="checkOriginal">
+                                        This work is my own original work
+                                    </label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary btn-submit" id="submitBtn" onclick="submitAssignment()">
+                            <i data-lucide="send"></i>
+                            Submit Assignment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Header -->
         <div class="assignments-header">
             <div class="d-flex justify-content-between align-items-center flex-wrap">
@@ -192,6 +256,15 @@ function getPriorityClass($dueDate)
                         <i data-lucide="clipboard-list"></i>
                         Assignments
                     </h1>
+                    <style>
+                        .assignments-title {
+                            color: var(--accent-light, #1A73E8) !important;
+                        }
+
+                        body.dark-mode .assignments-title {
+                            color: var(--accent-dark, #00ffc8) !important;
+                        }
+                    </style>
                     <p class="assignments-subtitle">Manage your coursework and submissions</p>
                 </div>
                 <div class="header-actions">
@@ -202,9 +275,21 @@ function getPriorityClass($dueDate)
                     <div class="filter-dropdown">
                         <select class="form-select filter-select" id="subjectFilter">
                             <option value="">All subjects</option>
-                            <option value="BCA301">Data Structures</option>
-                            <option value="BCA302">OOP in Java</option>
-                            <option value="BCA303">Web Technology</option>
+                            <?php
+                            // Show only subjects assigned to the student
+                            $subjectListQuery = $conn->prepare("
+                                SELECT DISTINCT s.SubjectCode, s.SubjectName
+                                FROM subjects s
+                                JOIN assignments a ON a.SubjectID = s.SubjectID
+                                WHERE s.DepartmentID = ? AND s.SemesterID = ?
+                            ");
+                            $subjectListQuery->bind_param("ii", $student['DepartmentID'], $student['SemesterID']);
+                            $subjectListQuery->execute();
+                            $subjectListRes = $subjectListQuery->get_result();
+                            while ($subj = $subjectListRes->fetch_assoc()) {
+                                echo '<option value="' . htmlspecialchars($subj['SubjectCode']) . '">' . htmlspecialchars($subj['SubjectName']) . '</option>';
+                            }
+                            ?>
                         </select>
                     </div>
                 </div>
@@ -258,8 +343,8 @@ function getPriorityClass($dueDate)
                                         <span class="points"><?= $assignment['points'] ?> points</span>
                                     </div>
                                     <div class="assignment-actions">
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="viewAssignment(<?= $assignment['id'] ?>)">
-                                            <i data-lucide="eye"></i>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="openAssignmentDetailModal(<?= htmlspecialchars(json_encode($assignment)) ?>)">
+                                            <i data-lucide="eye"></i> View Assignment
                                         </button>
                                     </div>
                                 </div>
@@ -286,7 +371,12 @@ function getPriorityClass($dueDate)
                                 </div>
 
                                 <div class="assignment-footer">
-                                    <button class="btn btn-primary btn-submit" onclick="openSubmissionModal(<?= htmlspecialchars(json_encode($assignment)) ?>)">
+                                    <?php if (!empty($assignment['AttachmentPath'])): ?>
+                                        <a href="/AttendifyPlus/<?= htmlspecialchars($assignment['AttachmentPath']) ?>" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i data-lucide="download"></i> View/Download Attachment
+                                        </a>
+                                    <?php endif; ?>
+                                    <button class="btn btn-primary btn-submit" onclick='openSubmissionModal(<?= htmlspecialchars(json_encode($assignment)) ?>)'>
                                         <i data-lucide="upload"></i>
                                         Submit Assignment
                                     </button>
@@ -390,6 +480,11 @@ function getPriorityClass($dueDate)
                                 </div>
 
                                 <div class="assignment-footer">
+                                    <?php if (!empty($assignment['AttachmentPath'])): ?>
+                                        <a href="/AttendifyPlus/<?= htmlspecialchars($assignment['AttachmentPath']) ?>" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i data-lucide="download"></i> View/Download Attachment
+                                        </a>
+                                    <?php endif; ?>
                                     <button class="btn btn-outline-primary" onclick="viewSubmission(<?= $assignment['id'] ?>)">
                                         <i data-lucide="eye"></i>
                                         View Submission
@@ -403,100 +498,92 @@ function getPriorityClass($dueDate)
         </div>
     </div>
 
-    <!-- Submission Modal -->
-    <div class="modal fade" id="submissionModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i data-lucide="upload"></i>
-                        Submit Assignment
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="submissionForm" enctype="multipart/form-data">
-                        <input type="hidden" id="assignmentId" name="assignment_id">
-
-                        <div class="assignment-info-card">
-                            <h6 id="modalAssignmentTitle"></h6>
-                            <div class="d-flex gap-3 text-muted">
-                                <span id="modalSubject"></span>
-                                <span id="modalDueDate"></span>
-                                <span id="modalPoints"></span>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label">Assignment Description</label>
-                            <div class="description-box" id="modalDescription"></div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="submissionText" class="form-label">
-                                <i data-lucide="type"></i>
-                                Your Response (Optional)
-                            </label>
-                            <textarea class="form-control" id="submissionText" name="submission_text" rows="4"
-                                placeholder="Add any comments or notes about your submission..."></textarea>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="fileUpload" class="form-label">
-                                <i data-lucide="paperclip"></i>
-                                Upload Files
-                            </label>
-                            <div class="upload-zone" onclick="document.getElementById('fileUpload').click()">
-                                <input type="file" id="fileUpload" name="files[]" multiple style="display: none;"
-                                    accept=".pdf,.doc,.docx,.txt,.jpg,.png,.zip,.rar">
-                                <div class="upload-content">
-                                    <i data-lucide="upload-cloud" class="upload-icon"></i>
-                                    <h6>Drop files here or click to browse</h6>
-                                    <p class="text-muted">Accepted formats: <span id="acceptedFormats"></span></p>
-                                    <p class="text-muted">Maximum size: <span id="maxFileSize"></span></p>
-                                </div>
-                            </div>
-                            <div id="fileList" class="file-list mt-3"></div>
-                        </div>
-
-                        <div class="submission-checklist">
-                            <h6><i data-lucide="check-square"></i> Before you submit:</h6>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="checkComplete">
-                                <label class="form-check-label" for="checkComplete">
-                                    I have completed all required parts of this assignment
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="checkFiles">
-                                <label class="form-check-label" for="checkFiles">
-                                    I have attached all necessary files
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="checkOriginal">
-                                <label class="form-check-label" for="checkOriginal">
-                                    This work is my own original work
-                                </label>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitAssignment()">
-                        <i data-lucide="send"></i>
-                        Submit Assignment
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Submission Modal (created dynamically) -->
+    <script>
+        // Only populate and show the static modal
+        function openSubmissionModal(assignment) {
+            // Populate modal fields
+            document.getElementById('assignmentId').value = assignment.id;
+            document.getElementById('modalAssignmentTitle').textContent = assignment.title;
+            document.getElementById('modalSubject').textContent = assignment.subject_code + ' - ' + assignment.subject;
+            document.getElementById('modalDueDate').textContent = 'Due: ' + new Date(assignment.due_date).toLocaleString();
+            document.getElementById('modalPoints').textContent = assignment.points + ' points';
+            document.getElementById('modalDescription').textContent = assignment.description;
+            document.getElementById('submissionText').value = '';
+            document.getElementById('fileList').innerHTML = '';
+            document.getElementById('acceptedFormats').textContent = '.pdf, .doc, .docx, .txt, .jpg, .png, .zip';
+            document.getElementById('maxFileSize').textContent = '10MB';
+            // Reset checkboxes
+            var checkboxes = document.querySelectorAll('.submission-checklist input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            // Show modal using Bootstrap
+            var modal = new bootstrap.Modal(document.getElementById('submissionModal'));
+            modal.show();
+            if (typeof lucide !== "undefined") lucide.createIcons();
+        }
+    </script>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/lucide.min.js"></script>
     <script src="../../assets/js/submit_assignment.js"></script>
+    <script>
+        // Assignment Detail Modal logic
+        function openAssignmentDetailModal(assignment) {
+            let fileView = '';
+            if (assignment.AttachmentPath) {
+                let fileName = assignment.AttachmentFileName || 'Attachment';
+                let fileType = assignment.AttachmentPath.split('.').pop().toLowerCase();
+                if (fileType === 'pdf') {
+                    fileView = `<div class='mb-3'><strong>Attachment Preview:</strong><br><iframe src='${assignment.AttachmentPath}' style='width:100%;height:400px;border:1px solid #ccc;border-radius:8px;'></iframe></div>`;
+                } else if (["jpg", "jpeg", "png", "gif", "bmp"].includes(fileType)) {
+                    fileView = `<div class='mb-3'><strong>Attachment Preview:</strong><br><img src='${assignment.AttachmentPath}' alt='${fileName}' style='max-width:100%;max-height:300px;border:1px solid #ccc;border-radius:8px;' /></div>`;
+                } else {
+                    fileView = `<div class='mb-3'><strong>Attachment:</strong> <a href='${assignment.AttachmentPath}' target='_blank'><i data-lucide='file-text'></i> View/Download File</a></div>`;
+                }
+            }
+            let modalHtml = `<div class='modal fade show' id='assignmentDetailModal' tabindex='-1' style='display:block;background:rgba(0,0,0,0.5);z-index:1055;'>
+            <div class='modal-dialog modal-lg modal-dialog-centered'>
+                <div class='modal-content' style='margin-top:60px;'>
+                    <div class='modal-header'>
+                        <h5 class='modal-title'><i data-lucide='clipboard-list'></i> ${assignment.title}</h5>
+                        <button type='button' class='btn-close' onclick='closeAssignmentDetailModal()'></button>
+                    </div>
+                    <div class='modal-body'>
+                        <div class='mb-2'><strong>Subject:</strong> ${assignment.subject_code} - ${assignment.subject}</div>
+                        <div class='mb-2'><strong>Teacher:</strong> ${assignment.teacher}</div>
+                        <div class='mb-2'><strong>Due Date:</strong> ${new Date(assignment.due_date).toLocaleString()}</div>
+                        <div class='mb-2'><strong>Points:</strong> ${assignment.points}</div>
+                        <div class='mb-3'><strong>Description:</strong><br>${assignment.description}</div>
+                        ${fileView}
+                        ${assignment.submitted ? `<div class='alert alert-success'>You have already submitted this assignment.</div>` : ''}
+                    </div>
+                    <div class='modal-footer'>
+                        <button type='button' class='btn btn-secondary' onclick='closeAssignmentDetailModal()'>Close</button>
+                        ${!assignment.submitted ? `<button type='button' class='btn btn-primary' onclick='closeAssignmentDetailModal();openSubmissionModal(${JSON.stringify(assignment)})'><i data-lucide="upload"></i> Submit Assignment</button>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>`;
+            let oldModal = document.getElementById('assignmentDetailModal');
+            if (oldModal) oldModal.remove();
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            lucide.createIcons();
+            // Prevent closing by clicking outside or pressing Esc
+            document.getElementById('assignmentDetailModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    e.stopPropagation();
+                }
+            });
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAssignmentDetailModal() {
+            let modal = document.getElementById('assignmentDetailModal');
+            if (modal) modal.remove();
+            document.body.style.overflow = '';
+        }
+    </script>
 </body>
 
 </html>

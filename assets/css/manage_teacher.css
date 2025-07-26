@@ -851,6 +851,58 @@ body.dark-mode .sidebar h5 {
     flex: 1;
     max-width: 200px;
   }
+  /* Responsive teacher directory table as cards */
+  #teachersTable, #teachersTable thead, #teachersTable tbody, #teachersTable tr, #teachersTable th, #teachersTable td {
+    display: block;
+    width: 100%;
+  }
+  #teachersTable thead {
+    display: none;
+  }
+  #teachersTable tr {
+    margin-bottom: 1.5rem;
+    background: var(--card-light);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 1rem;
+    border: 1px solid var(--border-light);
+  }
+  body.dark-mode #teachersTable tr {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+  }
+  #teachersTable td {
+    border: none;
+    padding: 0.5rem 0;
+    position: relative;
+  }
+  #teachersTable td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--accent-light);
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+  }
+  body.dark-mode #teachersTable td:before {
+    color: var(--accent-dark);
+  }
+  #teachersTable .btn-group {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-start;
+  }
+  #teachersTable .btn {
+    width: auto;
+    min-width: 40px;
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+  }
+  #teachersTable .teacher-photo, #teachersTable .teacher-placeholder {
+    margin-bottom: 0.5rem;
+  }
 }
 
 @media (max-width: 576px) {
@@ -972,4 +1024,137 @@ body.dark-mode #resultsCount {
 
 body.dark-mode .filter-loading {
   background-color: var(--card-dark);
+}
+
+.teacher-details-row {
+  display: none;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  transition: all 0.3s;
+}
+.teacher-details-row.expanded {
+  display: table-row;
+}
+.teacher-details-content {
+  padding: 1rem 1.5rem;
+  font-size: 0.98rem;
+  color: #333;
+}
+.teacher-row .info-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  color: #6366f1;
+  font-size: 1.2rem;
+  vertical-align: middle;
+}
+.teacher-row .info-btn:focus {
+  outline: 2px solid #6366f1;
+}
+@media (max-width: 767.98px) {
+  .teacher-details-content {
+    padding: 1rem 0.5rem;
+    font-size: 1.05rem;
+  }
+  .teacher-row .info-btn {
+    font-size: 1.5rem;
+  }
+}
+
+.teacher-details-row.collapse.show {
+  box-shadow: 0 4px 24px rgba(26, 115, 232, 0.08);
+  border-radius: 0 0 16px 16px;
+  background: var(--card-light);
+  transition: box-shadow 0.3s, background 0.3s;
+}
+body.dark-mode .teacher-details-row.collapse.show {
+  background: var(--card-dark);
+  box-shadow: 0 4px 24px rgba(0,255,200,0.08);
+}
+@media (max-width: 767.98px) {
+  .teacher-details-row.collapse.show {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    z-index: 1050;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 24px rgba(26, 115, 232, 0.15);
+    animation: slideUpSticky 0.3s ease;
+  }
+  @keyframes slideUpSticky {
+    from { opacity: 0; transform: translateY(100%); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Hide the database ID column */
+.teacher-row td[data-label="ID"],
+.teacher-header th[data-label="ID"] {
+  display: none !important;
+}
+
+/* Status badge next to name */
+.teacher-name-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+/* Lucide info icon button */
+.info-btn {
+  background: none;
+  border: none;
+  padding: 0.25em 0.5em;
+  cursor: pointer;
+  color: #555;
+  font-size: 1.2em;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+.info-btn:hover {
+  color: #007bff;
+}
+
+/* Expandable details row */
+.teacher-details-row {
+  display: none;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+}
+.teacher-details-row.expanded {
+  display: table-row;
+  animation: fadeIn 0.3s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Details content styling */
+.teacher-details-content {
+  padding: 1em 1.5em;
+  font-size: 0.98em;
+  color: #333;
+}
+.teacher-details-content strong {
+  display: inline-block;
+  min-width: 90px;
+  color: #555;
+}
+
+@media (max-width: 767.98px) {
+  .teacher-details-content {
+    padding: 1em 0.5em;
+    font-size: 1em;
+  }
+  .info-btn {
+    font-size: 1.5em;
+    padding: 0.5em;
+  }
+  .teacher-name-badge {
+    font-size: 1.1em;
+  }
 }

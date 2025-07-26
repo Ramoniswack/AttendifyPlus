@@ -1300,7 +1300,7 @@ body.dark-mode .header-actions .btn-light:hover {
 /* Dropdown Menu in Header */
 .page-header .dropdown-menu {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  /* backdrop-filter: blur(10px); */
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 

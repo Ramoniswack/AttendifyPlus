@@ -221,59 +221,131 @@ function initializeResponsiveBehavior() {
     console.log('Responsive behavior initialized');
 }
 
-// ===== UTILITY FUNCTIONS ===== //
+// ===== NOTIFICATION FUNCTIONS ===== //
 
-function updateNotificationBadge(count) {
+function fetchAndRenderNotifications() {
+    fetch('../../api/get_notifications.php')
+        .then(res => res.json())
+        .then(data => {
+            console.log('Raw notification data from API:', data);
+            renderNotificationDropdown(data);
+            updateNotificationBadge(data.filter(n => !n.is_read).length);
+        })
+        .catch(error => {
+            console.error('Error fetching notifications:', error);
+        });
+}
+
+function renderNotificationDropdown(notifications) {
+    // Ensure notifications are sorted by latest first (double-check sorting)
+    const sortedNotifications = [...notifications].sort((a, b) => {
+        const dateA = new Date(a.created_at);
+        const dateB = new Date(b.created_at);
+        if (dateA.getTime() === dateB.getTime()) {
+            return b.id - a.id; // If same time, higher ID first
+        }
+        return dateB - dateA; // Latest first
+    });
+    
+    console.log('Rendering notifications in order from API:', sortedNotifications.map(n => ({ id: n.id, title: n.title, message: n.message, created_at: n.created_at })));
+    
+    const dropdowns = document.querySelectorAll('.notification-dropdown');
+    dropdowns.forEach(dropdown => {
+        // Clear existing dynamic notifications
+        dropdown.querySelectorAll('.dynamic-notification').forEach(el => el.remove());
+        
+        // Insert Mark All as Read button after header
+        const header = dropdown.querySelector('.dropdown-header');
+        if (header && !dropdown.querySelector('.mark-all-read-btn')) {
+            const markAllBtn = document.createElement('button');
+            markAllBtn.className = 'dropdown-item mark-all-read-btn';
+            markAllBtn.type = 'button';
+            markAllBtn.textContent = 'Mark All as Read';
+            markAllBtn.onclick = function(e) {
+                e.preventDefault();
+                markAllNotificationsAsRead();
+            };
+            header.insertAdjacentElement('afterend', markAllBtn);
+        }
+        
+        // Insert notifications in correct order (latest first)
+        sortedNotifications.forEach(n => {
+            const li = document.createElement('li');
+            li.className = 'dynamic-notification';
+            li.innerHTML = `
+                <a class="dropdown-item${n.is_read ? '' : ' fw-bold'}" href="#" onclick="markNotificationAsRead(${n.id})">
+                    <div class="notification-item">
+                        <div class="notification-icon bg-${n.type || 'info'}">
+                            <i data-lucide="${n.icon || 'bell'}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <span class="notification-title">${n.title}</span>
+                            <span class="notification-message">${n.message}</span>
+                            <span class="notification-time">${new Date(n.created_at).toLocaleString()}</span>
+                        </div>
+                    </div>
+                </a>
+            `;
+            const firstDivider = dropdown.querySelector('.dropdown-divider');
+            if (firstDivider) firstDivider.parentNode.insertBefore(li, firstDivider.nextSibling);
+        });
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+}
+
+// Function to mark notification as read
+function markNotificationAsRead(notificationId) {
+    fetch('../../api/mark_notification_read.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `notification_id=${notificationId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the notification to show as read (remove bold)
+            const notificationElement = document.querySelector(`[onclick="markNotificationAsRead(${notificationId})"]`);
+            if (notificationElement) {
+                notificationElement.classList.remove('fw-bold');
+            }
+            // Refresh notifications to update badge count only
+            fetchAndRenderNotifications();
+        }
+    })
+    .catch(error => {
+        console.error('Error marking notification as read:', error);
+    });
+}
+
+function markAllNotificationsAsRead() {
+    fetch('../../api/mark_all_notifications_read.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            fetchAndRenderNotifications();
+        }
+    });
+}
+
+function updateNotificationBadge(unreadCount) {
     const desktopBadge = document.querySelector('.notification-badge');
     const mobileBadge = document.querySelector('.mobile-notification-badge');
-    
     [desktopBadge, mobileBadge].forEach(badge => {
         if (badge) {
-            if (count > 0) {
-                badge.textContent = count > 99 ? '99+' : count.toString();
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount.toString();
                 badge.style.display = 'inline';
             } else {
                 badge.style.display = 'none';
             }
         }
     });
-    
-    console.log('Notification badge updated:', count);
-}
-
-function addNotification(notification) {
-    const dropdowns = document.querySelectorAll('.notification-dropdown');
-    
-    dropdowns.forEach(dropdown => {
-        if (!dropdown) return;
-
-        const notificationHTML = `
-            <li>
-                <a class="dropdown-item" href="${notification.link || '#'}">
-                    <div class="notification-item">
-                        <div class="notification-icon ${notification.iconClass || 'bg-info'}">
-                            <i data-lucide="${notification.icon || 'bell'}"></i>
-                        </div>
-                        <div class="notification-content">
-                            <span class="notification-title">${notification.title}</span>
-                            <span class="notification-time">${notification.time}</span>
-                        </div>
-                    </div>
-                </a>
-            </li>
-        `;
-
-        const firstDivider = dropdown.querySelector('.dropdown-divider');
-        if (firstDivider && firstDivider.parentNode) {
-            firstDivider.parentNode.insertAdjacentHTML('afterend', notificationHTML);
-        }
-    });
-
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
-    
-    console.log('Notification added:', notification.title);
 }
 
 // ===== INITIALIZATION ===== //
@@ -314,6 +386,8 @@ function initializeNavbar() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing enhanced navbar...');
     initializeNavbar();
+    fetchAndRenderNotifications(); // Fetch on page load
+    setInterval(fetchAndRenderNotifications, 30000); // Auto-refresh every 30 seconds
 });
 
 window.addEventListener('load', function() {
@@ -342,8 +416,6 @@ window.addEventListener('storage', function(e) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         toggleTheme,
-        updateNotificationBadge,
-        addNotification,
         initializeNavbar,
         closeSidebar,
         openSidebar
