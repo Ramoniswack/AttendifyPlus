@@ -1,0 +1,310 @@
+erDiagram
+    %% Core Tables
+    login_tbl {
+        int LoginID PK
+        varchar Email UK
+        varchar Password
+        enum Role
+        enum Status
+        datetime CreatedDate
+    }
+    
+    departments {
+        int DepartmentID PK
+        varchar DepartmentName UK
+        varchar DepartmentCode UK
+    }
+    
+    semesters {
+        int SemesterID PK
+        int SemesterNumber
+    }
+    
+    %% User Tables
+    admins {
+        int AdminID PK
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int LoginID FK,UK
+    }
+    
+    teachers {
+        int TeacherID PK
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int LoginID FK,UK
+    }
+    
+    students {
+        int StudentID PK
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int DepartmentID FK
+        int SemesterID FK
+        year JoinYear
+        varchar ProgramCode
+        boolean DeviceRegistered
+        int LoginID FK,UK
+    }
+    
+    %% Academic Tables
+    subjects {
+        int SubjectID PK
+        varchar SubjectCode
+        varchar SubjectName
+        int CreditHour
+        int LectureHour
+        boolean IsElective
+        int DepartmentID FK
+        int SemesterID FK
+    }
+    
+    teacher_subject_map {
+        int MapID PK
+        int TeacherID FK
+        int SubjectID FK
+    }
+    
+    teacher_department_map {
+        int MapID PK
+        int TeacherID FK
+        int DepartmentID FK
+    }
+    
+    %% Attendance System
+    attendance_records {
+        int AttendanceID PK
+        int StudentID FK
+        int SubjectID FK
+        int TeacherID FK
+        datetime DateTime
+        enum Status
+        enum Method
+    }
+    
+    qr_attendance_sessions {
+        int SessionID PK
+        int TeacherID FK
+        int SubjectID FK
+        date Date
+        varchar QRToken
+        datetime ExpiresAt
+        boolean IsActive
+        datetime CreatedAt
+    }
+    
+    qr_attendance_pending {
+        int PendingID PK
+        int StudentID FK
+        int TeacherID FK
+        int SubjectID FK
+        int SessionID FK
+        datetime CreatedAt
+        varchar Status
+    }
+    
+    %% Device Management
+    device_registration_tokens {
+        int TokenID PK
+        int StudentID FK
+        varchar Token
+        datetime ExpiresAt
+        boolean Used
+        datetime CreatedAt
+    }
+    
+    student_devices {
+        int DeviceID PK
+        int StudentID FK
+        varchar DeviceFingerprint
+        varchar DeviceName
+        text DeviceInfo
+        boolean IsActive
+        datetime RegisteredAt
+        datetime LastUsed
+    }
+    
+    %% Materials System
+    materials {
+        int MaterialID PK
+        int TeacherID FK
+        int SubjectID FK
+        varchar Title
+        text Description
+        varchar FileName
+        varchar OriginalFileName
+        bigint FileSize
+        varchar FileType
+        varchar FilePath
+        datetime UploadDateTime
+        boolean IsActive
+        int DownloadCount
+        varchar Tags
+    }
+    
+    material_access_logs {
+        int LogID PK
+        int MaterialID FK
+        int StudentID FK
+        int TeacherID FK
+        datetime AccessDateTime
+        enum ActionType
+        varchar IPAddress
+    }
+    
+    %% Assignments System
+    assignments {
+        int AssignmentID PK
+        int TeacherID FK
+        int SubjectID FK
+        varchar Title
+        text Description
+        text Instructions
+        datetime DueDate
+        int MaxPoints
+        enum Status
+        datetime CreatedAt
+        datetime UpdatedAt
+        boolean IsActive
+        varchar AttachmentPath
+        varchar AttachmentFileName
+        bigint AttachmentFileSize
+        varchar AttachmentFileType
+        enum SubmissionType
+        boolean AllowLateSubmissions
+        text GradingRubric
+    }
+    
+    assignment_submissions {
+        int SubmissionID PK
+        int AssignmentID FK
+        int StudentID FK
+        text SubmissionText
+        varchar FilePath
+        varchar OriginalFileName
+        bigint FileSize
+        datetime SubmittedAt
+        boolean IsLate
+        enum Status
+        decimal Grade
+        decimal MaxGrade
+        text Feedback
+        datetime GradedAt
+        int GradedBy FK
+    }
+    
+    assignment_views {
+        int ViewID PK
+        int AssignmentID FK
+        int StudentID FK
+        datetime ViewedAt
+        int ViewCount
+        datetime LastViewedAt
+    }
+    
+    assignment_submission_files {
+        int FileID PK
+        int SubmissionID FK
+        varchar FileName
+        varchar FilePath
+        bigint FileSize
+        varchar FileType
+        datetime UploadedAt
+    }
+    
+    %% Notifications System
+    notifications {
+        int id PK
+        int user_id
+        varchar role
+        int department_id FK
+        int subject_id FK
+        int teacher_id FK
+        int student_id FK
+        varchar title
+        text message
+        varchar icon
+        varchar type
+        varchar action_type
+        json action_data
+        datetime created_at
+    }
+    
+    notification_reads {
+        int id PK
+        int notification_id FK
+        int user_id
+        datetime read_at
+    }
+    
+    %% Academic History
+    student_academic_history {
+        int HistoryID PK
+        int StudentID
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int DepartmentID FK
+        int SemesterID FK
+        year JoinYear
+        varchar ProgramCode
+        int LoginID
+        enum Status
+        text Reason
+        datetime ActionDate
+        int ActionBy FK
+    }
+    
+    %% Relationships
+    login_tbl ||--|| admins : "has"
+    login_tbl ||--|| teachers : "has"
+    login_tbl ||--|| students : "has"
+    
+    departments ||--o{ students : "belongs_to"
+    departments ||--o{ subjects : "offers"
+    departments ||--o{ teacher_department_map : "has"
+    
+    semesters ||--o{ students : "enrolled_in"
+    semesters ||--o{ subjects : "taught_in"
+    
+    teachers ||--o{ teacher_subject_map : "teaches"
+    teachers ||--o{ teacher_department_map : "works_in"
+    teachers ||--o{ attendance_records : "takes_attendance"
+    teachers ||--o{ qr_attendance_sessions : "creates"
+    teachers ||--o{ materials : "uploads"
+    teachers ||--o{ assignments : "creates"
+    teachers ||--o{ assignment_submissions : "grades"
+    
+    subjects ||--o{ teacher_subject_map : "taught_by"
+    subjects ||--o{ attendance_records : "has_attendance"
+    subjects ||--o{ qr_attendance_sessions : "has_sessions"
+    subjects ||--o{ materials : "has_materials"
+    subjects ||--o{ assignments : "has_assignments"
+    
+    students ||--o{ attendance_records : "attends"
+    students ||--o{ qr_attendance_pending : "scans_qr"
+    students ||--o{ device_registration_tokens : "registers_device"
+    students ||--o{ student_devices : "owns_device"
+    students ||--o{ material_access_logs : "accesses_material"
+    students ||--o{ assignment_submissions : "submits"
+    students ||--o{ assignment_views : "views"
+    
+    qr_attendance_sessions ||--o{ qr_attendance_pending : "generates"
+    
+    materials ||--o{ material_access_logs : "tracked"
+    
+    assignments ||--o{ assignment_submissions : "receives"
+    assignments ||--o{ assignment_views : "viewed"
+    
+    assignment_submissions ||--o{ assignment_submission_files : "contains"
+    
+    notifications ||--o{ notification_reads : "read_by"
+    
+    admins ||--o{ student_academic_history : "manages"

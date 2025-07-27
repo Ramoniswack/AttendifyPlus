@@ -1,0 +1,102 @@
+flowchart TD
+    A[Admin Login] --> B{Authentication<br/>Success?}
+    B -->|No| A
+    B -->|Yes| C[Admin Dashboard]
+    
+    C --> D[User Management]
+    C --> E[Department Management]
+    C --> F[Subject Management]
+    C --> G[Academic Management]
+    C --> H[Reports & Analytics]
+    C --> I[System Settings]
+    C --> Z[Logout]
+    
+    %% User Management Flow
+    D --> D1{Select User Type}
+    D1 -->|Teachers| D2[Teacher Management]
+    D1 -->|Students| D3[Student Management]
+    D1 -->|Login Accounts| D4[Account Management]
+    
+    D2 --> D2a[Add Teacher]
+    D2a --> D2b[Edit Teacher Profile]
+    D2b --> D2c[Assign Subjects to Teacher]
+    D2c --> D2d[Assign Department to Teacher]
+    D2d --> D2e[View Teacher Details]
+    D2e --> D2f[Activate/Deactivate Teacher]
+    
+    D3 --> D3a[Add Student]
+    D3a --> D3b[Edit Student Profile]
+    D3b --> D3c[Transfer Student Department]
+    D3c --> D3d[Graduate Student]
+    D3d --> D3e[Mark Student as Dropout]
+    D3e --> D3f[View Student Academic History]
+    
+    D4 --> D4a[Create New Login Account]
+    D4a --> D4b[Reset User Password]
+    D4b --> D4c[Change Account Status]
+    D4c --> D4d[Assign User Roles]
+    
+    %% Department Management Flow
+    E --> E1[Add New Department]
+    E1 --> E2[Edit Department Details]
+    E2 --> E3[Set Department Code]
+    E3 --> E4[Assign Teachers to Department]
+    E4 --> E5[View Department Statistics]
+    
+    %% Subject Management Flow
+    F --> F1[Add New Subject]
+    F1 --> F2[Edit Subject Details]
+    F2 --> F3[Set Subject Code & Name]
+    F3 --> F4[Set Credit Hours]
+    F4 --> F5[Set Lecture Hours]
+    F5 --> F6[Mark as Elective/Core]
+    F6 --> F7[Assign to Department]
+    F7 --> F8[Assign to Semester]
+    
+    %% Academic Management Flow
+    G --> G1[Manage Semesters]
+    G1 --> G2[Add/Edit Semester]
+    G2 --> G3[View Academic History]
+    G3 --> G4[Generate Graduation Reports]
+    G4 --> G5[Manage Program Codes]
+    
+    %% Reports & Analytics Flow
+    H --> H1{Select Report Type}
+    H1 -->|Attendance| H2[Attendance Reports]
+    H1 -->|Academic| H3[Academic Reports]
+    H1 -->|System| H4[System Usage Reports]
+    
+    H2 --> H2a[Overall Attendance Statistics]
+    H2a --> H2b[Department-wise Attendance]
+    H2b --> H2c[Subject-wise Attendance]
+    H2c --> H2d[Student Attendance History]
+    H2d --> H2e[Export Attendance Reports]
+    
+    H3 --> H3a[Student Performance Reports]
+    H3a --> H3b[Teacher Performance Analytics]
+    H3b --> H3c[Department Analytics]
+    H3c --> H3d[Assignment Statistics]
+    H3d --> H3e[Material Usage Reports]
+    
+    H4 --> H4a[User Activity Logs]
+    H4a --> H4b[System Performance Metrics]
+    H4b --> H4c[Login Statistics]
+    H4c --> H4d[Feature Usage Analytics]
+    
+    %% System Settings Flow
+    I --> I1[Notification Management]
+    I1 --> I2[Send System Notifications]
+    I2 --> I3[Create Notification Templates]
+    I3 --> I4[View Notification History]
+    I4 --> I5[System Configuration]
+    I5 --> I6[Database Backup & Maintenance]
+    I6 --> I7[User Permission Settings]
+    
+    style A fill:#e1f5fe
+    style C fill:#f3e5f5
+    style D fill:#fff3e0
+    style E fill:#fff3e0
+    style F fill:#fff3e0
+    style G fill:#fff3e0
+    style H fill:#e8f5e8
+    style I fill:#fce4ec

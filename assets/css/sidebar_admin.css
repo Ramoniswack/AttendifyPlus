@@ -3,18 +3,58 @@
  * Copied from sidebar_teacher.css for consistency
  */ 
 
+/* SIDEBAR BASE STYLES */
+.sidebar {
+  position: fixed;
+  top: 56px;
+  left: -250px;
+  width: 250px;
+  height: calc(100vh - 56px);
+  background-color: var(--card-light);
+  padding-top: 1rem;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  z-index: 1050;
+  transition: left 0.3s ease;
+}
+
+.sidebar.active {
+  left: 0;
+}
+
+body.dark-mode .sidebar {
+  background-color: var(--card-dark);
+  color: var(--text-dark);
+}
+
+/* SIDEBAR TITLE */
+.sidebar h5 {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 25px;
+  color: var(--accent-light);
+}
+
+body.dark-mode .sidebar h5 {
+  color: var(--accent-dark);
+}
+
+/* SIDEBAR NAV LINKS */
 .sidebar .nav-link {
   color: var(--text-light);
   font-size: 1rem;
   padding: 8px 12px;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s;
   margin-bottom: 10px;
   display: flex;
   align-items: center;
   text-decoration: none;
   position: relative;
   overflow: hidden;
+}
+
+body.dark-mode .sidebar .nav-link {
+  color: var(--text-dark);
 }
 
 .sidebar .nav-link::before {
@@ -37,4 +77,106 @@
   color: var(--accent-light);
   transform: translateX(5px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .sidebar .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--accent-dark);
+}
+
+.sidebar .nav-link.active {
+  background-color: var(--accent-light);
+  color: white;
+}
+
+body.dark-mode .sidebar .nav-link.active {
+  background-color: var(--accent-dark);
+  color: black;
+}
+
+/* HORIZONTAL RULE */
+.sidebar hr {
+  border-color: var(--text-light);
+  opacity: 0.3;
+}
+
+body.dark-mode .sidebar hr {
+  border-color: var(--text-dark);
+  opacity: 0.3;
+}
+
+/* LOGOUT LINK */
+.sidebar .nav-link.text-danger {
+  color: #dc3545 !important;
+}
+
+body.dark-mode .sidebar .nav-link.text-danger {
+  color: #ff6b6b !important;
+}
+
+.sidebar .nav-link.text-danger:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545 !important;
+}
+
+body.dark-mode .sidebar .nav-link.text-danger:hover {
+  background-color: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b !important;
+}
+
+/* OVERLAY */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 56px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1040;
+}
+
+body.sidebar-open .sidebar-overlay {
+  display: block;
+}
+
+/* PUSH EFFECT */
+body.sidebar-open .dashboard-container {
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+}
+
+@media (max-width: 767.98px) {
+  body.sidebar-open .dashboard-container {
+    pointer-events: none;
+    filter: blur(2px);
+  }
+}
+
+@media (min-width: 768px) {
+  body.sidebar-open .dashboard-container {
+    margin-left: 250px !important;
+    pointer-events: auto;
+    filter: none;
+  }
+}
+
+/* CSS VARIABLES */
+:root {
+  --bg-light: linear-gradient(to right, #f0f4f8, #e8f0fe);
+  --bg-dark: #121212;
+  --card-light: #ffffff;
+  --card-dark: #1f1f1f;
+  --text-light: #333;
+  --text-dark: #eee;
+  --accent-light: #1A73E8;
+  --accent-dark: #00ffc8;
+  --navbar-light: var(--accent-light);
+  --navbar-dark: var(--accent-dark);
+  --text-muted-light: #6c757d;
+  --text-muted-dark: #a0a0a0;
+  --border-light: #f8f9fa;
+  --border-dark: #333;
+  --shadow-light: rgba(0, 0, 0, 0.1);
+  --shadow-dark: rgba(0, 0, 0, 0.3);
 } 

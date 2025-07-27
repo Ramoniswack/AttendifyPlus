@@ -1,0 +1,247 @@
+<?php
+session_start();
+require_once(__DIR__ . '/../config/db_config.php');
+
+// Check session
+if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'teacher') {
+    header("Location: ../views/auth/login.php");
+    exit();
+}
+
+$loginID = $_SESSION['LoginID'];
+
+// Get teacher info
+$teacherStmt = $conn->prepare("SELECT TeacherID, FullName FROM teachers WHERE LoginID = ?");
+$teacherStmt->bind_param("i", $loginID);
+$teacherStmt->execute();
+$teacherRes = $teacherStmt->get_result();
+$teacherRow = $teacherRes->fetch_assoc();
+
+if (!$teacherRow) {
+    header("Location: ../views/logout.php");
+    exit();
+}
+
+$teacherID = $teacherRow['TeacherID'];
+
+// Get parameters
+$subjectID = $_GET['subject'] ?? null;
+$date = $_GET['date'] ?? null;
+$month = $_GET['month'] ?? null;
+
+if (!$subjectID || (!$date && !$month)) {
+    die("Missing required parameters");
+}
+
+// Verify teacher has access to this subject
+$subjectCheck = $conn->prepare("
+    SELECT s.SubjectID, s.SubjectCode, s.SubjectName, d.DepartmentName, sem.SemesterNumber
+    FROM subjects s
+    JOIN teacher_subject_map tsm ON s.SubjectID = tsm.SubjectID
+    JOIN departments d ON s.DepartmentID = d.DepartmentID
+    JOIN semesters sem ON s.SemesterID = sem.SemesterID
+    WHERE tsm.TeacherID = ? AND s.SubjectID = ?
+");
+$subjectCheck->bind_param("ii", $teacherID, $subjectID);
+$subjectCheck->execute();
+$subjectResult = $subjectCheck->get_result();
+$subject = $subjectResult->fetch_assoc();
+
+if (!$subject) {
+    die("Access denied to this subject");
+}
+
+// Get students for the subject
+$studentsQuery = $conn->prepare("
+    SELECT s.StudentID, s.FullName, s.Contact, d.DepartmentName, sem.SemesterNumber
+    FROM students s
+    JOIN subjects sub ON s.SemesterID = sub.SemesterID AND s.DepartmentID = sub.DepartmentID
+    JOIN departments d ON s.DepartmentID = d.DepartmentID
+    JOIN semesters sem ON s.SemesterID = sem.SemesterID
+    WHERE sub.SubjectID = ?
+    ORDER BY s.FullName
+");
+$studentsQuery->bind_param("i", $subjectID);
+$studentsQuery->execute();
+$studentsResult = $studentsQuery->get_result();
+$students = [];
+while ($row = $studentsResult->fetch_assoc()) {
+    $students[] = $row;
+}
+
+// Get attendance data
+$attendanceData = [];
+$summaryData = [];
+
+if ($date) {
+    // Daily attendance
+    $attendanceQuery = $conn->prepare("
+        SELECT ar.StudentID, ar.Status, ar.Method, ar.DateTime, s.FullName
+        FROM attendance_records ar
+        JOIN students s ON ar.StudentID = s.StudentID
+        WHERE ar.TeacherID = ? AND ar.SubjectID = ? AND DATE(ar.DateTime) = ?
+        ORDER BY s.FullName
+    ");
+    $attendanceQuery->bind_param("iis", $teacherID, $subjectID, $date);
+    $attendanceQuery->execute();
+    $attendanceResult = $attendanceQuery->get_result();
+    while ($row = $attendanceResult->fetch_assoc()) {
+        $attendanceData[$row['StudentID']] = $row;
+    }
+} elseif ($month) {
+    // Monthly summary
+    $summaryQuery = $conn->prepare("
+        SELECT 
+            COUNT(*) as total_records,
+            SUM(CASE WHEN Status = 'present' THEN 1 ELSE 0 END) as present_count,
+            SUM(CASE WHEN Status = 'absent' THEN 1 ELSE 0 END) as absent_count,
+            SUM(CASE WHEN Status = 'late' THEN 1 ELSE 0 END) as late_count,
+            SUM(CASE WHEN Method = 'qr' THEN 1 ELSE 0 END) as qr_count,
+            SUM(CASE WHEN Method = 'manual' THEN 1 ELSE 0 END) as manual_count
+        FROM attendance_records 
+        WHERE TeacherID = ? AND SubjectID = ? AND DATE_FORMAT(DateTime, '%Y-%m') = ?
+    ");
+    $summaryQuery->bind_param("iis", $teacherID, $subjectID, $month);
+    $summaryQuery->execute();
+    $summaryResult = $summaryQuery->get_result();
+    $summaryData = $summaryResult->fetch_assoc();
+}
+
+// Calculate daily statistics
+$presentCount = 0;
+$absentCount = 0;
+$lateCount = 0;
+$qrCount = 0;
+$manualCount = 0;
+
+foreach ($attendanceData as $attendance) {
+    if ($attendance['Status'] == 'present') $presentCount++;
+    elseif ($attendance['Status'] == 'absent') $absentCount++;
+    elseif ($attendance['Status'] == 'late') $lateCount++;
+
+    if ($attendance['Method'] == 'qr') $qrCount++;
+    elseif ($attendance['Method'] == 'manual') $manualCount++;
+}
+
+// Count unmarked students as absent
+$markedStudents = count($attendanceData);
+$totalStudents = count($students);
+$absentCount += ($totalStudents - $markedStudents);
+
+// Set headers for CSV download
+$reportType = $date ? 'Daily' : 'Monthly';
+$filename = "Attendance_Report_" . $subject['SubjectCode'] . "_" . ($date ? $date : $month) . "_" . date('Y-m-d') . ".csv";
+header('Content-Type: text/csv');
+header('Content-Disposition: attachment; filename="' . $filename . '"');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+// Create CSV file
+$output = fopen('php://output', 'w');
+
+// Write header
+fputcsv($output, ['ATTENDANCE REPORT']);
+fputcsv($output, ['Generated on: ' . date('Y-m-d H:i:s')]);
+fputcsv($output, ['Generated by: ' . $teacherRow['FullName']]);
+fputcsv($output, []);
+
+// Subject Information
+fputcsv($output, ['SUBJECT INFORMATION']);
+fputcsv($output, ['Subject Code', $subject['SubjectCode']]);
+fputcsv($output, ['Subject Name', $subject['SubjectName']]);
+fputcsv($output, ['Department', $subject['DepartmentName']]);
+fputcsv($output, ['Semester', $subject['SemesterNumber']]);
+fputcsv($output, ['Report Type', $reportType . ' Report']);
+fputcsv($output, ['Report Date', $date ? $date : $month]);
+fputcsv($output, []);
+
+if ($date) {
+    // Daily Summary
+    fputcsv($output, ['DAILY SUMMARY']);
+    fputcsv($output, ['Total Students', $totalStudents]);
+    fputcsv($output, ['Present', $presentCount]);
+    fputcsv($output, ['Absent', $absentCount]);
+    fputcsv($output, ['Late', $lateCount]);
+    fputcsv($output, ['Attendance Percentage', $totalStudents > 0 ? round((($presentCount + $lateCount) / $totalStudents) * 100, 2) . '%' : '0%']);
+    fputcsv($output, ['QR Code Attendance', $qrCount]);
+    fputcsv($output, ['Manual Attendance', $manualCount]);
+    fputcsv($output, []);
+
+    // Daily Attendance Details
+    fputcsv($output, ['DAILY ATTENDANCE DETAILS']);
+    fputcsv($output, ['#', 'Student Name', 'Contact', 'Department', 'Semester', 'Status', 'Method', 'Time']);
+
+    foreach ($students as $index => $student) {
+        $attendance = $attendanceData[$student['StudentID']] ?? null;
+
+        fputcsv($output, [
+            $index + 1,
+            $student['FullName'],
+            $student['Contact'],
+            $student['DepartmentName'],
+            $student['SemesterNumber'],
+            $attendance ? ucfirst($attendance['Status']) : 'Not Marked',
+            $attendance ? ucfirst($attendance['Method']) : '-',
+            $attendance ? date('h:i A', strtotime($attendance['DateTime'])) : '-'
+        ]);
+    }
+} elseif ($month) {
+    // Monthly Summary
+    fputcsv($output, ['MONTHLY SUMMARY']);
+    fputcsv($output, ['Total Records', $summaryData['total_records'] ?? 0]);
+    fputcsv($output, ['Present', $summaryData['present_count'] ?? 0]);
+    fputcsv($output, ['Absent', $summaryData['absent_count'] ?? 0]);
+    fputcsv($output, ['Late', $summaryData['late_count'] ?? 0]);
+    fputcsv($output, ['QR Code Attendance', $summaryData['qr_count'] ?? 0]);
+    fputcsv($output, ['Manual Attendance', $summaryData['manual_count'] ?? 0]);
+    fputcsv($output, []);
+
+    // Monthly attendance by student
+    fputcsv($output, ['MONTHLY ATTENDANCE BY STUDENT']);
+    fputcsv($output, ['Student Name', 'Contact', 'Department', 'Semester', 'Total Sessions', 'Present', 'Absent', 'Late', 'Attendance %', 'QR Count', 'Manual Count']);
+
+    foreach ($students as $student) {
+        $studentQuery = $conn->prepare("
+            SELECT 
+                COUNT(*) as total_sessions,
+                SUM(CASE WHEN Status = 'present' THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN Status = 'absent' THEN 1 ELSE 0 END) as absent_count,
+                SUM(CASE WHEN Status = 'late' THEN 1 ELSE 0 END) as late_count,
+                SUM(CASE WHEN Method = 'qr' THEN 1 ELSE 0 END) as qr_count,
+                SUM(CASE WHEN Method = 'manual' THEN 1 ELSE 0 END) as manual_count
+            FROM attendance_records 
+            WHERE StudentID = ? AND SubjectID = ? AND TeacherID = ? AND DATE_FORMAT(DateTime, '%Y-%m') = ?
+        ");
+        $studentQuery->bind_param("iiis", $student['StudentID'], $subjectID, $teacherID, $month);
+        $studentQuery->execute();
+        $studentResult = $studentQuery->get_result();
+        $studentStats = $studentResult->fetch_assoc();
+
+        $totalSessions = $studentStats['total_sessions'];
+        $presentCount = $studentStats['present_count'];
+        $attendancePercentage = $totalSessions > 0 ? round(($presentCount / $totalSessions) * 100, 2) : 0;
+
+        fputcsv($output, [
+            $student['FullName'],
+            $student['Contact'],
+            $student['DepartmentName'],
+            $student['SemesterNumber'],
+            $totalSessions,
+            $presentCount,
+            $studentStats['absent_count'],
+            $studentStats['late_count'],
+            $attendancePercentage . '%',
+            $studentStats['qr_count'],
+            $studentStats['manual_count']
+        ]);
+    }
+}
+
+fputcsv($output, []);
+
+// Footer
+fputcsv($output, ['Report generated by Attendify+']);
+fputcsv($output, ['For any queries, contact the system administrator']);
+
+fclose($output);
+exit();

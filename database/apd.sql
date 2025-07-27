@@ -232,6 +232,65 @@ CREATE TABLE IF NOT EXISTS qr_attendance_pending (
 );
 
 
+-- Create assignments table
+CREATE TABLE IF NOT EXISTS `assignments` (
+  `AssignmentID` int(11) NOT NULL AUTO_INCREMENT,
+  `TeacherID` int(11) NOT NULL,
+  `SubjectID` int(11) NOT NULL,
+  `Title` varchar(255) NOT NULL,
+  `Description` text,
+  `Instructions` text,
+  `DueDate` datetime DEFAULT NULL,
+  `MaxPoints` int(11) DEFAULT 100,
+  `Status` enum('draft','active','graded','archived') DEFAULT 'draft',
+  `CreatedAt` datetime DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `IsActive` tinyint(1) DEFAULT 1,
+  `AttachmentPath` varchar(500) DEFAULT NULL,
+  `AttachmentFileName` varchar(255) DEFAULT NULL,
+  `AttachmentFileSize` bigint(20) DEFAULT NULL,
+  `AttachmentFileType` varchar(50) DEFAULT NULL,
+  `SubmissionType` enum('file','text','both') DEFAULT 'both',
+  `AllowLateSubmissions` tinyint(1) DEFAULT 0,
+  `GradingRubric` text,
+  PRIMARY KEY (`AssignmentID`),
+  KEY `TeacherID` (`TeacherID`),
+  KEY `SubjectID` (`SubjectID`),
+  KEY `Status` (`Status`),
+  KEY `DueDate` (`DueDate`),
+  FOREIGN KEY (`TeacherID`) REFERENCES `teachers` (`TeacherID`) ON DELETE CASCADE,
+  FOREIGN KEY (`SubjectID`) REFERENCES `subjects` (`SubjectID`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Create assignment submissions table
+CREATE TABLE IF NOT EXISTS `assignment_submissions` (
+  `SubmissionID` int(11) NOT NULL AUTO_INCREMENT,
+  `AssignmentID` int(11) NOT NULL,
+  `StudentID` int(11) NOT NULL,
+  `SubmissionText` text,
+  `FilePath` varchar(500) DEFAULT NULL,
+  `OriginalFileName` varchar(255) DEFAULT NULL,
+  `FileSize` bigint(20) DEFAULT NULL,
+  `SubmittedAt` datetime DEFAULT CURRENT_TIMESTAMP,
+  `IsLate` tinyint(1) DEFAULT 0,
+  `Status` enum('submitted','graded','returned') DEFAULT 'submitted',
+  `Grade` decimal(5,2) DEFAULT NULL,
+  `MaxGrade` decimal(5,2) DEFAULT NULL,
+  `Feedback` text,
+  `GradedAt` datetime DEFAULT NULL,
+  `GradedBy` int(11) DEFAULT NULL,
+  PRIMARY KEY (`SubmissionID`),
+  UNIQUE KEY `unique_assignment_student` (`AssignmentID`,`StudentID`),
+  KEY `AssignmentID` (`AssignmentID`),
+  KEY `StudentID` (`StudentID`),
+  KEY `Status` (`Status`),
+  KEY `GradedBy` (`GradedBy`),
+  FOREIGN KEY (`AssignmentID`) REFERENCES `assignments` (`AssignmentID`) ON DELETE CASCADE,
+  FOREIGN KEY (`StudentID`) REFERENCES `students` (`StudentID`) ON DELETE CASCADE,
+  FOREIGN KEY (`GradedBy`) REFERENCES `teachers` (`TeacherID`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Create assignment views table to track when students view assignments
 CREATE TABLE IF NOT EXISTS `assignment_views` (
   `ViewID` int(11) NOT NULL AUTO_INCREMENT,
   `AssignmentID` int(11) NOT NULL,
@@ -248,28 +307,90 @@ CREATE TABLE IF NOT EXISTS `assignment_views` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
+-- Create indexes for better performance
+CREATE INDEX idx_assignments_teacher_status ON assignments(TeacherID, Status);
+CREATE INDEX idx_assignments_subject_status ON assignments(SubjectID, Status);
+CREATE INDEX idx_assignments_due_date ON assignments(DueDate);
+CREATE INDEX idx_submissions_assignment_student ON assignment_submissions(AssignmentID, StudentID);
+CREATE INDEX idx_submissions_status ON assignment_submissions(Status);
 
+CREATE TABLE IF NOT EXISTS `assignment_submission_files` (
+  `FileID` int(11) NOT NULL AUTO_INCREMENT,
+  `SubmissionID` int(11) NOT NULL,
+  `FileName` varchar(255) NOT NULL,
+  `FilePath` varchar(500) NOT NULL,
+  `FileSize` bigint(20) NOT NULL,
+  `FileType` varchar(50) DEFAULT NULL,
+  `UploadedAt` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`FileID`),
+  KEY `SubmissionID` (`SubmissionID`),
+  FOREIGN KEY (`SubmissionID`) REFERENCES `assignment_submissions` (`SubmissionID`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+
+-- Enhanced notifications table with better targeting
 CREATE TABLE notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NULL,           -- For user-specific notifications
-    role VARCHAR(20) NULL,      -- For role-based notifications ('student', 'teacher', 'admin')
+    user_id INT NULL,                    -- For user-specific notifications
+    role VARCHAR(20) NULL,               -- For role-based notifications ('student', 'teacher', 'admin')
+    department_id INT NULL,              -- For department-specific notifications
+    subject_id INT NULL,                 -- For subject-specific notifications
+    teacher_id INT NULL,                 -- For teacher-specific notifications
+    student_id INT NULL,                 -- For student-specific notifications
     title VARCHAR(255) NOT NULL,
     message TEXT,
-    icon VARCHAR(32),           -- e.g., 'alert-triangle'
-    type VARCHAR(32),           -- e.g., 'info', 'warning', 'success'
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    icon VARCHAR(32) DEFAULT 'bell',     -- e.g., 'alert-triangle', 'check-circle', 'download', 'upload'
+    type VARCHAR(32) DEFAULT 'info',     -- e.g., 'info', 'warning', 'success', 'error'
+    action_type VARCHAR(50) NULL,        -- e.g., 'assignment_submitted', 'material_uploaded', 'attendance_taken', 'qr_scanned'
+    action_data JSON NULL,               -- Additional data for the action (e.g., assignment_id, material_id)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_role (user_id, role),
+    INDEX idx_department (department_id),
+    INDEX idx_subject (subject_id),
+    INDEX idx_teacher (teacher_id),
+    INDEX idx_student (student_id),
+    INDEX idx_action_type (action_type),
+    INDEX idx_created_at (created_at),
+    FOREIGN KEY (department_id) REFERENCES departments(DepartmentID) ON DELETE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES subjects(SubjectID) ON DELETE CASCADE,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(TeacherID) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(StudentID) ON DELETE CASCADE
 );
 
-
+-- Notification reads table (unchanged)
 CREATE TABLE notification_reads (
     id INT AUTO_INCREMENT PRIMARY KEY,
     notification_id INT NOT NULL,
     user_id INT NOT NULL,
     read_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY (notification_id, user_id)
+    UNIQUE KEY (notification_id, user_id),
+    FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE
 );
 
 
+-- Create table for graduated and dropout students
+CREATE TABLE student_academic_history (
+    HistoryID INT AUTO_INCREMENT PRIMARY KEY,
+    StudentID INT NOT NULL,
+    FullName VARCHAR(100) NOT NULL,
+    Contact VARCHAR(20),
+    Address VARCHAR(200),
+    PhotoURL VARCHAR(255),
+    DepartmentID INT NOT NULL,
+    SemesterID INT NOT NULL,
+    JoinYear YEAR,
+    ProgramCode VARCHAR(50),
+    LoginID INT NOT NULL,
+    Status ENUM('graduated', 'dropout') NOT NULL,
+    Reason TEXT,
+    ActionDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ActionBy INT NOT NULL,
+    FOREIGN KEY (DepartmentID) REFERENCES departments(DepartmentID),
+    FOREIGN KEY (SemesterID) REFERENCES semesters(SemesterID),
+    FOREIGN KEY (ActionBy) REFERENCES admins(AdminID)
+);
 
 -- ========== Dummy Data Starts Here ==========
 -- Complete database reset with BCA and BBA departments only

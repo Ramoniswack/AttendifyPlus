@@ -1,0 +1,687 @@
+/* Attendance Report CSS - Dark Mode Responsive */
+
+:root {
+  --bg-light: linear-gradient(to right, #f0f4f8, #e8f0fe);
+  --bg-dark: #121212;
+  --card-light: #ffffff;
+  --card-dark: #1f1f1f;
+  --text-light: #333;
+  --text-dark: #eee;
+  --accent-light: #1A73E8;
+  --accent-dark: #00ffc8;
+  --navbar-light: var(--accent-light);
+  --navbar-dark: var(--accent-dark);
+  --text-muted-light: #6c757d;
+  --text-muted-dark: #a0a0a0;
+  --border-light: #f8f9fa;
+  --border-dark: #333;
+  --shadow-light: rgba(0, 0, 0, 0.1);
+  --shadow-dark: rgba(0, 0, 0, 0.3);
+  --bg-table-header: #f8f9fa;
+  --bg-table-hover: #f8f9fa;
+}
+
+body.dark-mode {
+  --bg-table-header: #2d3748;
+  --bg-table-hover: #2d3748;
+}
+
+/* Dark Mode Fixes for Attendance Report */
+
+/* Card Dark Mode Enhancements */
+.card {
+  background: var(--card-light);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px var(--shadow-light);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .card {
+  background: var(--card-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+.card-header {
+  background: var(--card-light);
+  border-bottom: 1px solid var(--border-light);
+  border-radius: 12px 12px 0 0 !important;
+  padding: 1.25rem 1.5rem;
+}
+
+body.dark-mode .card-header {
+  background: var(--card-dark);
+  border-bottom-color: var(--border-dark);
+}
+
+.card-body {
+  background: var(--card-light);
+  color: var(--text-light);
+}
+
+body.dark-mode .card-body {
+  background: var(--card-dark);
+  color: var(--text-dark);
+}
+
+.card-title {
+  color: var(--text-light);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+body.dark-mode .card-title {
+  color: var(--text-dark);
+}
+
+.card-title i {
+  color: var(--accent-light);
+}
+
+body.dark-mode .card-title i {
+  color: var(--accent-dark);
+}
+
+/* Table Dark Mode Fixes */
+.table {
+  background: var(--card-light);
+  color: var(--text-light);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+body.dark-mode .table {
+  background: var(--card-dark);
+  color: var(--text-dark);
+  box-shadow: 0 2px 8px var(--shadow-dark);
+}
+
+.table thead th {
+  background: var(--bg-table-header);
+  border-bottom: 2px solid var(--border-light);
+  color: var(--text-light);
+  font-weight: 600;
+  padding: 1rem;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+}
+
+body.dark-mode .table thead th {
+  background: var(--bg-table-header);
+  border-bottom-color: var(--border-dark);
+  color: var(--text-dark);
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--border-light);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .table tbody tr {
+  border-bottom-color: var(--border-dark);
+}
+
+.table tbody tr:hover {
+  background: var(--bg-table-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .table tbody tr:hover {
+  background: var(--bg-table-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.table tbody td {
+  padding: 1rem;
+  vertical-align: middle;
+  color: var(--text-light);
+}
+
+body.dark-mode .table tbody td {
+  color: var(--text-dark);
+}
+
+/* Summary Cards Dark Mode */
+.bg-light {
+  background: var(--card-light) !important;
+  color: var(--text-light) !important;
+}
+
+body.dark-mode .bg-light {
+  background: var(--card-dark) !important;
+  color: var(--text-dark) !important;
+}
+
+.bg-light .card-title {
+  color: var(--text-light);
+}
+
+body.dark-mode .bg-light .card-title {
+  color: var(--text-dark);
+}
+
+.bg-light .text-muted {
+  color: var(--text-muted-light) !important;
+}
+
+body.dark-mode .bg-light .text-muted {
+  color: var(--text-muted-dark) !important;
+}
+
+/* Text Color Enhancements for Dark Mode */
+.text-success {
+  color: #28a745 !important;
+}
+
+body.dark-mode .text-success {
+  color: #40d962 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+body.dark-mode .text-danger {
+  color: #ff6b6b !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+body.dark-mode .text-warning {
+  color: #f4d03f !important;
+}
+
+.text-info {
+  color: #17a2b8 !important;
+}
+
+body.dark-mode .text-info {
+  color: #4fc3f7 !important;
+}
+
+.text-primary {
+  color: var(--accent-light) !important;
+}
+
+body.dark-mode .text-primary {
+  color: var(--accent-dark) !important;
+}
+
+/* Form Elements Dark Mode */
+.form-label {
+  color: var(--text-light);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+body.dark-mode .form-label {
+  color: var(--text-dark);
+}
+
+.form-control,
+.form-select {
+  background: var(--card-light);
+  border: 1px solid var(--border-light);
+  color: var(--text-light);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background: var(--card-dark);
+  border-color: var(--border-dark);
+  color: var(--text-dark);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25);
+  background: var(--card-light);
+  color: var(--text-light);
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 0.2rem rgba(0, 255, 200, 0.25);
+  background: var(--card-dark);
+  color: var(--text-dark);
+}
+
+/* Badge Enhancements */
+.badge {
+  font-weight: 500;
+  padding: 0.5em 0.75em;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge.bg-success {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+body.dark-mode .badge.bg-success {
+  background: #40d962 !important;
+  color: #000 !important;
+}
+
+.badge.bg-danger {
+  background: #dc3545 !important;
+  color: white !important;
+}
+
+body.dark-mode .badge.bg-danger {
+  background: #ff6b6b !important;
+  color: #000 !important;
+}
+
+.badge.bg-warning {
+  background: #ffc107 !important;
+  color: #000 !important;
+}
+
+body.dark-mode .badge.bg-warning {
+  background: #f4d03f !important;
+  color: #000 !important;
+}
+
+.badge.bg-info {
+  background: #17a2b8 !important;
+  color: white !important;
+}
+
+body.dark-mode .badge.bg-info {
+  background: #4fc3f7 !important;
+  color: #000 !important;
+}
+
+.badge.bg-secondary {
+  background: #6c757d !important;
+  color: white !important;
+}
+
+body.dark-mode .badge.bg-secondary {
+  background: #a0a0a0 !important;
+  color: #000 !important;
+}
+
+/* Summary Cards */
+.summary-card {
+  background: var(--card-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px var(--shadow-light);
+  border: none;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+body.dark-mode .summary-card {
+  background: var(--card-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+.summary-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px var(--shadow-light);
+}
+
+body.dark-mode .summary-card:hover {
+  box-shadow: 0 8px 25px var(--shadow-dark);
+}
+
+.summary-card .card-title {
+  color: var(--text-light);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+body.dark-mode .summary-card .card-title {
+  color: var(--text-dark);
+}
+
+/* Summary Statistics */
+.summary-stats {
+  background: var(--bg-table-hover);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+body.dark-mode .summary-stats {
+  background: var(--bg-table-hover);
+}
+
+.summary-stats .row {
+  margin: 0;
+}
+
+.summary-stats .col-4,
+.summary-stats .col-6 {
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.summary-stats .fw-bold {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .table-responsive {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .table thead th,
+  .table tbody td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .summary-card {
+    padding: 1rem;
+  }
+  
+  .summary-stats .fw-bold {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .table thead th,
+  .table tbody td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.4em 0.6em;
+  }
+  
+  .summary-stats .fw-bold {
+    font-size: 1.1rem;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Animation Enhancements */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+
+/* Table Row Animation */
+.table tbody tr {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.table tbody tr:nth-child(2) { animation-delay: 0.15s; }
+.table tbody tr:nth-child(3) { animation-delay: 0.2s; }
+.table tbody tr:nth-child(4) { animation-delay: 0.25s; }
+.table tbody tr:nth-child(5) { animation-delay: 0.3s; }
+
+/* Focus States for Accessibility */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+body.dark-mode .btn:focus,
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+  outline-color: var(--accent-dark);
+}
+
+/* Print Styles */
+@media print {
+  body.dark-mode {
+    background: white !important;
+    color: black !important;
+  }
+  
+  body.dark-mode .table {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  body.dark-mode .table thead th {
+    background: #f8f9fa !important;
+    color: black !important;
+  }
+  
+  .btn {
+    display: none !important;
+  }
+  
+  .sidebar,
+  .navbar {
+    display: none !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  body.dark-mode {
+    --border-dark: #666;
+    --text-dark: #fff;
+    --card-dark: #000;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+} 
+
+/* Progress Bar Dark Mode */
+.progress {
+  background: var(--border-light);
+}
+
+body.dark-mode .progress {
+  background: var(--border-dark);
+}
+
+.progress-bar {
+  background: var(--accent-light);
+}
+
+body.dark-mode .progress-bar {
+  background: var(--accent-dark);
+}
+
+/* Strong Text Dark Mode */
+strong {
+  color: var(--text-light);
+}
+
+body.dark-mode strong {
+  color: var(--text-dark);
+}
+
+/* Small Text Dark Mode */
+small {
+  color: var(--text-muted-light);
+}
+
+body.dark-mode small {
+  color: var(--text-muted-dark);
+}
+
+/* Table Header Dark Mode Fix - Force Override */
+.table thead th {
+  background: #f8f9fa !important;
+  color: #333 !important;
+  border-bottom: 2px solid #dee2e6 !important;
+}
+
+body.dark-mode .table thead th {
+  background: #2d3748 !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: #4a5568 !important;
+}
+
+/* Table Body Dark Mode Fix - Force Override */
+.table tbody tr {
+  background: #ffffff !important;
+  color: #333 !important;
+  border-bottom: 1px solid #dee2e6 !important;
+}
+
+body.dark-mode .table tbody tr {
+  background: #1a202c !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: #4a5568 !important;
+}
+
+/* Table Hover Dark Mode Fix - Force Override */
+.table tbody tr:hover {
+  background: #f8f9fa !important;
+}
+
+body.dark-mode .table tbody tr:hover {
+  background: #2d3748 !important;
+}
+
+/* Table Cell Dark Mode Fix - Force Override */
+.table tbody td {
+  color: #333 !important;
+}
+
+body.dark-mode .table tbody td {
+  color: #e2e8f0 !important;
+}
+
+/* Table Responsive Dark Mode */
+.table-responsive {
+  background: #ffffff !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+body.dark-mode .table-responsive {
+  background: #1a202c !important;
+} 
+
+/* Dark mode responsive styles for attendance report table */
+body.dark-mode .table {
+    color: var(--text-dark);
+}
+
+body.dark-mode .table thead th {
+    background-color: #2a2a2a;
+    color: var(--text-dark);
+    border-color: #444;
+}
+
+body.dark-mode .table tbody td {
+    border-color: #444;
+}
+
+body.dark-mode .table-hover tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .table-hover tbody tr:hover td {
+    color: var(--text-dark);
+}
+
+/* Dark mode for badges in table */
+body.dark-mode .badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+body.dark-mode .badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+body.dark-mode .badge.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+body.dark-mode .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+body.dark-mode .badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+/* Dark mode for text colors */
+body.dark-mode .text-muted {
+    color: #a0a0a0 !important;
+}
+
+/* Dark mode for strong text */
+body.dark-mode strong {
+    color: var(--text-dark);
+}
+
+/* Dark mode for summary cards */
+body.dark-mode .card.bg-light {
+    background-color: #2a2a2a !important;
+    border-color: #444;
+}
+
+body.dark-mode .card.bg-light .card-title {
+    color: var(--text-dark);
+}
+
+body.dark-mode .card.bg-light .text-muted {
+    color: #a0a0a0 !important;
+} 

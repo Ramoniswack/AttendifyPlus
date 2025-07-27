@@ -224,10 +224,15 @@ function initializeResponsiveBehavior() {
 // ===== NOTIFICATION FUNCTIONS ===== //
 
 function fetchAndRenderNotifications() {
+    console.log('Fetching notifications...');
     fetch('../../api/get_notifications.php')
-        .then(res => res.json())
+        .then(res => {
+            console.log('Response status:', res.status);
+            return res.json();
+        })
         .then(data => {
             console.log('Raw notification data from API:', data);
+            console.log('Number of notifications:', data.length);
             renderNotificationDropdown(data);
             updateNotificationBadge(data.filter(n => !n.is_read).length);
         })
@@ -237,6 +242,8 @@ function fetchAndRenderNotifications() {
 }
 
 function renderNotificationDropdown(notifications) {
+    console.log('Rendering notifications, count:', notifications.length);
+    
     // Ensure notifications are sorted by latest first (double-check sorting)
     const sortedNotifications = [...notifications].sort((a, b) => {
         const dateA = new Date(a.created_at);

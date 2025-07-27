@@ -337,6 +337,17 @@ fetch('../../api/process_qr_attendance.php', {  // Add proper relative path
                 updateStatus('camera', 'Ready to Scan', 'You can start scanning again');
             }, 3000);
         } else {
+            console.log('Error response data:', data);
+            
+            // Log debug information if available
+            if (data.debug_info) {
+                console.log('=== DEVICE FINGERPRINT DEBUG INFO ===');
+                console.log('Current fingerprint:', data.debug_info.current_fingerprint);
+                console.log('Registered fingerprint:', data.debug_info.registered_fingerprint);
+                console.log('Student ID:', data.debug_info.student_id);
+                console.log('Fingerprint match:', data.debug_info.current_fingerprint === data.debug_info.registered_fingerprint);
+            }
+            
             showToast(data.message || 'Failed to mark attendance', 'error');
             updateStatus('x-circle', 'Failed', data.message || 'Failed to mark attendance');
             
@@ -484,21 +495,17 @@ function showToast(message, type = 'info', duration = 5000) {
 
 // Device fingerprint generation for unique device identification
 function generateDeviceFingerprint() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.textBaseline = 'top';
-    ctx.font = '14px Arial';
-    ctx.fillText('Device fingerprint', 2, 2);
-    
     const fingerprint = [
         navigator.userAgent,
         navigator.language,
         screen.width + 'x' + screen.height,
         screen.colorDepth,
-        new Date().getTimezoneOffset(),
+        navigator.hardwareConcurrency || 'unknown',
+        navigator.platform,
         !!window.sessionStorage,
         !!window.localStorage,
-        canvas.toDataURL()
+        navigator.cookieEnabled,
+        navigator.onLine
     ].join('|');
     
     // Simple hash function
@@ -511,6 +518,38 @@ function generateDeviceFingerprint() {
     
     return Math.abs(hash).toString(16);
 }
+
+// Test function to debug device fingerprint
+function testDeviceFingerprint() {
+    const fingerprint = generateDeviceFingerprint();
+    console.log('=== DEVICE FINGERPRINT TEST ===');
+    console.log('Generated fingerprint:', fingerprint);
+    console.log('Fingerprint length:', fingerprint.length);
+    
+    // Log the components used to generate the fingerprint
+    const components = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + 'x' + screen.height,
+        screen.colorDepth,
+        navigator.hardwareConcurrency || 'unknown',
+        navigator.platform,
+        !!window.sessionStorage,
+        !!window.localStorage,
+        navigator.cookieEnabled,
+        navigator.onLine
+    ];
+    
+    console.log('Fingerprint components:');
+    components.forEach((component, index) => {
+        console.log(`  ${index + 1}. ${component}`);
+    });
+    
+    return fingerprint;
+}
+
+// Make test function available globally for debugging
+window.testDeviceFingerprint = testDeviceFingerprint;
 
 // Check if the student has any pending QR scans
 function checkPendingQRScans() {

@@ -31,6 +31,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                 <i data-lucide="qr-code"></i>
                 <span class="btn-text d-none d-xxl-inline">Scan QR</span>
             </a>
+            
             <!-- Notifications -->
             <div class="dropdown notification-dropdown-wrapper">
                 <button class="btn navbar-btn notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
@@ -72,10 +73,10 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                    <li><a class="dropdown-item" href="profile_student.php"><i data-lucide="user"></i> My Profile</a></li>
-                    <li><a class="dropdown-item" href="attendance_history.php"><i data-lucide="calendar-check"></i> My Attendance</a></li>
-                    <li><a class="dropdown-item" href="my_subjects_student.php"><i data-lucide="book-open"></i> My Subjects</a></li>
-                    <li><a class="dropdown-item" href="view_assignments.php"><i data-lucide="clipboard-list"></i> My Assignments</a></li>
+                    <li><a class="dropdown-item" href="../student/profile_student.php"><i data-lucide="user"></i> My Profile</a></li>
+                    <li><a class="dropdown-item" href="../student/my_attendance.php"><i data-lucide="calendar-check"></i> My Attendance</a></li>
+                    <li><a class="dropdown-item" href="../student/my_subjects_student.php"><i data-lucide="book-open"></i> My Subjects</a></li>
+                    <li><a class="dropdown-item" href="../student/submit_assignment.php"><i data-lucide="clipboard-list"></i> My Assignments</a></li>
                     <li>
                         <hr class="dropdown-divider">
                     </li>
@@ -128,10 +129,10 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                    <li><a class="dropdown-item" href="profile_student.php"><i data-lucide="user"></i> Profile</a></li>
-                    <li><a class="dropdown-item" href="attendance_history.php"><i data-lucide="calendar-check"></i> Attendance</a></li>
-                    <li><a class="dropdown-item" href="my_subjects_student.php"><i data-lucide="book-open"></i> Subjects</a></li>
-                    <li><a class="dropdown-item" href="view_assignments.php"><i data-lucide="clipboard-list"></i> Assignments</a></li>
+                    <li><a class="dropdown-item" href="../student/profile_student.php"><i data-lucide="user"></i> Profile</a></li>
+                    <li><a class="dropdown-item" href="../student/my_attendance.php"><i data-lucide="calendar-check"></i> Attendance</a></li>
+                    <li><a class="dropdown-item" href="../student/my_subjects_student.php"><i data-lucide="book-open"></i> Subjects</a></li>
+                    <li><a class="dropdown-item" href="../student/submit_assignment.php"><i data-lucide="clipboard-list"></i> Assignments</a></li>
                     <li>
                         <hr class="dropdown-divider">
                     </li>

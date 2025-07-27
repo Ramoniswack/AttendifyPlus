@@ -183,85 +183,38 @@ $assignmentDataJSON = json_encode($assignmentData);
             </div>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?php echo $stats['total_students']; ?></div>
-                            <div>Total Students</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i>
-                                    Across all subjects
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="users"></i>
-                        </div>
-                    </div>
+        <!-- Statistics Cards - Updated to Match Dashboard Student -->
+        <div class="row g-4 mb-4 align-items-stretch">
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="users"></i></div>
+                    <div class="mini-stat-value"><?php echo $stats['total_students']; ?></div>
+                    <div class="mini-stat-label">Total Students</div>
+                    <div class="mini-stat-desc text-muted mt-1"><i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> Across all subjects</div>
                 </div>
             </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card teachers text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?php echo number_format($stats['avg_attendance'], 1); ?>%</div>
-                            <div>Avg Attendance</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i>
-                                    Overall rate
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="calendar"></i>
-                        </div>
-                    </div>
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="calendar"></i></div>
+                    <div class="mini-stat-value"><?php echo number_format($stats['avg_attendance'], 1); ?>%</div>
+                    <div class="mini-stat-label">Avg Attendance</div>
+                    <div class="mini-stat-desc text-muted mt-1"><i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> Overall rate</div>
                 </div>
             </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card admins text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?php echo $stats['assignments_due']; ?></div>
-                            <div>Assignments Due</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
-                                    This week
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="file-text"></i>
-                        </div>
-                    </div>
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="file-text"></i></div>
+                    <div class="mini-stat-value"><?php echo $stats['assignments_due']; ?></div>
+                    <div class="mini-stat-label">Assignments Due</div>
+                    <div class="mini-stat-desc text-muted mt-1"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> This week</div>
                 </div>
             </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card activities text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?php echo $stats['total_subjects']; ?></div>
-                            <div>My Subjects</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
-                                    Active courses
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="book-open"></i>
-                        </div>
-                    </div>
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="book-open"></i></div>
+                    <div class="mini-stat-value"><?php echo $stats['total_subjects']; ?></div>
+                    <div class="mini-stat-label">My Subjects</div>
+                    <div class="mini-stat-desc text-muted mt-1"><i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> Active courses</div>
                 </div>
             </div>
         </div>

@@ -331,19 +331,46 @@ if ($selectedSemesterID) {
 // Get students for selected semester and subject
 $students = [];
 if ($selectedSemesterID && $selectedSubjectID) {
+    // First, get all students for this semester and department
     $studentQuery = $conn->prepare("
-        SELECT s.StudentID, s.FullName, s.DeviceRegistered, s.ProgramCode,
-               ar.Status as AttendanceStatus, ar.Method as AttendanceMethod,
-               ar.DateTime as AttendanceTime
+        SELECT s.StudentID, s.FullName, s.DeviceRegistered, s.ProgramCode
         FROM students s
-        LEFT JOIN attendance_records ar ON s.StudentID = ar.StudentID 
-            AND ar.SubjectID = ? AND ar.TeacherID = ? AND DATE(ar.DateTime) = ?
         WHERE s.SemesterID = ? AND s.DepartmentID = ?
         ORDER BY s.FullName
     ");
-    $studentQuery->bind_param("iiisi", $selectedSubjectID, $teacherID, $date, $selectedSemesterID, $teacherDept['DepartmentID']);
+    $studentQuery->bind_param("ii", $selectedSemesterID, $teacherDept['DepartmentID']);
     $studentQuery->execute();
     $studentResult = $studentQuery->get_result();
+
+    // Get all students first
+    $allStudents = [];
+    while ($row = $studentResult->fetch_assoc()) {
+        $allStudents[] = $row;
+    }
+
+    // Now get attendance data separately for better debugging
+    $attendanceQuery = $conn->prepare("
+        SELECT ar.StudentID, ar.Status, ar.Method, ar.DateTime
+        FROM attendance_records ar
+        WHERE ar.SubjectID = ? AND ar.TeacherID = ? AND DATE(ar.DateTime) = ?
+    ");
+    $attendanceQuery->bind_param("iis", $selectedSubjectID, $teacherID, $date);
+    $attendanceQuery->execute();
+    $attendanceResult = $attendanceQuery->get_result();
+
+    // Create attendance lookup
+    $attendanceLookup = [];
+    while ($attRow = $attendanceResult->fetch_assoc()) {
+        $attendanceLookup[$attRow['StudentID']] = $attRow;
+    }
+
+    // Debug: Log attendance data found
+    if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+        error_log("DEBUG: Found " . count($attendanceLookup) . " attendance records for date: $date");
+        foreach ($attendanceLookup as $studentId => $attData) {
+            error_log("DEBUG: Student $studentId - Status: {$attData['Status']}, Method: {$attData['Method']}");
+        }
+    }
 
     // Get pending QR scans from database
     $qrScannedStudents = [];
@@ -359,16 +386,89 @@ if ($selectedSemesterID && $selectedSubjectID) {
         $qrScannedStudents[$pendingRow['StudentID']] = $pendingRow['CreatedAt'];
     }
 
-    while ($row = $studentResult->fetch_assoc()) {
-        // Add QR scan info if student has scanned
-        $row['QRScannedAt'] = $qrScannedStudents[$row['StudentID']] ?? null;
-        $students[] = $row;
+    // Combine student data with attendance data
+    foreach ($allStudents as $student) {
+        $studentId = $student['StudentID'];
+
+        // Get attendance data for this student
+        $attendanceData = $attendanceLookup[$studentId] ?? null;
+
+        $student['AttendanceStatus'] = $attendanceData ? $attendanceData['Status'] : null;
+        $student['AttendanceMethod'] = $attendanceData ? $attendanceData['Method'] : null;
+        $student['AttendanceTime'] = $attendanceData ? $attendanceData['DateTime'] : null;
+        $student['QRScannedAt'] = $qrScannedStudents[$studentId] ?? null;
+
+        // Debug: Log each student's final data
+        if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+            error_log("DEBUG: Final student data - {$student['FullName']} (ID: $studentId): Status={$student['AttendanceStatus']}, Method={$student['AttendanceMethod']}");
+        }
+
+        $students[] = $student;
     }
 }
 
 // Debug: Log student data to console to verify attendance status is loaded
 if ($selectedSemesterID && $selectedSubjectID && !empty($students)) {
     // Debug output removed for production
+}
+
+// Enhanced debug: Direct database check for attendance records
+if (isset($_GET['debug']) && $_GET['debug'] === '1' && $selectedSubjectID && $selectedSemesterID && $date) {
+    // Check 1: Direct attendance records query
+    $debugQuery = $conn->prepare("
+        SELECT ar.StudentID, s.FullName, ar.Status, ar.Method, ar.DateTime
+        FROM attendance_records ar
+        JOIN students s ON ar.StudentID = s.StudentID
+        WHERE ar.SubjectID = ? AND ar.TeacherID = ? AND DATE(ar.DateTime) = ?
+        ORDER BY s.FullName
+    ");
+    $debugQuery->bind_param("iis", $selectedSubjectID, $teacherID, $date);
+    $debugQuery->execute();
+    $debugResult = $debugQuery->get_result();
+
+    $debugAttendance = [];
+    while ($debugRow = $debugResult->fetch_assoc()) {
+        $debugAttendance[] = $debugRow;
+    }
+
+    // Check 2: All attendance records for this teacher/subject (regardless of date)
+    $debugQuery2 = $conn->prepare("
+        SELECT ar.StudentID, s.FullName, ar.Status, ar.Method, ar.DateTime, DATE(ar.DateTime) as DateOnly
+        FROM attendance_records ar
+        JOIN students s ON ar.StudentID = s.StudentID
+        WHERE ar.SubjectID = ? AND ar.TeacherID = ?
+        ORDER BY ar.DateTime DESC
+        LIMIT 10
+    ");
+    $debugQuery2->bind_param("ii", $selectedSubjectID, $teacherID);
+    $debugQuery2->execute();
+    $debugResult2 = $debugQuery2->get_result();
+
+    $debugAllAttendance = [];
+    while ($debugRow2 = $debugResult2->fetch_assoc()) {
+        $debugAllAttendance[] = $debugRow2;
+    }
+
+    // Check 3: Students in this semester/department
+    $debugQuery3 = $conn->prepare("
+        SELECT s.StudentID, s.FullName, s.SemesterID, s.DepartmentID
+        FROM students s
+        WHERE s.SemesterID = ? AND s.DepartmentID = ?
+        ORDER BY s.FullName
+    ");
+    $debugQuery3->bind_param("ii", $selectedSemesterID, $teacherDept['DepartmentID']);
+    $debugQuery3->execute();
+    $debugResult3 = $debugQuery3->get_result();
+
+    $debugStudents = [];
+    while ($debugRow3 = $debugResult3->fetch_assoc()) {
+        $debugStudents[] = $debugRow3;
+    }
+
+    // Store debug data for display
+    $debugAttendanceData = $debugAttendance;
+    $debugAllAttendanceData = $debugAllAttendance;
+    $debugStudentsData = $debugStudents;
 }
 
 // Get current QR session if active
@@ -424,6 +524,65 @@ foreach ($students as $student) {
             $attendanceStats['qrMarked']++;
         }
     }
+}
+
+// Debug: Log attendance stats
+if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+    error_log("DEBUG: Attendance stats calculated - Present: {$attendanceStats['present']}, Absent: {$attendanceStats['absent']}, Late: {$attendanceStats['late']}, QR: {$attendanceStats['qrMarked']}");
+}
+
+// Simple direct database test to verify attendance data
+if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+    // Test 1: Check if the specific attendance record exists
+    $testQuery = $conn->prepare("
+        SELECT COUNT(*) as count 
+        FROM attendance_records 
+        WHERE SubjectID = ? AND TeacherID = ? AND DATE(DateTime) = ?
+    ");
+    $testQuery->bind_param("iis", $selectedSubjectID, $teacherID, $date);
+    $testQuery->execute();
+    $testResult = $testQuery->get_result();
+    $testCount = $testResult->fetch_assoc()['count'];
+
+    // Test 2: Get the actual record details
+    $testQuery2 = $conn->prepare("
+        SELECT ar.*, s.FullName 
+        FROM attendance_records ar
+        JOIN students s ON ar.StudentID = s.StudentID
+        WHERE ar.SubjectID = ? AND ar.TeacherID = ? AND DATE(ar.DateTime) = ?
+        LIMIT 5
+    ");
+    $testQuery2->bind_param("iis", $selectedSubjectID, $teacherID, $date);
+    $testQuery2->execute();
+    $testResult2 = $testQuery2->get_result();
+
+    $testRecords = [];
+    while ($testRow = $testResult2->fetch_assoc()) {
+        $testRecords[] = $testRow;
+    }
+
+    // Test 3: Check all attendance records for this teacher/subject (any date)
+    $testQuery3 = $conn->prepare("
+        SELECT ar.*, s.FullName, DATE(ar.DateTime) as DateOnly
+        FROM attendance_records ar
+        JOIN students s ON ar.StudentID = s.StudentID
+        WHERE ar.SubjectID = ? AND ar.TeacherID = ?
+        ORDER BY ar.DateTime DESC
+        LIMIT 10
+    ");
+    $testQuery3->bind_param("ii", $selectedSubjectID, $teacherID);
+    $testQuery3->execute();
+    $testResult3 = $testQuery3->get_result();
+
+    $testAllRecords = [];
+    while ($testRow3 = $testResult3->fetch_assoc()) {
+        $testAllRecords[] = $testRow3;
+    }
+
+    // Store test data
+    $debugTestCount = $testCount;
+    $debugTestRecords = $testRecords;
+    $debugTestAllRecords = $testAllRecords;
 }
 ?>
 
@@ -654,9 +813,25 @@ foreach ($students as $student) {
                                                             <?php endif; ?>
                                                         </div>
                                                         <small class="text-muted">ID: <?= $student['StudentID'] ?></small>
-                                                        <?php if ($student['AttendanceStatus'] && $student['AttendanceMethod'] === 'qr'): ?>
-                                                            <span class="badge bg-info ms-2">QR Marked</span>
+
+                                                        <?php if ($student['AttendanceStatus']): ?>
+                                                            <!-- Show existing attendance with method indicator -->
+                                                            <?php if ($student['AttendanceMethod'] === 'qr'): ?>
+                                                                <span class="badge bg-info ms-2">
+                                                                    <i data-lucide="qr-code" style="width: 10px; height: 10px;"></i>
+                                                                    QR Marked
+                                                                </span>
+                                                            <?php else: ?>
+                                                                <span class="badge bg-secondary ms-2">
+                                                                    <i data-lucide="edit" style="width: 10px; height: 10px;"></i>
+                                                                    Manual
+                                                                </span>
+                                                            <?php endif; ?>
+                                                            <small class="text-muted d-block">
+                                                                Time: <?= date('H:i:s', strtotime($student['AttendanceTime'])) ?>
+                                                            </small>
                                                         <?php elseif ($student['QRScannedAt']): ?>
+                                                            <!-- Show pending QR scan -->
                                                             <span class="badge bg-warning text-dark ms-2">
                                                                 <i data-lucide="clock" style="width: 10px; height: 10px;"></i>
                                                                 QR Scanned - Pending Save
@@ -671,7 +846,13 @@ foreach ($students as $student) {
                                                         // Determine if student has QR scanned (pending) or already marked present
                                                         $isQRScanned = !empty($student['QRScannedAt']) && empty($student['AttendanceStatus']);
                                                         $isPresentSelected = $student['AttendanceStatus'] === 'present' || $isQRScanned;
-                                                        $isDisabled = $student['AttendanceMethod'] === 'qr' && !empty($student['AttendanceStatus']);
+                                                        // Allow editing for all attendance types
+                                                        $isDisabled = false;
+
+                                                        // Debug: Log radio button state
+                                                        if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+                                                            echo "<!-- DEBUG: Student {$student['FullName']} - Status: {$student['AttendanceStatus']}, Method: {$student['AttendanceMethod']}, Present Selected: " . ($isPresentSelected ? 'Yes' : 'No') . " -->";
+                                                        }
                                                         ?>
 
                                                         <input type="radio" class="btn-check" name="attendance[<?= $student['StudentID'] ?>]"
@@ -679,7 +860,13 @@ foreach ($students as $student) {
                                                             <?= $isPresentSelected ? 'checked' : '' ?>
                                                             <?= $isDisabled ? 'disabled' : '' ?>>
                                                         <label class="btn <?= $student['AttendanceStatus'] === 'present' ? 'btn-success' : ($isQRScanned ? 'btn-warning' : 'btn-outline-success') ?>" for="p<?= $student['StudentID'] ?>">
-                                                            <?= $student['AttendanceMethod'] === 'qr' && $student['AttendanceStatus'] === 'present' ? 'Present (QR)' : ($isQRScanned ? 'Present (QR)' : 'Present') ?>
+                                                            <?php if ($student['AttendanceMethod'] === 'qr' && $student['AttendanceStatus'] === 'present'): ?>
+                                                                Present (QR)
+                                                            <?php elseif ($isQRScanned): ?>
+                                                                Present (QR)
+                                                            <?php else: ?>
+                                                                Present
+                                                            <?php endif; ?>
                                                         </label>
 
                                                         <input type="radio" class="btn-check" name="attendance[<?= $student['StudentID'] ?>]"
@@ -704,16 +891,110 @@ foreach ($students as $student) {
                                         $attendanceExists = false;
                                         $totalStudentsWithAttendance = $attendanceStats['present'] + $attendanceStats['absent'] + $attendanceStats['late'];
 
-                                        if ($totalStudentsWithAttendance > 0) {
+                                        // Also check database directly for more reliable detection
+                                        $dbCheckStmt = $conn->prepare("SELECT COUNT(*) as count FROM attendance_records WHERE SubjectID = ? AND DATE(DateTime) = ? AND TeacherID = ?");
+                                        $dbCheckStmt->bind_param("isi", $selectedSubjectID, $date, $teacherID);
+                                        $dbCheckStmt->execute();
+                                        $dbResult = $dbCheckStmt->get_result();
+                                        $dbAttendanceExists = $dbResult->fetch_assoc()['count'] > 0;
+
+                                        if ($totalStudentsWithAttendance > 0 || $dbAttendanceExists) {
                                             $attendanceExists = true;
-                                        }                                        // If attendance exists, this is an update scenario
+                                        }
+
+                                        // If attendance exists, this is an update scenario
                                         $isUpdateMode = $attendanceExists;
 
-                                        // Debug output removed for production
+                                        // Debug output for troubleshooting
+                                        if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+                                            echo "<div class='alert alert-info small'>";
+                                            echo "<h6><i data-lucide='bug'></i> Debug Information</h6>";
+                                            echo "<strong>Query Parameters:</strong><br>";
+                                            echo "Date: $date<br>";
+                                            echo "Subject ID: $selectedSubjectID<br>";
+                                            echo "Teacher ID: $teacherID<br>";
+                                            echo "Semester ID: $selectedSemesterID<br>";
+                                            echo "Department ID: {$teacherDept['DepartmentID']}<br><br>";
+
+                                            echo "<strong>Database Check:</strong><br>";
+                                            echo "Total Students with Attendance: $totalStudentsWithAttendance<br>";
+                                            echo "DB Attendance Exists: " . ($dbAttendanceExists ? 'Yes' : 'No') . "<br>";
+                                            echo "Update Mode: " . ($isUpdateMode ? 'Yes' : 'No') . "<br><br>";
+
+                                            if (isset($debugAttendanceData)) {
+                                                echo "<strong>Direct Database Query Results (for this date):</strong><br>";
+                                                if (empty($debugAttendanceData)) {
+                                                    echo "❌ No attendance records found in database for this date/subject/teacher<br>";
+                                                } else {
+                                                    echo "✅ Found " . count($debugAttendanceData) . " attendance records:<br>";
+                                                    foreach ($debugAttendanceData as $record) {
+                                                        echo "- {$record['FullName']}: {$record['Status']} ({$record['Method']}) at {$record['DateTime']}<br>";
+                                                    }
+                                                }
+                                                echo "<br>";
+                                            }
+
+                                            if (isset($debugAllAttendanceData)) {
+                                                echo "<strong>All Attendance Records (last 10, any date):</strong><br>";
+                                                if (empty($debugAllAttendanceData)) {
+                                                    echo "❌ No attendance records found for this teacher/subject<br>";
+                                                } else {
+                                                    echo "✅ Found " . count($debugAllAttendanceData) . " attendance records:<br>";
+                                                    foreach ($debugAllAttendanceData as $record) {
+                                                        echo "- {$record['FullName']}: {$record['Status']} ({$record['Method']}) on {$record['DateOnly']} at {$record['DateTime']}<br>";
+                                                    }
+                                                }
+                                                echo "<br>";
+                                            }
+
+                                            if (isset($debugStudentsData)) {
+                                                echo "<strong>Students in this Semester/Department:</strong><br>";
+                                                if (empty($debugStudentsData)) {
+                                                    echo "❌ No students found in this semester/department<br>";
+                                                } else {
+                                                    echo "✅ Found " . count($debugStudentsData) . " students:<br>";
+                                                    foreach ($debugStudentsData as $student) {
+                                                        echo "- {$student['FullName']} (ID: {$student['StudentID']})<br>";
+                                                    }
+                                                }
+                                                echo "<br>";
+                                            }
+
+                                            if (isset($debugTestCount)) {
+                                                echo "<strong>Direct Database Test:</strong><br>";
+                                                echo "Total attendance records for this date/subject/teacher: $debugTestCount<br>";
+
+                                                if (isset($debugTestRecords) && !empty($debugTestRecords)) {
+                                                    echo "✅ Found attendance records for this date:<br>";
+                                                    foreach ($debugTestRecords as $record) {
+                                                        echo "- Student: {$record['FullName']} (ID: {$record['StudentID']})<br>";
+                                                        echo "  Status: {$record['Status']}, Method: {$record['Method']}<br>";
+                                                        echo "  DateTime: {$record['DateTime']}<br>";
+                                                        echo "  SubjectID: {$record['SubjectID']}, TeacherID: {$record['TeacherID']}<br><br>";
+                                                    }
+                                                } else {
+                                                    echo "❌ No attendance records found for this specific date<br>";
+                                                }
+
+                                                if (isset($debugTestAllRecords) && !empty($debugTestAllRecords)) {
+                                                    echo "<strong>All Attendance Records (any date):</strong><br>";
+                                                    foreach ($debugTestAllRecords as $record) {
+                                                        echo "- {$record['FullName']}: {$record['Status']} ({$record['Method']}) on {$record['DateOnly']}<br>";
+                                                    }
+                                                }
+                                                echo "<br>";
+                                            }
+
+                                            echo "<strong>Form Data (Students Array):</strong><br>";
+                                            foreach ($students as $student) {
+                                                echo "- {$student['FullName']} (ID: {$student['StudentID']}): Status={$student['AttendanceStatus']}, Method={$student['AttendanceMethod']}, Time={$student['AttendanceTime']}<br>";
+                                            }
+                                            echo "</div>";
+                                        }
                                         ?>
 
                                         <?php if ($isUpdateMode): ?>
-                                            <!-- Update Mode - Attendance Already Exists -->
+                                            <!-- Update Mode - Attendance Already Taken -->
                                             <div class="alert alert-info text-center mb-3">
                                                 <i data-lucide="edit" style="width: 24px; height: 24px;" class="mb-2 text-info"></i>
                                                 <h6 class="mb-1">Attendance Already Taken</h6>
@@ -737,8 +1018,17 @@ foreach ($students as $student) {
                                                     <i data-lucide="refresh-cw"></i>
                                                     New Session
                                                 </button>
+                                                <button type="button" class="btn btn-outline-info btn-sm" onclick="window.location.href='attendance.php?debug=1&semester=<?= $selectedSemesterID ?>&subject=<?= $selectedSubjectID ?>&date=<?= $date ?>'" title="Debug Info">
+                                                    <i data-lucide="bug"></i>
+                                                </button>
                                             </div>
                                             <input type="hidden" name="update_mode" value="1">
+
+                                            <!-- Add visual indicator that this is update mode -->
+                                            <div class="alert alert-warning mt-3">
+                                                <small><i data-lucide="info" class="me-1"></i>
+                                                    <strong>Update Mode:</strong> Existing attendance data is loaded. You can modify any student's attendance status.</small>
+                                            </div>
                                         <?php else: ?>
                                             <!-- Normal Save State -->
                                             <div class="d-flex gap-2 justify-content-center">
@@ -1386,6 +1676,37 @@ foreach ($students as $student) {
                     }
                 }
             });
+
+            // Update attendance counter for update mode
+            if (document.getElementById('updateBtn')) {
+                updateAttendanceCounter();
+            }
+        }
+
+        // Enhanced attendance counter for update mode
+        function updateAttendanceCounter() {
+            const updateBtn = document.getElementById('updateBtn');
+            if (!updateBtn) return;
+
+            const totalStudents = document.querySelectorAll('input[name^="attendance["]').length / 3;
+            const completedStudents = new Set();
+
+            document.querySelectorAll('input[name^="attendance["]:checked').forEach(function(radio) {
+                const studentId = radio.name.match(/attendance\[(\d+)\]/)[1];
+                completedStudents.add(studentId);
+            });
+
+            const completed = completedStudents.size;
+
+            updateBtn.innerHTML = `
+                <i data-lucide="edit"></i>
+                Update Attendance (${completed}/${totalStudents})
+            `;
+
+            // Re-initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         }
 
         // Inline fallback for radio button styling

@@ -36,9 +36,9 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </a>
 
 
-      <a class="nav-link <?= ($currentPage == 'seminar_analytics.php') ? 'active' : '' ?>" href="seminar_analytics.php">
+      <!-- <a class="nav-link <?= ($currentPage == 'seminar_analytics.php') ? 'active' : '' ?>" href="seminar_analytics.php">
         <i data-lucide="pie-chart" class="me-2"></i>Seminar Analytics
-      </a>
+      </a> -->
 
       <a class="nav-link <?= ($currentPage == 'full_analytics.php') ? 'active' : '' ?>" href="full_analytics.php">
         <i data-lucide="bar-chart-3" class="me-2"></i>Overall Analytics

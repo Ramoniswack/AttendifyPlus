@@ -148,85 +148,38 @@ $monthlyDataJSON = json_encode($monthlyData);
             </div>
         </div>
 
-        <!-- Statistics Cards - Updated to Match Teacher/Student Theme -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?php echo $stats['total_students']; ?></div>
-                            <div>Total Students</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i>
-                                    +<?php echo $stats['recent_students']; ?> this month
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="users"></i>
-                        </div>
-                    </div>
+        <!-- Statistics Cards - Updated to Match Dashboard Student -->
+        <div class="row g-4 mb-4 align-items-stretch">
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="users"></i></div>
+                    <div class="mini-stat-value"><?php echo $stats['total_students']; ?></div>
+                    <div class="mini-stat-label">Total Students</div>
+                    <div class="mini-stat-desc text-muted mt-1"><i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> +<?php echo $stats['recent_students']; ?> this month</div>
                 </div>
             </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card teachers text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?php echo $stats['total_teachers']; ?></div>
-                            <div>Total Teachers</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i>
-                                    Active faculty
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="user-check"></i>
-                        </div>
-                    </div>
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="user-check"></i></div>
+                    <div class="mini-stat-value"><?php echo $stats['total_teachers']; ?></div>
+                    <div class="mini-stat-label">Total Teachers</div>
+                    <div class="mini-stat-desc text-muted mt-1"><i data-lucide="shield-check" style="width: 14px; height: 14px;"></i> Active faculty</div>
                 </div>
             </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card admins text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?php echo $stats['total_admins']; ?></div>
-                            <div>Active Admins</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="shield" style="width: 14px; height: 14px;"></i>
-                                    System managers
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="shield"></i>
-                        </div>
-                    </div>
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="shield"></i></div>
+                    <div class="mini-stat-value"><?php echo $stats['total_admins']; ?></div>
+                    <div class="mini-stat-label">Active Admins</div>
+                    <div class="mini-stat-desc text-muted mt-1"><i data-lucide="settings" style="width: 14px; height: 14px;"></i> System managers</div>
                 </div>
             </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card activities text-center">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number"><?php echo count($departmentData); ?></div>
-                            <div>Departments</div>
-                            <div class="mt-1">
-                                <small class="text-white-50">
-                                    <i data-lucide="building" style="width: 14px; height: 14px;"></i>
-                                    Academic units
-                                </small>
-                            </div>
-                        </div>
-                        <div class="stats-icon">
-                            <i data-lucide="building"></i>
-                        </div>
-                    </div>
+            <div class="col-12 col-md-3">
+                <div class="mini-stat-card h-100 d-flex flex-column justify-content-center align-items-start p-4">
+                    <div class="mini-stat-icon"><i data-lucide="building"></i></div>
+                    <div class="mini-stat-value"><?php echo count($departmentData); ?></div>
+                    <div class="mini-stat-label">Departments</div>
+                    <div class="mini-stat-desc text-muted mt-1"><i data-lucide="book-open" style="width: 14px; height: 14px;"></i> Academic units</div>
                 </div>
             </div>
         </div>
