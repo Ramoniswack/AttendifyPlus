@@ -104,93 +104,114 @@ body.dark-mode .card {
   justify-content: space-between;
 }
 
-/* ===== STATISTICS CARDS (MATCHING ADMIN EXACTLY) ===== */
+/* ===== STATISTICS CARDS (EXACT MATCH TO DASHBOARD_STUDENT MINI-STAT-CARD) ===== */
+.mini-stat-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(32,31,30,0.08);
+  border: 1px solid #f3f4f6;
+  min-height: 120px;
+  transition: box-shadow 0.2s;
+  margin-bottom: 0;
+}
+
+.mini-stat-card:hover {
+  box-shadow: 0 4px 24px rgba(26,115,232,0.10);
+}
+
+.mini-stat-icon {
+  color: #047857;
+  font-size: 1.5rem;
+  opacity: 0.8;
+  margin-bottom: 0.5rem;
+}
+
+.mini-stat-value {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #1a73e8;
+  margin-bottom: 0.2rem;
+}
+
+.mini-stat-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1a237e;
+  opacity: 0.85;
+}
+
+.mini-stat-desc {
+  font-size: 0.95rem;
+  color: #718096;
+}
+
+.mini-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a237e;
+  margin-bottom: 0.5rem;
+}
+
+/* Dark mode support for mini-stat-card */
+body.dark-mode .mini-stat-card {
+  background: #1f1f1f;
+  border: 1px solid #333;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .mini-stat-card:hover {
+  box-shadow: 0 4px 24px rgba(0,255,200,0.15);
+}
+
+body.dark-mode .mini-stat-label,
+body.dark-mode .mini-card-title {
+  color: #e9ecef;
+}
+
+body.dark-mode .mini-stat-value {
+  color: #00ffc8;
+}
+
+body.dark-mode .mini-stat-icon {
+  color: #ff6b6b;
+}
+
+body.dark-mode .mini-stat-desc,
+body.dark-mode .mini-notification-desc {
+  color: #a0a0a0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .mini-stat-card {
+    padding: 1.1rem 0.7rem 1rem 0.7rem;
+    min-height: 100px;
+  }
+  .mini-stat-value {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .mini-stat-card {
+    padding: 0.9rem 0.6rem 0.8rem 0.6rem;
+    min-height: 90px;
+  }
+  .mini-stat-label {
+    font-size: 0.95rem;
+  }
+  .mini-stat-value {
+    font-size: 1.3rem;
+  }
+  .mini-card-title {
+    font-size: 1rem;
+  }
+}
+
+/* Remove old stat-card styles that conflict */
 .stats-card,
 .stat-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 15px;
-  padding: 20px;
-  margin-bottom: 20px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.stats-card:hover,
-.stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-}
-
-.stats-card.assignments-card,
-.stat-card.teachers {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-}
-
-.stats-card.assignments-card:hover,
-.stat-card.teachers:hover {
-  box-shadow: 0 8px 25px rgba(17, 153, 142, 0.3);
-}
-
-.stats-card.recent-card,
-.stat-card.admins {
-  background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
-}
-
-.stats-card.recent-card:hover,
-.stat-card.admins:hover {
-  box-shadow: 0 8px 25px rgba(252, 70, 107, 0.3);
-}
-
-.stat-card.activities {
-  background: linear-gradient(135deg, #ffa726 0%, #ffcc02 100%);
-}
-
-.stat-card.activities:hover {
-  box-shadow: 0 8px 25px rgba(255, 167, 38, 0.3);
-}
-
-body.dark-mode .stats-card,
-body.dark-mode .stat-card {
-  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-}
-
-body.dark-mode .stats-card:hover,
-body.dark-mode .stat-card:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
-}
-
-body.dark-mode .stats-card.assignments-card,
-body.dark-mode .stat-card.teachers {
-  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-}
-
-body.dark-mode .stats-card.recent-card,
-body.dark-mode .stat-card.admins {
-  background: linear-gradient(135deg, #7c2d12 0%, #b91c1c 100%);
-}
-
-body.dark-mode .stat-card.activities {
-  background: linear-gradient(135deg, #92400e 0%, #d97706 100%);
-}
-
-.stats-number,
-.stat-number {
-  font-size: 2.5rem;
-  font-weight: bold;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.stats-icon,
-.stat-icon {
-  font-size: 2.5rem;
-  opacity: 0.8;
-}
-
-.stats-icon i,
-.stat-icon i {
-  width: 40px;
-  height: 40px;
+  display: none;
 }
 
 /* Chart Cards */

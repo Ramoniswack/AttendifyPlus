@@ -1,0 +1,177 @@
+flowchart TD
+    A[Student Login] --> B{Authentication<br/>Success?}
+    B -->|No| A
+    B -->|Yes| C{Device<br/>Registered?}
+    
+    C -->|No| C1[Device Registration Required]
+    C1 --> C2[Request Registration Token]
+    C2 --> C3[Enter Token from Admin/Teacher]
+    C3 --> C4{Token Valid<br/>& Not Expired?}
+    C4 -->|No| C5[Show Error Message]
+    C5 --> C3
+    C4 -->|Yes| C6[Register Device Successfully]
+    C6 --> C7[Generate Device Fingerprint]
+    C7 --> C8[Save Device Information]
+    C8 --> D[Student Dashboard]
+    
+    C -->|Yes| D
+    
+    D --> E[My Subjects]
+    D --> F[Attendance]
+    D --> G[Study Materials]
+    D --> H[Assignments]
+    D --> I[Notifications]
+    D --> J[My Profile]
+    D --> Z[Logout]
+    
+    %% My Subjects Flow
+    E --> E1[View Current Semester Subjects]
+    E1 --> E2[Check Subject Details]
+    E2 --> E3[View Subject Code & Name]
+    E3 --> E4[Check Credit Hours]
+    E4 --> E5[View Lecture Hours]
+    E5 --> E6[Check if Elective/Core]
+    E6 --> E7[View Assigned Teacher]
+    E7 --> E8[Check Teacher Contact Info]
+    
+    %% Attendance Flow
+    F --> F1{Select Action}
+    F1 -->|Mark| F2[QR Code Attendance]
+    F1 -->|View| F3[My Attendance Records]
+    F1 -->|Summary| F4[Attendance Summary]
+    F1 -->|Analytics| F5[Attendance Analytics]
+    
+    F2 --> F2a[Open QR Code Scanner]
+    F2a --> F2b[Scan Teacher's QR Code]
+    F2b --> F2c{QR Code Valid<br/>& Active?}
+    F2c -->|No| F2d[Show Error Message]
+    F2d --> F2a
+    F2c -->|Yes| F2e[Submit Attendance Request]
+    F2e --> F2f[Show Success Confirmation]
+    F2f --> F2g[Wait for Teacher Approval]
+    F2g --> F2h[Receive Approval Notification]
+    
+    F3 --> F3a[Select Date Range]
+    F3a --> F3b[Filter by Subject]
+    F3b --> F3c[View Attendance History]
+    F3c --> F3d[Check Attendance Status]
+    F3d --> F3e[View Method Manual/QR]
+    F3e --> F3f[Check Attendance Date/Time]
+    
+    F4 --> F4a[View Overall Attendance %]
+    F4a --> F4b[Subject-wise Attendance %]
+    F4b --> F4c[Monthly Attendance Trends]
+    F4c --> F4d[Compare with Class Average]
+    F4d --> F4e[View Attendance Goals]
+    
+    F5 --> F5a[Check Attendance Warnings]
+    F5a --> F5b[View Low Attendance Alerts]
+    F5b --> F5c[See Improvement Suggestions]
+    F5c --> F5d[Track Attendance Progress]
+    
+    %% Study Materials Flow
+    G --> G1{Select Action}
+    G1 -->|Browse| G2[Browse All Materials]
+    G1 -->|Search| G3[Search Materials]
+    G1 -->|Downloads| G4[My Download History]
+    
+    G2 --> G2a[Filter by Subject]
+    G2a --> G2b[View Material List]
+    G2b --> G2c[Check Material Details]
+    G2c --> G2d[View Title & Description]
+    G2d --> G2e[Check Upload Date]
+    G2e --> G2f[View Teacher Name]
+    G2f --> G2g[Preview Material]
+    G2g --> G2h[Download Material]
+    G2h --> G2i[Track Download Activity]
+    
+    G3 --> G3a[Enter Search Keywords]
+    G3a --> G3b[Apply Tag Filters]
+    G3b --> G3c[Filter by Teacher]
+    G3c --> G3d[Filter by Upload Date]
+    G3d --> G3e[View Search Results]
+    G3e --> G3f[Select Material to Download]
+    
+    G4 --> G4a[View Downloaded Materials]
+    G4a --> G4b[Check Download Date/Time]
+    G4b --> G4c[Re-download if Needed]
+    G4c --> G4d[View Download Statistics]
+    
+    %% Assignments Flow
+    H --> H1{Select Action}
+    H1 -->|View| H2[View Available Assignments]
+    H1 -->|Submit| H3[Submit Assignment]
+    H1 -->|Track| H4[My Submissions]
+    H1 -->|Grades| H5[View Grades & Feedback]
+    
+    H2 --> H2a[Filter by Subject]
+    H2a --> H2b[Filter by Status Active/Due]
+    H2b --> H2c[View Assignment List]
+    H2c --> H2d[Open Assignment Details]
+    H2d --> H2e[Read Instructions]
+    H2e --> H2f[Check Due Date & Time]
+    H2f --> H2g[View Maximum Points]
+    H2g --> H2h[Download Instruction Files]
+    H2h --> H2i[Check Submission Requirements]
+    
+    H3 --> H3a[Select Assignment to Submit]
+    H3a --> H3b{Check Submission Type}
+    H3b -->|File Only| H3c[Upload Assignment File]
+    H3b -->|Text Only| H3d[Enter Text Response]
+    H3b -->|Both| H3e[Upload File & Enter Text]
+    H3c --> H3f[Review Submission]
+    H3d --> H3f
+    H3e --> H3f
+    H3f --> H3g[Submit Assignment]
+    H3g --> H3h[Receive Submission Confirmation]
+    H3h --> H3i{Check if Late}
+    H3i -->|Yes| H3j[Show Late Submission Warning]
+    H3i -->|No| H3k[Submission Successful]
+    
+    H4 --> H4a[View Submitted Assignments]
+    H4a --> H4b[Check Submission Status]
+    H4b --> H4c[View Submission Date/Time]
+    H4c --> H4d[Check if Graded]
+    H4d --> H4e[View Submission Details]
+    H4e --> H4f[Download Submitted Files]
+    
+    H5 --> H5a[View Graded Assignments]
+    H5a --> H5b[Check Received Grades]
+    H5b --> H5c[Read Teacher Feedback]
+    H5c --> H5d[View Grade Distribution]
+    H5d --> H5e[Compare with Class Average]
+    H5e --> H5f[Track Grade Trends]
+    
+    %% Notifications Flow
+    I --> I1[View All Notifications]
+    I1 --> I2[Filter by Type]
+    I2 --> I3[Assignment Notifications]
+    I3 --> I4[Material Upload Notifications]
+    I4 --> I5[Attendance Notifications]
+    I5 --> I6[General Announcements]
+    I6 --> I7[Mark Notifications as Read]
+    I7 --> I8[Delete Old Notifications]
+    
+    %% Profile Flow
+    J --> J1[View Profile Information]
+    J1 --> J2[Check Personal Details]
+    J2 --> J3[View Academic Information]
+    J3 --> J4[Check Department & Semester]
+    J4 --> J5[View Program Code & Join Year]
+    J5 --> J6[Edit Contact Information]
+    J6 --> J7[Update Profile Photo]
+    J7 --> J8[Change Login Password]
+    J8 --> J9[Manage Registered Devices]
+    J9 --> J10[View Device List]
+    J10 --> J11[Remove Old Devices]
+    J11 --> J12[Register New Device]
+    
+    style A fill:#e1f5fe
+    style C fill:#fff8e1
+    style D fill:#f3e5f5
+    style E fill:#fff3e0
+    style F fill:#e8f5e8
+    style G fill:#fce4ec
+    style H fill:#f1f8e9
+    style I fill:#e3f2fd
+    style J fill:#fafafa

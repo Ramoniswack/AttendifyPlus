@@ -1,0 +1,413 @@
+/* Class Analytics CSS - Dark Mode Responsive */
+
+/* Chart Container */
+.chart-container {
+  position: relative;
+  height: 300px;
+  margin: 1rem 0;
+}
+
+/* Chart Card Enhancements */
+.chart-card {
+  background: var(--card-light);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 25px var(--shadow-light);
+  border: none;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+body.dark-mode .chart-card {
+  background: var(--card-dark);
+  box-shadow: 0 8px 25px var(--shadow-dark);
+}
+
+.chart-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .chart-card:hover {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.chart-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+body.dark-mode .chart-title {
+  color: var(--text-dark);
+}
+
+.chart-title i {
+  color: var(--accent-light);
+}
+
+body.dark-mode .chart-title i {
+  color: var(--accent-dark);
+}
+
+/* Statistics Cards */
+.statistics-card {
+  background: var(--card-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px var(--shadow-light);
+  border: none;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+body.dark-mode .statistics-card {
+  background: var(--card-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+.statistics-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px var(--shadow-light);
+}
+
+body.dark-mode .statistics-card:hover {
+  box-shadow: 0 8px 25px var(--shadow-dark);
+}
+
+/* Progress Bar Enhancements */
+.progress {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border-light);
+  overflow: hidden;
+}
+
+body.dark-mode .progress {
+  background: var(--border-dark);
+}
+
+.progress-bar {
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+/* Form Select Enhancement */
+.form-select {
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--card-light);
+  color: var(--text-light);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .form-select {
+  border-color: var(--border-dark);
+  background: var(--card-dark);
+  color: var(--text-dark);
+}
+
+.form-select:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25);
+}
+
+body.dark-mode .form-select:focus {
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 0.2rem rgba(0, 255, 200, 0.25);
+}
+
+/* Empty State */
+.empty-state {
+  background: var(--card-light);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: 0 4px 15px var(--shadow-light);
+  border: 1px solid var(--border-light);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .empty-state {
+  background: var(--card-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+  border-color: var(--border-dark);
+}
+
+.empty-state i {
+  color: var(--text-muted-light);
+  margin-bottom: 1rem;
+}
+
+body.dark-mode .empty-state i {
+  color: var(--text-muted-dark);
+}
+
+.empty-state h4 {
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+}
+
+body.dark-mode .empty-state h4 {
+  color: var(--text-dark);
+}
+
+.empty-state p {
+  color: var(--text-muted-light);
+}
+
+body.dark-mode .empty-state p {
+  color: var(--text-muted-dark);
+}
+
+/* Text Color Enhancements */
+.text-success {
+  color: #28a745 !important;
+}
+
+body.dark-mode .text-success {
+  color: #40d962 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+body.dark-mode .text-danger {
+  color: #ff6b6b !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+body.dark-mode .text-warning {
+  color: #f4d03f !important;
+}
+
+.text-info {
+  color: #17a2b8 !important;
+}
+
+body.dark-mode .text-info {
+  color: #4fc3f7 !important;
+}
+
+.text-primary {
+  color: var(--accent-light) !important;
+}
+
+body.dark-mode .text-primary {
+  color: var(--accent-dark) !important;
+}
+
+/* Card Header Enhancements */
+.card-header {
+  background: var(--card-light);
+  border-bottom: 1px solid var(--border-light);
+  border-radius: 12px 12px 0 0 !important;
+  padding: 1.25rem 1.5rem;
+}
+
+body.dark-mode .card-header {
+  background: var(--card-dark);
+  border-bottom-color: var(--border-dark);
+}
+
+.card-title {
+  color: var(--text-light);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+body.dark-mode .card-title {
+  color: var(--text-dark);
+}
+
+.card-title i {
+  color: var(--accent-light);
+}
+
+body.dark-mode .card-title i {
+  color: var(--accent-dark);
+}
+
+/* Statistics Grid */
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-table-hover);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .stat-item {
+  background: var(--bg-table-hover);
+}
+
+.stat-item:hover {
+  background: var(--border-light);
+  transform: translateY(-2px);
+}
+
+body.dark-mode .stat-item:hover {
+  background: var(--border-dark);
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--text-muted-light);
+  font-weight: 500;
+}
+
+body.dark-mode .stat-label {
+  color: var(--text-muted-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chart-container {
+    height: 250px;
+  }
+  
+  .chart-card {
+    padding: 1rem;
+  }
+  
+  .statistics-card {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .statistics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .stat-number {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .chart-container {
+    height: 200px;
+  }
+  
+  .dashboard-container {
+    padding: 1rem;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .statistics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-number {
+    font-size: 1.25rem;
+  }
+  
+  .chart-title {
+    font-size: 1rem;
+  }
+}
+
+/* Animation Enhancements */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chart-card,
+.statistics-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.chart-card:nth-child(1) { animation-delay: 0.1s; }
+.chart-card:nth-child(2) { animation-delay: 0.2s; }
+.statistics-card:nth-child(1) { animation-delay: 0.3s; }
+.statistics-card:nth-child(2) { animation-delay: 0.4s; }
+
+/* Chart.js Dark Mode Support */
+body.dark-mode canvas {
+  filter: invert(0.9) hue-rotate(180deg);
+}
+
+/* Focus States for Accessibility */
+.form-select:focus {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+body.dark-mode .form-select:focus {
+  outline-color: var(--accent-dark);
+}
+
+/* Print Styles */
+@media print {
+  body.dark-mode {
+    background: white !important;
+    color: black !important;
+  }
+  
+  body.dark-mode .chart-card,
+  body.dark-mode .statistics-card {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  .btn {
+    display: none !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  body.dark-mode {
+    --border-dark: #666;
+    --text-dark: #fff;
+    --card-dark: #000;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+} 

@@ -416,7 +416,7 @@ function getSubmissionProgress($submissions, $total)
                         </div>
                     </div>
                     <!-- Assignment Cards Container (Minimal) -->
-                    <div class="assignments-container card p-3 mb-4" style="background: var(--card-light); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid var(--border-color);">
+                    <div class="assignments-container card p-3 mb-4">
                         <div class="assignments-grid">
                             <?php foreach ($activeAssignments as $assignment): ?>
                                 <div class="assignment-card" data-status="active" data-subject="<?= htmlspecialchars($assignment['SubjectCode'] ?? '') ?>">

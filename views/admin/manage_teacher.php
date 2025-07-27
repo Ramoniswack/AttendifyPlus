@@ -8,6 +8,7 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
 
 include '../../config/db_config.php';
 include '../../helpers/helpers.php';
+include '../../helpers/notification_helpers.php';
 
 $successMsg = '';
 $errorMsg = '';
@@ -176,15 +177,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $conn->commit();
 
         // Create notification for new teacher registration
-        createNotification(
-          $conn,
-          null,
-          'admin',
-          "New Teacher Added",
-          "Teacher '{$FullName}' has been successfully added to the system.",
-          'user-plus',
-          'info'
-        );
+        // Create notification for new teacher registration using enhanced notification system
+        notifyAllAdmins($conn, $_SESSION['UserID'], 'added', 'teacher', $FullName);
 
         $_SESSION['success_message'] = "Teacher added successfully.";
         header("Location: " . $_SERVER['PHP_SELF']);
@@ -224,10 +218,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   if (empty($Address)) {
     $errors['Address'] = "Address is required.";
   }
-  if ($SubjectIDs !== null && is_array($SubjectIDs)) {
-    if (empty($SubjectIDs) || !is_array($SubjectIDs) || empty($SubjectIDs[0])) {
-      $errors['SubjectID'] = "Please assign at least one subject.";
-    }
+  // Only validate subjects if they are being explicitly updated
+  $subjectsUpdated = isset($_POST['subjects_updated']) && $_POST['subjects_updated'] == '1';
+  if ($subjectsUpdated && (empty($SubjectIDs) || !is_array($SubjectIDs) || (count($SubjectIDs) === 1 && empty($SubjectIDs[0])))) {
+    $errors['SubjectID'] = "Please assign at least one subject.";
   }
   // Photo upload
   $PhotoURL = '';
@@ -286,17 +280,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       $updateLogin->bind_param("ssi", $Email, $currentStatus, $loginID);
       $updateLogin->execute();
       $updateLogin->close();
-      // Update subject assignment (remove old, add new)
-      if ($SubjectIDs !== null && is_array($SubjectIDs)) {
+      // Update subject assignment only if subjects were actually updated
+      if ($subjectsUpdated && $SubjectIDs !== null && is_array($SubjectIDs)) {
         $conn->query("DELETE FROM teacher_subject_map WHERE TeacherID = " . intval($teacherID));
         $stmtSub = $conn->prepare("INSERT INTO teacher_subject_map (TeacherID, SubjectID) VALUES (?, ?)");
         foreach ($SubjectIDs as $subjId) {
-          $stmtSub->bind_param("ii", $teacherID, $subjId);
-          $stmtSub->execute();
+          if (!empty($subjId)) {
+            $stmtSub->bind_param("ii", $teacherID, $subjId);
+            $stmtSub->execute();
+          }
         }
         $stmtSub->close();
       }
       $conn->commit();
+
+      // Create notification for teacher update
+      notifyAllAdmins($conn, $_SESSION['UserID'], 'edited', 'teacher', $FullName);
+
       $_SESSION['success_message'] = "Teacher details updated successfully.";
     } catch (Exception $e) {
       $conn->rollback();
@@ -328,10 +328,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmtSub->close();
       }
       $conn->commit();
+
+      // Get teacher name for notification
+      $teacherNameStmt = $conn->prepare("SELECT t.FullName FROM teachers t WHERE t.TeacherID = ?");
+      $teacherNameStmt->bind_param("i", $teacherID);
+      $teacherNameStmt->execute();
+      $teacherName = $teacherNameStmt->get_result()->fetch_assoc()['FullName'];
+      $teacherNameStmt->close();
+
+      // Create notification for subject update
+      notifyAllAdmins($conn, $_SESSION['UserID'], 'edited', 'teacher', $teacherName);
+
       $_SESSION['success_message'] = "Subjects updated successfully.";
     } catch (Exception $e) {
       $conn->rollback();
       $_SESSION['error_message'] = "Error updating subjects: " . $e->getMessage();
+    }
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+  }
+}
+
+// Handle subject removal
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'remove_subjects') {
+  $teacherID = $_POST['teacher_id'] ?? '';
+  $subjectsToRemove = isset($_POST['SubjectsToRemove']) ? (array)$_POST['SubjectsToRemove'] : [];
+
+  if (!empty($teacherID) && !empty($subjectsToRemove)) {
+    $conn->begin_transaction();
+    try {
+      // Remove selected subjects from teacher
+      $stmt = $conn->prepare("DELETE FROM teacher_subject_map WHERE TeacherID = ? AND SubjectID = ?");
+      foreach ($subjectsToRemove as $subjectId) {
+        $stmt->bind_param("ii", $teacherID, $subjectId);
+        $stmt->execute();
+      }
+      $stmt->close();
+
+      $conn->commit();
+
+      // Get teacher name for notification
+      $teacherNameStmt = $conn->prepare("SELECT t.FullName FROM teachers t WHERE t.TeacherID = ?");
+      $teacherNameStmt->bind_param("i", $teacherID);
+      $teacherNameStmt->execute();
+      $teacherName = $teacherNameStmt->get_result()->fetch_assoc()['FullName'];
+      $teacherNameStmt->close();
+
+      // Create notification for subject removal
+      notifyAllAdmins($conn, $_SESSION['UserID'], 'edited', 'teacher', $teacherName);
+
+      $_SESSION['success_message'] = "Subjects removed successfully.";
+    } catch (Exception $e) {
+      $conn->rollback();
+      $_SESSION['error_message'] = "Error removing subjects: " . $e->getMessage();
     }
     header("Location: " . $_SERVER['PHP_SELF']);
     exit();
@@ -352,6 +401,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $updateStmt->bind_param("si", $newStatus, $teacherID);
 
     if ($updateStmt->execute()) {
+      // Get teacher name for notification
+      $teacherNameStmt = $conn->prepare("SELECT t.FullName FROM teachers t WHERE t.TeacherID = ?");
+      $teacherNameStmt->bind_param("i", $teacherID);
+      $teacherNameStmt->execute();
+      $teacherName = $teacherNameStmt->get_result()->fetch_assoc()['FullName'];
+      $teacherNameStmt->close();
+
+      // Create notification for teacher status change
+      $statusAction = $newStatus === 'active' ? 'activated' : 'deactivated';
+      notifyAllAdmins($conn, $_SESSION['UserID'], $statusAction, 'teacher', $teacherName);
+
       $_SESSION['success_message'] = "Teacher status updated successfully.";
     } else {
       $_SESSION['error_message'] = "Failed to update teacher status.";
@@ -390,7 +450,7 @@ while ($row = $res->fetch_assoc()) {
 
 // Fetch teacher subjects for detail view
 $teacherSubjects = [];
-$subjectSql = "SELECT ts.TeacherID, s.SubjectName, s.SubjectCode, d.DepartmentName, sem.SemesterNumber
+$subjectSql = "SELECT ts.TeacherID, ts.SubjectID, s.SubjectName, s.SubjectCode, d.DepartmentName, sem.SemesterNumber
                FROM teacher_subject_map ts
                JOIN subjects s ON ts.SubjectID = s.SubjectID
                JOIN departments d ON s.DepartmentID = d.DepartmentID
@@ -457,6 +517,386 @@ while ($row = $assignedRes->fetch_assoc()) {
   <script src="../../assets/js/lucide.min.js"></script>
   <script src="../../assets/js/manage_teacher.js" defer></script>
   <script src="../../assets/js/navbar_admin.js" defer></script>
+  <style>
+    /* Subject Assignment Container - Minimal & Dark Mode Responsive */
+    .subject-assignment-container {
+      border: 1px solid var(--bs-border-color);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      background-color: var(--bs-body-bg);
+      transition: all 0.2s ease;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .subject-selection-container {
+      border: 1px solid var(--bs-border-color);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      background-color: var(--bs-body-bg);
+      transition: all 0.2s ease;
+    }
+
+    .dark-mode .subject-selection-container {
+      border-color: var(--bs-border-color);
+      background-color: var(--bs-dark);
+    }
+
+    /* Subject Select Styling */
+    .readonly-multiselect,
+    .subject-select {
+      border: 1px solid var(--bs-border-color);
+      background-color: var(--bs-body-bg);
+      color: var(--bs-body-color);
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+      line-height: 1.4;
+      overflow-y: auto !important;
+      scrollbar-width: thin;
+      min-height: 120px !important;
+      max-height: 200px !important;
+    }
+
+    .readonly-multiselect::-webkit-scrollbar,
+    .subject-select::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .readonly-multiselect::-webkit-scrollbar-track,
+    .subject-select::-webkit-scrollbar-track {
+      background: var(--bs-light);
+      border-radius: 3px;
+    }
+
+    .readonly-multiselect::-webkit-scrollbar-thumb,
+    .subject-select::-webkit-scrollbar-thumb {
+      background: var(--bs-secondary);
+      border-radius: 3px;
+    }
+
+    .readonly-multiselect::-webkit-scrollbar-thumb:hover,
+    .subject-select::-webkit-scrollbar-thumb:hover {
+      background: var(--bs-secondary-dark);
+    }
+
+    .readonly-multiselect:focus,
+    .subject-select:focus {
+      border-color: var(--bs-primary);
+      box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+    }
+
+    .readonly-multiselect option,
+    .subject-select option {
+      padding: 0.375rem 0.5rem;
+      background-color: var(--bs-body-bg);
+      color: var(--bs-body-color);
+      border-bottom: 1px solid var(--bs-border-color);
+      font-size: 0.875rem;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .readonly-multiselect option:last-child,
+    .subject-select option:last-child {
+      border-bottom: none;
+    }
+
+    .readonly-multiselect option:hover,
+    .subject-select option:hover {
+      background-color: var(--bs-primary);
+      color: white;
+    }
+
+    .readonly-multiselect option:checked,
+    .subject-select option:checked {
+      background-color: var(--bs-primary);
+      color: white;
+    }
+
+    /* Subject Assignment Buttons */
+    .subject-assignment-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+
+    .subject-assignment-buttons .btn {
+      font-size: 0.8rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.375rem;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    /* Dark Mode Specific Adjustments */
+    .dark-mode .subject-assignment-container,
+    .dark-mode .subject-selection-container {
+      background-color: var(--bs-dark);
+      border-color: var(--bs-border-color);
+    }
+
+    .dark-mode .readonly-multiselect,
+    .dark-mode .subject-select {
+      background-color: var(--bs-dark);
+      border-color: var(--bs-border-color);
+      color: var(--bs-body-color);
+    }
+
+    .dark-mode .readonly-multiselect option,
+    .dark-mode .subject-select option {
+      background-color: var(--bs-dark);
+      color: var(--bs-body-color);
+      border-color: var(--bs-border-color);
+    }
+
+    .dark-mode .readonly-multiselect option:hover,
+    .dark-mode .subject-select option:hover {
+      background-color: var(--bs-primary);
+      color: white;
+    }
+
+    /* Subject Status Badge */
+    .subject-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+      border-radius: 0.375rem;
+      background-color: var(--bs-success-bg-subtle);
+      color: var(--bs-success-text-emphasis);
+      margin-bottom: 0.5rem;
+      border: 1px solid var(--bs-success-border-subtle);
+    }
+
+    .dark-mode .subject-status {
+      background-color: var(--bs-success-bg-subtle);
+      color: var(--bs-success-text-emphasis);
+      border-color: var(--bs-success-border-subtle);
+    }
+
+    /* Empty State */
+    .subject-empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      color: var(--bs-secondary);
+      font-style: italic;
+      font-size: 0.875rem;
+      background-color: var(--bs-light);
+      border: 1px dashed var(--bs-border-color);
+      border-radius: 0.375rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .dark-mode .subject-empty-state {
+      background-color: var(--bs-dark);
+      border-color: var(--bs-border-color);
+      color: var(--bs-secondary);
+    }
+
+    /* New Subject List Container */
+    .subject-list-container {
+      border: 1px solid var(--bs-border-color);
+      border-radius: 0.375rem;
+      background-color: var(--bs-body-bg);
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+
+    .dark-mode .subject-list-container {
+      border-color: #4a5568;
+      background-color: #1a202c;
+    }
+
+    .subject-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      margin-bottom: 0.25rem;
+      background-color: var(--bs-light);
+      border-radius: 0.25rem;
+      border: 1px solid var(--bs-border-color);
+      transition: all 0.2s ease;
+    }
+
+    .dark-mode .subject-item {
+      background-color: #2d3748;
+      border-color: #4a5568;
+      color: #ffffff;
+    }
+
+    .dark-mode .subject-item {
+      background-color: #2d3748;
+      border-color: #4a5568;
+      color: #ffffff;
+    }
+
+    .subject-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .subject-text {
+      font-size: 0.875rem;
+      color: var(--bs-body-color);
+      flex: 1;
+    }
+
+    .dark-mode .subject-text {
+      color: #ffffff !important;
+    }
+
+    .subject-list-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .subject-list-container::-webkit-scrollbar-track {
+      background: var(--bs-light);
+      border-radius: 3px;
+    }
+
+    .subject-list-container::-webkit-scrollbar-thumb {
+      background: var(--bs-secondary);
+      border-radius: 3px;
+    }
+
+    .subject-list-container::-webkit-scrollbar-thumb:hover {
+      background: var(--bs-secondary-dark);
+    }
+
+    /* Remove Subjects Container */
+    .remove-subjects-container {
+      border: 1px solid var(--bs-border-color);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      background-color: var(--bs-body-bg);
+      transition: all 0.2s ease;
+    }
+
+    .dark-mode .remove-subjects-container {
+      border-color: var(--bs-border-color);
+      background-color: var(--bs-dark);
+    }
+
+    .remove-subjects-select {
+      border: 1px solid var(--bs-border-color);
+      background-color: var(--bs-body-bg);
+      color: var(--bs-body-color);
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+      line-height: 1.4;
+      overflow-y: auto !important;
+      scrollbar-width: thin;
+    }
+
+    .dark-mode .remove-subjects-select {
+      border-color: var(--bs-border-color);
+      background-color: var(--bs-dark);
+      color: var(--bs-body-color);
+    }
+
+    .remove-subjects-select option {
+      padding: 0.375rem 0.5rem;
+      background-color: var(--bs-body-bg);
+      color: var(--bs-body-color);
+      border-bottom: 1px solid var(--bs-border-color);
+      font-size: 0.875rem;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dark-mode .remove-subjects-select option {
+      background-color: var(--bs-dark);
+      color: var(--bs-body-color);
+      border-color: var(--bs-border-color);
+    }
+
+    .remove-subjects-select option:hover {
+      background-color: var(--bs-danger);
+      color: white;
+    }
+
+    .remove-subjects-select option:checked {
+      background-color: var(--bs-danger);
+      color: white;
+    }
+
+    /* Subject Selection Header */
+    .subject-selection-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .subject-selection-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .dark-mode .subject-selection-actions .btn {
+      border-color: var(--bs-border-color);
+      color: var(--bs-body-color);
+    }
+
+    .dark-mode .subject-selection-actions .btn:hover {
+      background-color: var(--bs-primary);
+      border-color: var(--bs-primary);
+      color: white;
+    }
+
+    .subject-selection-actions .btn {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 576px) {
+      .subject-selection-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .subject-selection-actions {
+        justify-content: center;
+      }
+
+      .subject-assignment-container,
+      .subject-selection-container {
+        padding: 0.5rem;
+      }
+
+      .readonly-multiselect,
+      .subject-select {
+        font-size: 0.8rem;
+      }
+
+      .readonly-multiselect option,
+      .subject-select option {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.375rem;
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .subject-assignment-buttons {
+        flex-direction: column;
+      }
+
+      .subject-assignment-buttons .btn {
+        width: 100%;
+      }
+    }
+  </style>
   <style>
     .readonly-multiselect {
       pointer-events: none;
@@ -707,7 +1147,6 @@ while ($row = $assignedRes->fetch_assoc()) {
                 <td>
                   <div>
                     <div class="fw-semibold"><?= htmlspecialchars($teacher['FullName']) ?></div>
-                    <small class="text-muted">ID: <?= $teacher['TeacherID'] ?></small>
                   </div>
                 </td>
                 <td>
@@ -792,6 +1231,7 @@ while ($row = $assignedRes->fetch_assoc()) {
             <form method="POST" action="" enctype="multipart/form-data" class="update-teacher-form">
               <input type="hidden" name="action" value="update_teacher">
               <input type="hidden" name="teacher_id" value="<?= $teacher['TeacherID'] ?>">
+              <input type="hidden" name="subjects_updated" value="0" id="subjectsUpdated<?= $teacher['TeacherID'] ?>">
               <div class="modal-body">
                 <div class="row">
                   <div class="col-md-4 text-center">
@@ -859,25 +1299,40 @@ while ($row = $assignedRes->fetch_assoc()) {
                       </div>
                       <div class="col-12">
                         <label class="form-label">Subject Assignment</label>
-                        <select name="SubjectID[]" class="form-select readonly-multiselect" multiple>
-                          <?php
-                          // Only show subjects currently assigned to the teacher by default
-                          if (isset($teacherSubjects[$teacher['TeacherID']]) && count($teacherSubjects[$teacher['TeacherID']]) > 0) {
-                            foreach ($teacherSubjects[$teacher['TeacherID']] as $assignedSubj) {
-                              $subjId = $assignedSubj['SubjectID'];
-                              $subjCode = htmlspecialchars($assignedSubj['SubjectCode'] ?? '');
-                              $subjName = htmlspecialchars($assignedSubj['SubjectName'] ?? '');
-                              $deptName = htmlspecialchars($assignedSubj['DepartmentName'] ?? '');
-                              $semNum = htmlspecialchars($assignedSubj['SemesterNumber'] ?? '');
-                              echo "<option value=\"$subjId\" selected>$subjCode - $subjName ($deptName, Sem $semNum)</option>";
-                            }
-                          }
-                          ?>
-                        </select>
-                        <small class="form-text text-muted">Currently assigned subjects. To add or remove, use the form below.</small>
-                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#assignSubjectsModal<?= $teacher['TeacherID'] ?>">
-                          Assign New Subjects
-                        </button>
+                        <div class="subject-assignment-container">
+                          <?php if (isset($teacherSubjects[$teacher['TeacherID']]) && count($teacherSubjects[$teacher['TeacherID']]) > 0): ?>
+                            <div class="subject-status">
+                              <i data-lucide="check-circle" class="me-1"></i>
+                              <?= count($teacherSubjects[$teacher['TeacherID']]) ?> subject(s) assigned
+                            </div>
+                            <div class="subject-list-container">
+                              <?php foreach ($teacherSubjects[$teacher['TeacherID']] as $assignedSubj): ?>
+                                <?php
+                                $subjCode = htmlspecialchars($assignedSubj['SubjectCode'] ?? '');
+                                $subjName = htmlspecialchars($assignedSubj['SubjectName'] ?? '');
+                                $deptName = htmlspecialchars($assignedSubj['DepartmentName'] ?? '');
+                                $semNum = htmlspecialchars($assignedSubj['SemesterNumber'] ?? '');
+                                ?>
+                                <div class="subject-item">
+                                  <span class="subject-text"><?= $subjCode ?> - <?= $subjName ?> (<?= $deptName ?>, Sem <?= $semNum ?>)</span>
+                                </div>
+                              <?php endforeach; ?>
+                            </div>
+                          <?php else: ?>
+                            <div class="subject-empty-state">
+                              <i data-lucide="book-open" class="me-2"></i>
+                              No subjects assigned
+                            </div>
+                            <div class="subject-list-container">
+                            </div>
+                          <?php endif; ?>
+
+                          <div class="subject-assignment-buttons">
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#assignSubjectsModal<?= $teacher['TeacherID'] ?>">
+                              <i data-lucide="plus"></i> Manage Subjects
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -906,7 +1361,7 @@ while ($row = $assignedRes->fetch_assoc()) {
       </div>
       <!-- Add the assign subjects modal for each teacher (at the end of the edit modal): -->
       <div class="modal fade" id="assignSubjectsModal<?= $teacher['TeacherID'] ?>" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
           <div class="modal-content">
             <form method="POST" action="" class="assign-subjects-form">
               <input type="hidden" name="action" value="update_subjects">
@@ -936,15 +1391,92 @@ while ($row = $assignedRes->fetch_assoc()) {
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Subjects</label>
-                  <select name="SubjectID[]" class="form-select subject-select" multiple required style="min-height: 200px;">
-                    <!-- Options will be populated by JS -->
-                  </select>
-                  <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple subjects.</small>
+                  <div class="subject-selection-container">
+                    <div class="subject-selection-header mb-2">
+                      <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple subjects.</small>
+                      <div class="subject-selection-actions">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="console.log('Select All button clicked'); selectAllSubjects(<?= $teacher['TeacherID'] ?>);">
+                          <i data-lucide="check-square"></i> Select All
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm ms-1" onclick="console.log('Clear All button clicked'); deselectAllSubjects(<?= $teacher['TeacherID'] ?>);">
+                          <i data-lucide="square"></i> Clear All
+                        </button>
+
+                        <?php if (isset($teacherSubjects[$teacher['TeacherID']]) && count($teacherSubjects[$teacher['TeacherID']]) > 0): ?>
+                          <button type="button" class="btn btn-outline-danger btn-sm ms-1" onclick="showRemoveSubjectsModal(<?= $teacher['TeacherID'] ?>)">
+                            <i data-lucide="trash-2"></i> Remove Subjects
+                          </button>
+                        <?php endif; ?>
+                      </div>
+                    </div>
+                    <select name="SubjectID[]" class="form-select subject-select" multiple required style="min-height: 200px; max-height: 300px; overflow-y: auto;">
+                      <!-- Options will be populated by JS -->
+                    </select>
+                    <small class="form-text text-muted mt-2 d-block">Selected subjects will be assigned to the teacher.</small>
+                  </div>
                 </div>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="submit" class="btn btn-primary">Assign</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remove Subjects Modal -->
+      <div class="modal fade" id="removeSubjectsModal<?= $teacher['TeacherID'] ?>" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <form method="POST" action="" class="remove-subjects-form">
+              <input type="hidden" name="action" value="remove_subjects">
+              <input type="hidden" name="teacher_id" value="<?= $teacher['TeacherID'] ?>">
+              <div class="modal-header">
+                <h5 class="modal-title">
+                  <i data-lucide="trash-2" class="me-2"></i>
+                  Remove Subjects from <?= htmlspecialchars($teacher['FullName']) ?>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="alert alert-warning">
+                  <i data-lucide="alert-triangle" class="me-2"></i>
+                  Select the subjects you want to remove from this teacher.
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Currently Assigned Subjects</label>
+                  <div class="remove-subjects-container">
+                    <select name="SubjectsToRemove[]" class="form-select remove-subjects-select" multiple style="min-height: 200px; max-height: 300px; overflow-y: auto;">
+                      <?php if (isset($teacherSubjects[$teacher['TeacherID']]) && count($teacherSubjects[$teacher['TeacherID']]) > 0): ?>
+                        <?php foreach ($teacherSubjects[$teacher['TeacherID']] as $assignedSubj): ?>
+                          <?php
+                          $subjId = $assignedSubj['SubjectID'];
+                          $subjCode = htmlspecialchars($assignedSubj['SubjectCode'] ?? '');
+                          $subjName = htmlspecialchars($assignedSubj['SubjectName'] ?? '');
+                          $deptName = htmlspecialchars($assignedSubj['DepartmentName'] ?? '');
+                          $semNum = htmlspecialchars($assignedSubj['SemesterNumber'] ?? '');
+                          ?>
+                          <option value="<?= $subjId ?>"><?= $subjCode ?> - <?= $subjName ?> (<?= $deptName ?>, Sem <?= $semNum ?>)</option>
+                        <?php endforeach; ?>
+                      <?php endif; ?>
+                    </select>
+                    <div class="mt-2">
+                      <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAllRemoveSubjects(<?= $teacher['TeacherID'] ?>)">
+                        <i data-lucide="check-square"></i> Select All
+                      </button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm ms-1" onclick="deselectAllRemoveSubjects(<?= $teacher['TeacherID'] ?>)">
+                        <i data-lucide="square"></i> Clear All
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger">
+                  <i data-lucide="trash-2" class="me-1"></i> Remove Selected
+                </button>
               </div>
             </form>
           </div>
@@ -991,11 +1523,143 @@ while ($row = $assignedRes->fetch_assoc()) {
           // Reset modal fields on open
           const modal = document.getElementById('assignSubjectsModal<?= $teacher['TeacherID'] ?>');
           modal.addEventListener('show.bs.modal', () => {
+            console.log('Assign subjects modal opened for teacher <?= $teacher['TeacherID'] ?>');
             modal.querySelector('.department-select').value = '';
             modal.querySelector('.semester-select').value = '';
             modal.querySelector('.subject-select').innerHTML = '';
           });
+
+          // Add event listener to subject select in edit form
+          const subjectSelect = document.getElementById('subjectSelect<?= $teacher['TeacherID'] ?>');
+          if (subjectSelect) {
+            subjectSelect.addEventListener('change', () => {
+              markSubjectsUpdated(<?= $teacher['TeacherID'] ?>);
+            });
+          }
         });
+
+        // Function to select all available subjects
+        function selectAllSubjects(teacherId) {
+          console.log(`selectAllSubjects called for teacher ${teacherId}`);
+          const modal = document.getElementById(`assignSubjectsModal${teacherId}`);
+          if (!modal) {
+            console.error(`Modal not found for teacher ${teacherId}`);
+            return;
+          }
+          const subjectSelect = modal.querySelector('.subject-select');
+          if (subjectSelect && subjectSelect.options.length > 0) {
+            console.log(`Found ${subjectSelect.options.length} options to select`);
+            for (let i = 0; i < subjectSelect.options.length; i++) {
+              subjectSelect.options[i].selected = true;
+              console.log(`Selected option ${i}: ${subjectSelect.options[i].textContent}`);
+            }
+            console.log(`Successfully selected all ${subjectSelect.options.length} subjects for teacher ${teacherId}`);
+            // Trigger change event to update any listeners
+            const changeEvent = new Event('change', {
+              bubbles: true
+            });
+            subjectSelect.dispatchEvent(changeEvent);
+          } else {
+            console.error(`Subject select not found or no options available for teacher ${teacherId}`);
+          }
+        }
+
+        // Function to deselect all subjects
+        function deselectAllSubjects(teacherId) {
+          console.log(`deselectAllSubjects called for teacher ${teacherId}`);
+          const modal = document.getElementById(`assignSubjectsModal${teacherId}`);
+          if (!modal) {
+            console.error(`Modal not found for teacher ${teacherId}`);
+            return;
+          }
+          const subjectSelect = modal.querySelector('.subject-select');
+          if (subjectSelect) {
+            console.log(`Found ${subjectSelect.options.length} options to deselect`);
+            for (let i = 0; i < subjectSelect.options.length; i++) {
+              subjectSelect.options[i].selected = false;
+              console.log(`Deselected option ${i}: ${subjectSelect.options[i].textContent}`);
+            }
+            console.log(`Successfully cleared all subjects for teacher ${teacherId}`);
+            // Trigger change event to update any listeners
+            const changeEvent = new Event('change', {
+              bubbles: true
+            });
+            subjectSelect.dispatchEvent(changeEvent);
+          }
+        }
+
+
+
+        // Function to mark subjects as updated when changed
+        function markSubjectsUpdated(teacherId) {
+          document.getElementById(`subjectsUpdated${teacherId}`).value = '1';
+        }
+
+        // Function to show remove subjects modal
+        function showRemoveSubjectsModal(teacherId) {
+          const assignModal = document.getElementById(`assignSubjectsModal${teacherId}`);
+          const removeModal = document.getElementById(`removeSubjectsModal${teacherId}`);
+
+          // Close the assign modal first
+          const assignModalInstance = bootstrap.Modal.getInstance(assignModal);
+          if (assignModalInstance) {
+            assignModalInstance.hide();
+          }
+
+          // Show the remove modal
+          const removeModalInstance = new bootstrap.Modal(removeModal);
+          removeModalInstance.show();
+        }
+
+        // Function to select all subjects in remove modal
+        function selectAllRemoveSubjects(teacherId) {
+          const modal = document.getElementById(`removeSubjectsModal${teacherId}`);
+          if (!modal) {
+            console.error(`Remove modal not found for teacher ${teacherId}`);
+            return;
+          }
+          const subjectSelect = modal.querySelector('.remove-subjects-select');
+          if (subjectSelect && subjectSelect.options.length > 0) {
+            Array.from(subjectSelect.options).forEach(option => {
+              option.selected = true;
+            });
+            console.log(`Selected all ${subjectSelect.options.length} subjects for removal from teacher ${teacherId}`);
+          }
+        }
+
+        // Function to deselect all subjects in remove modal
+        function deselectAllRemoveSubjects(teacherId) {
+          const modal = document.getElementById(`removeSubjectsModal${teacherId}`);
+          if (!modal) {
+            console.error(`Remove modal not found for teacher ${teacherId}`);
+            return;
+          }
+          const subjectSelect = modal.querySelector('.remove-subjects-select');
+          if (subjectSelect) {
+            Array.from(subjectSelect.options).forEach(option => {
+              option.selected = false;
+            });
+            console.log(`Cleared all subjects for removal from teacher ${teacherId}`);
+          }
+        }
+
+        // Test function to verify select all works
+        function testSelectAll(teacherId) {
+          console.log('=== TESTING SELECT ALL ===');
+          const modal = document.getElementById(`assignSubjectsModal${teacherId}`);
+          console.log('Modal found:', !!modal);
+          if (modal) {
+            const subjectSelect = modal.querySelector('.subject-select');
+            console.log('Subject select found:', !!subjectSelect);
+            console.log('Number of options:', subjectSelect ? subjectSelect.options.length : 0);
+            if (subjectSelect && subjectSelect.options.length > 0) {
+              console.log('First option:', subjectSelect.options[0].textContent);
+              subjectSelect.options[0].selected = true;
+              console.log('First option selected:', subjectSelect.options[0].selected);
+            }
+          }
+          console.log('=== END TEST ===');
+        }
       </script>
     <?php endforeach; ?>
 

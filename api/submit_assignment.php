@@ -1,141 +1,196 @@
 <?php
 session_start();
-require_once('../config/db_config.php');
-require_once('../helpers/notification_helpers.php');
+require_once(__DIR__ . '/../config/db_config.php');
 
+// Check session
 if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'student') {
     http_response_code(401);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-    exit;
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    exit;
-}
+$studentID = $_SESSION['UserID'];
 
 try {
-    $assignmentId = intval($_POST['assignment_id'] ?? 0);
-    $submissionText = trim($_POST['submission_text'] ?? '');
-
-    if ($assignmentId <= 0) {
-        echo json_encode(['success' => false, 'error' => 'Invalid assignment ID']);
-        exit;
+    // Validate input
+    if (!isset($_POST['assignment_id']) || empty($_POST['assignment_id'])) {
+        throw new Exception('Assignment ID is required');
     }
 
-    // Get student information
-    $studentQuery = "SELECT s.StudentID, s.FullName FROM students s WHERE s.LoginID = ?";
-    $stmt = $conn->prepare($studentQuery);
-    $stmt->bind_param("i", $_SESSION['LoginID']);
-    $stmt->execute();
-    $student = $stmt->get_result()->fetch_assoc();
-
-    if (!$student) {
-        echo json_encode(['success' => false, 'error' => 'Student information not found']);
-        exit;
-    }
+    $assignmentID = intval($_POST['assignment_id']);
+    $submissionText = $_POST['submission_text'] ?? '';
 
     // Check if assignment exists and is active
-    $assignmentQuery = "SELECT a.*, s.SubjectID, t.TeacherID, t.FullName as TeacherName 
-                       FROM assignments a 
-                       JOIN subjects s ON a.SubjectID = s.SubjectID 
-                       JOIN teachers t ON a.TeacherID = t.TeacherID 
-                       WHERE a.AssignmentID = ? AND a.IsActive = 1";
-    $stmt = $conn->prepare($assignmentQuery);
-    $stmt->bind_param("i", $assignmentId);
-    $stmt->execute();
-    $assignment = $stmt->get_result()->fetch_assoc();
+    $assignmentQuery = $conn->prepare("
+        SELECT a.*, s.SubjectCode, s.SubjectName, s.DepartmentID, s.SemesterID, t.FullName as TeacherName
+        FROM assignments a
+        JOIN subjects s ON a.SubjectID = s.SubjectID
+        JOIN teachers t ON a.TeacherID = t.TeacherID
+        WHERE a.AssignmentID = ? AND a.Status IN ('active', 'graded')
+    ");
+    $assignmentQuery->bind_param("i", $assignmentID);
+    $assignmentQuery->execute();
+    $assignmentResult = $assignmentQuery->get_result();
+    $assignment = $assignmentResult->fetch_assoc();
 
     if (!$assignment) {
-        echo json_encode(['success' => false, 'error' => 'Assignment not found or inactive']);
-        exit;
+        throw new Exception('Assignment not found or not available for submission');
+    }
+
+    // Check if student has access to this assignment (same department and semester)
+    $studentQuery = $conn->prepare("
+        SELECT DepartmentID, SemesterID
+        FROM students
+        WHERE StudentID = ?
+    ");
+    $studentQuery->bind_param("i", $studentID);
+    $studentQuery->execute();
+    $studentResult = $studentQuery->get_result();
+    $student = $studentResult->fetch_assoc();
+
+    if ($student['DepartmentID'] != $assignment['DepartmentID'] || $student['SemesterID'] != $assignment['SemesterID']) {
+        throw new Exception('Access denied to this assignment');
     }
 
     // Check if already submitted
-    $existingQuery = "SELECT SubmissionID FROM assignment_submissions WHERE AssignmentID = ? AND StudentID = ?";
-    $stmt = $conn->prepare($existingQuery);
-    $stmt->bind_param("ii", $assignmentId, $student['StudentID']);
-    $stmt->execute();
-    if ($stmt->get_result()->num_rows > 0) {
-        echo json_encode(['success' => false, 'error' => 'Assignment already submitted']);
-        exit;
+    $existingSubmissionQuery = $conn->prepare("
+        SELECT SubmissionID FROM assignment_submissions 
+        WHERE AssignmentID = ? AND StudentID = ?
+    ");
+    $existingSubmissionQuery->bind_param("ii", $assignmentID, $studentID);
+    $existingSubmissionQuery->execute();
+    $existingSubmissionResult = $existingSubmissionQuery->get_result();
+
+    if ($existingSubmissionResult->num_rows > 0) {
+        throw new Exception('Assignment already submitted');
     }
 
-    // Handle file uploads
-    $uploadedFiles = [];
-    if (isset($_FILES['files']) && is_array($_FILES['files']['name'])) {
-        $uploadDir = '../../uploads/assignments/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        for ($i = 0; $i < count($_FILES['files']['name']); $i++) {
-            if ($_FILES['files']['error'][$i] === UPLOAD_ERR_OK) {
-                $fileName = $_FILES['files']['name'][$i];
-                $fileSize = $_FILES['files']['size'][$i];
-                $fileTmpName = $_FILES['files']['tmp_name'][$i];
-
-                // Generate unique filename
-                $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
-                $uniqueFileName = uniqid() . '_' . time() . '.' . $fileExtension;
-                $filePath = $uploadDir . $uniqueFileName;
-
-                if (move_uploaded_file($fileTmpName, $filePath)) {
-                    $uploadedFiles[] = [
-                        'original_name' => $fileName,
-                        'file_path' => $filePath,
-                        'file_size' => $fileSize
-                    ];
-                }
-            }
+    // Check if due date has passed
+    $isLate = false;
+    if ($assignment['DueDate'] && strtotime($assignment['DueDate']) < time()) {
+        $isLate = true;
+        if (!$assignment['AllowLateSubmissions']) {
+            throw new Exception('Assignment due date has passed and late submissions are not allowed');
         }
     }
 
-    // Insert submission
+    // Start transaction
     $conn->begin_transaction();
 
     try {
-        // Insert main submission
-        $insertQuery = "INSERT INTO assignment_submissions (AssignmentID, StudentID, SubmissionText, Status, SubmittedAt) VALUES (?, ?, ?, 'submitted', NOW())";
-        $stmt = $conn->prepare($insertQuery);
-        $stmt->bind_param("iis", $assignmentId, $student['StudentID'], $submissionText);
-        $stmt->execute();
-        $submissionId = $conn->insert_id;
+        // Insert submission record
+        $insertSubmissionQuery = $conn->prepare("
+            INSERT INTO assignment_submissions (
+                AssignmentID, StudentID, SubmissionText, SubmittedAt, IsLate, Status
+            ) VALUES (?, ?, ?, NOW(), ?, 'submitted')
+        ");
+        $insertSubmissionQuery->bind_param("iisi", $assignmentID, $studentID, $submissionText, $isLate);
+        $insertSubmissionQuery->execute();
 
-        // Insert file attachments if any
-        if (!empty($uploadedFiles)) {
-            $fileQuery = "INSERT INTO assignment_submission_files (SubmissionID, FileName, FilePath, FileSize) VALUES (?, ?, ?, ?)";
-            $stmt = $conn->prepare($fileQuery);
+        $submissionID = $conn->insert_id;
 
-            foreach ($uploadedFiles as $file) {
-                $stmt->bind_param("issi", $submissionId, $file['original_name'], $file['file_path'], $file['file_size']);
-                $stmt->execute();
+        // Handle file uploads
+        if (isset($_FILES['submission_files']) && !empty($_FILES['submission_files']['name'][0])) {
+            $uploadDir = __DIR__ . '/../uploads/assignments/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            $allowedTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'text/plain',
+                'image/jpeg',
+                'image/jpg',
+                'image/png'
+            ];
+
+            $maxFileSize = 10 * 1024 * 1024; // 10MB
+
+            foreach ($_FILES['submission_files']['tmp_name'] as $key => $tmpName) {
+                $fileName = $_FILES['submission_files']['name'][$key];
+                $fileSize = $_FILES['submission_files']['size'][$key];
+                $fileType = $_FILES['submission_files']['type'][$key];
+
+                // Validate file
+                if ($fileSize > $maxFileSize) {
+                    throw new Exception("File $fileName is too large. Maximum size is 10MB.");
+                }
+
+                if (!in_array($fileType, $allowedTypes)) {
+                    throw new Exception("File type not allowed for $fileName");
+                }
+
+                // Generate unique filename
+                $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+                $uniqueFileName = $submissionID . '_' . time() . '_' . uniqid() . '.' . $fileExtension;
+                $filePath = $uploadDir . $uniqueFileName;
+
+                // Move uploaded file
+                if (!move_uploaded_file($tmpName, $filePath)) {
+                    throw new Exception("Failed to upload file $fileName");
+                }
+
+                // Insert file record
+                $insertFileQuery = $conn->prepare("
+                    INSERT INTO assignment_submission_files (
+                        SubmissionID, FileName, FilePath, FileSize, FileType
+                    ) VALUES (?, ?, ?, ?, ?)
+                ");
+                $relativePath = 'uploads/assignments/' . $uniqueFileName;
+                $insertFileQuery->bind_param("issis", $submissionID, $fileName, $relativePath, $fileSize, $fileType);
+                $insertFileQuery->execute();
             }
         }
 
         // Create notification for teacher
-        notifyAssignmentSubmission(
-            $conn,
-            $student['StudentID'],
-            $assignmentId,
-            $assignment['TeacherID'],
-            $assignment['SubjectID']
-        );
+        $notificationQuery = $conn->prepare("
+            INSERT INTO notifications (
+                teacher_id, title, message, icon, type, action_type, action_data
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
 
+        $notificationTitle = "New Assignment Submission";
+        $notificationMessage = "Student " . $_SESSION['Username'] . " has submitted assignment: " . $assignment['Title'];
+        $notificationIcon = "upload";
+        $notificationType = "info";
+        $actionType = "assignment_submitted";
+        $actionData = json_encode([
+            'assignment_id' => $assignmentID,
+            'submission_id' => $submissionID,
+            'student_id' => $studentID
+        ]);
+
+        $notificationQuery->bind_param(
+            "issssss",
+            $assignment['TeacherID'],
+            $notificationTitle,
+            $notificationMessage,
+            $notificationIcon,
+            $notificationType,
+            $actionType,
+            $actionData
+        );
+        $notificationQuery->execute();
+
+        // Commit transaction
         $conn->commit();
 
         echo json_encode([
             'success' => true,
             'message' => 'Assignment submitted successfully',
-            'submission_id' => $submissionId,
-            'files_count' => count($uploadedFiles)
+            'submission_id' => $submissionID
         ]);
     } catch (Exception $e) {
+        // Rollback transaction
         $conn->rollback();
         throw $e;
     }
 } catch (Exception $e) {
-    error_log("Error submitting assignment: " . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Server error occurred']);
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 }

@@ -9,10 +9,21 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'admin') {
 
 include '../../config/db_config.php';
 include '../../helpers/helpers.php';
+include '../../helpers/notification_helpers.php';
 
 $successMsg = '';
 $errorMsg = '';
 $errors = [];             //declare array
+
+// Retrieve form errors from session if they exist
+if (isset($_SESSION['form_errors'])) {
+    $errors = $_SESSION['form_errors'];
+    unset($_SESSION['form_errors']);
+}
+if (isset($_SESSION['form_data'])) {
+    $formData = $_SESSION['form_data'];
+    unset($_SESSION['form_data']);
+}
 
 // Move these functions to the top so they are available everywhere
 function isValidFormattedName($Fullname)
@@ -69,6 +80,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $errors['Contact'] = "Contact number is required.";
     } elseif (!preg_match('/^\d{10}$/', $Contact)) {
         $errors['Contact'] = "Contact number must be exactly 10 digits.";
+    } else {
+        // Check if contact number already exists in database
+        $contactCheck = $conn->prepare("SELECT a.AdminID FROM admins a WHERE a.Contact = ?");
+        $contactCheck->bind_param("s", $Contact);
+        $contactCheck->execute();
+        $contactCheck->store_result();
+
+        if ($contactCheck->num_rows > 0) {
+            $errors['Contact'] = "This contact number is already registered by another administrator.";
+        }
+        $contactCheck->close();
     }
 
     if (empty($Address)) {
@@ -123,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $emailCheck->store_result();
 
         if ($emailCheck->num_rows > 0) {
-            $errorMsg = "This email is already registered.";
+            $errors['Email'] = "This email is already registered.";
         } else {
             // Begin transaction
             $conn->begin_transaction();
@@ -143,29 +165,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                 $conn->commit();
 
-                // Create notification for new admin registration
-                createNotification(
-                    $conn,
-                    null,
-                    'admin',
-                    "New Administrator Added",
-                    "Administrator '{$FullName}' has been successfully added to the system.",
-                    'user-plus',
-                    'info'
-                );
+                // Create notification for new admin registration using enhanced notification system
+                notifyAllAdmins($conn, $_SESSION['UserID'], 'added', 'admin', $FullName);
 
                 $_SESSION['success_message'] = "Admin added successfully.";
                 header("Location: " . $_SERVER['PHP_SELF']);
                 exit();
             } catch (Exception $e) {
                 $conn->rollback();
-                $errorMsg = "Error adding admin: " . $e->getMessage();
+                $errors['general'] = "Error adding admin: " . $e->getMessage();
             }
 
             if (isset($stmt1)) $stmt1->close();
             if (isset($stmt2)) $stmt2->close();
         }
         $emailCheck->close();
+    }
+
+    // If there are errors, store them in session to display in modal
+    if (!empty($errors)) {
+        $_SESSION['form_errors'] = $errors;
+        $_SESSION['form_data'] = $_POST;
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
     }
 }
 
@@ -188,6 +210,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
     if (!preg_match('/^\d{10}$/', $Contact)) {
         $errors['Contact'] = "Contact number must be exactly 10 digits.";
+    } else {
+        // Check if contact number already exists for other admins
+        $contactCheck = $conn->prepare("SELECT a.AdminID FROM admins a WHERE a.Contact = ? AND a.AdminID != ?");
+        $contactCheck->bind_param("si", $Contact, $adminID);
+        $contactCheck->execute();
+        $contactCheck->store_result();
+
+        if ($contactCheck->num_rows > 0) {
+            $errors['Contact'] = "This contact number is already registered by another administrator.";
+        }
+        $contactCheck->close();
     }
     if (empty($Address)) {
         $errors['Address'] = "Address is required.";
@@ -283,6 +316,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $conn->commit();
             error_log('[ADMIN UPDATE] Transaction committed for AdminID=' . $adminID . ', hasChanges=' . ($hasChanges ? 'true' : 'false'));
             if ($hasChanges) {
+                // Create notification for admin update
+                notifyAllAdmins($conn, $_SESSION['UserID'], 'edited', 'admin', $FullName);
                 $_SESSION['success_message'] = "Administrator details updated successfully.";
             } else {
                 $_SESSION['info_message'] = "No changes were made to the administrator details.";
@@ -314,18 +349,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $updateStmt->bind_param("si", $newStatus, $adminID);
 
         if ($updateStmt->execute()) {
+            // Get admin name for notification
+            $adminNameStmt = $conn->prepare("SELECT a.FullName FROM admins a WHERE a.AdminID = ?");
+            $adminNameStmt->bind_param("i", $adminID);
+            $adminNameStmt->execute();
+            $adminName = $adminNameStmt->get_result()->fetch_assoc()['FullName'];
+            $adminNameStmt->close();
+
             // Create notification for admin status change
             $statusAction = $newStatus === 'active' ? 'activated' : 'deactivated';
-            createNotification(
-                $conn,
-                null,
-                'admin',
-                "Administrator Status Updated",
-                "An administrator account has been {$statusAction}.",
-                'settings',
-                'warning'
-            );
-            
+            notifyAllAdmins($conn, $_SESSION['UserID'], $statusAction, 'admin', $adminName);
+
             $_SESSION['success_message'] = "Admin status updated successfully.";
         } else {
             $_SESSION['error_message'] = "Failed to update admin status.";
@@ -388,6 +422,27 @@ foreach ($statsQueries as $key => $query) {
     <script src="../../assets/js/lucide.min.js"></script>
     <script src="../../assets/js/manage_teacher.js" defer></script>
     <script src="../../assets/js/navbar_admin.js" defer></script>
+    <style>
+        .toggle-password {
+            border-left: none;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .toggle-password:hover {
+            background-color: #e9ecef;
+        }
+
+        .input-group .form-control {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .error {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -569,7 +624,6 @@ foreach ($statsQueries as $key => $query) {
                                 <td>
                                     <div>
                                         <div class="fw-semibold"><?= htmlspecialchars($admin['FullName']) ?></div>
-                                        <small class="text-muted">ID: <?= $admin['AdminID'] ?></small>
                                     </div>
                                 </td>
                                 <td>
@@ -742,7 +796,7 @@ foreach ($statsQueries as $key => $query) {
                                     Full Name <span class="required-field">*</span>
                                 </label>
                                 <input name="FullName" type="text" class="form-control" required placeholder="Enter full name"
-                                    value="<?php echo htmlspecialchars($_POST['FullName'] ?? ''); ?>" />
+                                    value="<?php echo htmlspecialchars($formData['FullName'] ?? $_POST['FullName'] ?? ''); ?>" />
                                 <span class="error text-danger"><?php echo $errors['FullName'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
@@ -750,13 +804,13 @@ foreach ($statsQueries as $key => $query) {
                                     Email Address <span class="required-field">*</span>
                                 </label>
                                 <input name="Email" type="email" class="form-control" required placeholder="admin@example.com"
-                                    value="<?php echo htmlspecialchars($_POST['Email'] ?? ''); ?>" />
+                                    value="<?php echo htmlspecialchars($formData['Email'] ?? $_POST['Email'] ?? ''); ?>" />
                                 <span class="error text-danger"><?php echo $errors['Email'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Contact Number</label>
                                 <input name="Contact" type="tel" class="form-control" placeholder="98xxxxxxxx"
-                                    value="<?php echo htmlspecialchars($_POST['Contact'] ?? ''); ?>" />
+                                    value="<?php echo htmlspecialchars($formData['Contact'] ?? $_POST['Contact'] ?? ''); ?>" />
                                 <span class="error text-danger"><?php echo $errors['Contact'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
@@ -768,7 +822,7 @@ foreach ($statsQueries as $key => $query) {
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address</label>
-                                <textarea name="Address" class="form-control" rows="2" placeholder="Enter full address"><?php echo htmlspecialchars($_POST['Address'] ?? ''); ?></textarea>
+                                <textarea name="Address" class="form-control" rows="2" placeholder="Enter full address"><?php echo htmlspecialchars($formData['Address'] ?? $_POST['Address'] ?? ''); ?></textarea>
                                 <span class="error text-danger"><?php echo $errors['Address'] ?? ''; ?></span>
                             </div>
 
@@ -780,16 +834,28 @@ foreach ($statsQueries as $key => $query) {
                                 <label class="form-label">
                                     Password <span class="required-field">*</span>
                                 </label>
-                                <input name="Password" type="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters"
-                                    value="<?php echo htmlspecialchars($_POST['Password'] ?? ''); ?>" />
+                                <div class="input-group">
+                                    <input name="Password" type="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters"
+                                        value="<?php echo htmlspecialchars($formData['Password'] ?? $_POST['Password'] ?? ''); ?>" />
+                                    <button type="button" class="btn btn-outline-secondary toggle-password" data-target="Password">
+                                        <i data-lucide="eye" class="eye-icon"></i>
+                                        <i data-lucide="eye-off" class="eye-off-icon" style="display: none;"></i>
+                                    </button>
+                                </div>
                                 <span class="error text-danger"><?php echo $errors['Password'] ?? ''; ?></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">
                                     Confirm Password <span class="required-field">*</span>
                                 </label>
-                                <input name="ConfirmPassword" type="password" class="form-control" required placeholder="Re-enter password"
-                                    value="<?php echo htmlspecialchars($_POST['ConfirmPassword'] ?? ''); ?>" />
+                                <div class="input-group">
+                                    <input name="ConfirmPassword" type="password" class="form-control" required placeholder="Re-enter password"
+                                        value="<?php echo htmlspecialchars($formData['ConfirmPassword'] ?? $_POST['ConfirmPassword'] ?? ''); ?>" />
+                                    <button type="button" class="btn btn-outline-secondary toggle-password" data-target="ConfirmPassword">
+                                        <i data-lucide="eye" class="eye-icon"></i>
+                                        <i data-lucide="eye-off" class="eye-off-icon" style="display: none;"></i>
+                                    </button>
+                                </div>
                                 <span class="error text-danger"><?php echo $errors['ConfirmPassword'] ?? ''; ?></span>
                             </div>
                         </div>
@@ -990,6 +1056,32 @@ foreach ($statsQueries as $key => $query) {
         // Initialize form change detection
         document.addEventListener('DOMContentLoaded', () => {
             setupFormChangeDetection();
+
+            // Show password functionality
+            document.querySelectorAll('.toggle-password').forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetName = this.getAttribute('data-target');
+                    const input = document.querySelector(`input[name="${targetName}"]`);
+                    const eyeIcon = this.querySelector('.eye-icon');
+                    const eyeOffIcon = this.querySelector('.eye-off-icon');
+
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        eyeIcon.style.display = 'none';
+                        eyeOffIcon.style.display = 'inline';
+                    } else {
+                        input.type = 'password';
+                        eyeIcon.style.display = 'inline';
+                        eyeOffIcon.style.display = 'none';
+                    }
+                });
+            });
+
+            // Show modal with errors if they exist
+            <?php if (!empty($errors)): ?>
+                const addAdminModal = new bootstrap.Modal(document.getElementById('addAdminModal'));
+                addAdminModal.show();
+            <?php endif; ?>
         });
     </script>
 </body>

@@ -910,3 +910,240 @@ body.dark-mode .bg-info {
   width: 1rem;
   height: 1rem;
 }
+
+/* Dark mode responsive styles for attendance update mode */
+.alert-info {
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+  color: #0c5460;
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .alert-info {
+  background-color: #1a2a3a;
+  border-color: #2d4a5a;
+  color: #b8d4e3;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+  color: #856404;
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .alert-warning {
+  background-color: #3a2e1a;
+  border-color: #5a4a2a;
+  color: #f4d03f;
+}
+
+/* Update mode specific styles */
+.alert-info .text-info {
+  color: #0c5460 !important;
+}
+
+body.dark-mode .alert-info .text-info {
+  color: #4fc3f7 !important;
+}
+
+.alert-info h6 {
+  color: #0c5460;
+  font-weight: 600;
+}
+
+body.dark-mode .alert-info h6 {
+  color: #4fc3f7;
+}
+
+.alert-info .text-muted {
+  color: #6c757d !important;
+}
+
+body.dark-mode .alert-info .text-muted {
+  color: #a0a0a0 !important;
+}
+
+/* Update mode button styles */
+.btn-warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #000;
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .btn-warning {
+  background-color: #ff9800;
+  border-color: #ff9800;
+  color: #000;
+}
+
+.btn-warning:hover {
+  background-color: #e0a800;
+  border-color: #d39e00;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+}
+
+body.dark-mode .btn-warning:hover {
+  background-color: #f57c00;
+  border-color: #f57c00;
+  color: #000;
+  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+}
+
+/* Debug mode styles */
+.alert-info.small {
+  font-size: 0.875rem;
+  padding: 0.75rem;
+}
+
+body.dark-mode .alert-info.small {
+  background-color: #1a2a3a;
+  border-color: #2d4a5a;
+}
+
+.alert-info.small h6 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.alert-info.small strong {
+  color: #0c5460;
+  font-weight: 600;
+}
+
+body.dark-mode .alert-info.small strong {
+  color: #4fc3f7;
+}
+
+/* Update mode visual indicator */
+.alert-warning small {
+  color: #856404;
+}
+
+body.dark-mode .alert-warning small {
+  color: #f4d03f;
+}
+
+.alert-warning .me-1 {
+  color: #856404;
+}
+
+body.dark-mode .alert-warning .me-1 {
+  color: #f4d03f;
+}
+
+/* Debug button styles */
+.btn-outline-info.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+}
+
+body.dark-mode .btn-outline-info.btn-sm {
+  border-color: #4fc3f7;
+  color: #4fc3f7;
+}
+
+.btn-outline-info.btn-sm:hover {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+  color: white;
+}
+
+body.dark-mode .btn-outline-info.btn-sm:hover {
+  background-color: #4fc3f7;
+  border-color: #4fc3f7;
+  color: #000;
+}
+
+/* Update mode student row styling */
+.student-row.update-mode {
+  background-color: #fff8e1 !important;
+  border: 1px solid #ffc107 !important;
+  border-radius: 6px;
+  margin-bottom: 6px !important;
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .student-row.update-mode {
+  background-color: #3a2e1a !important;
+  border: 1px solid #ff9800 !important;
+}
+
+/* Update mode button group */
+.d-flex.gap-2.justify-content-center {
+  gap: 0.5rem !important;
+}
+
+@media (max-width: 576px) {
+  .d-flex.gap-2.justify-content-center {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
+  
+  .d-flex.gap-2.justify-content-center .btn {
+    width: 100%;
+  }
+}
+
+/* Update mode attendance summary */
+.alert-info small.text-muted {
+  color: #6c757d !important;
+  font-size: 0.875rem;
+}
+
+body.dark-mode .alert-info small.text-muted {
+  color: #a0a0a0 !important;
+}
+
+/* Debug information styling */
+.alert-info .text-danger {
+  color: #dc3545 !important;
+}
+
+body.dark-mode .alert-info .text-danger {
+  color: #ff6b6b !important;
+}
+
+.alert-info .text-success {
+  color: #28a745 !important;
+}
+
+body.dark-mode .alert-info .text-success {
+  color: #40d962 !important;
+}
+
+/* Update mode responsive adjustments */
+@media (max-width: 768px) {
+  .alert-info, .alert-warning {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .alert-info h6 {
+    font-size: 1rem;
+  }
+  
+  .d-flex.gap-2.justify-content-center {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 576px) {
+  .alert-info, .alert-warning {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .alert-info h6 {
+    font-size: 0.9rem;
+  }
+  
+  .btn-warning {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}

@@ -52,138 +52,78 @@ try {
         exit();
     }
 
-    // Check if device is registered OR auto-register for testing
+    // Check if device is registered - REQUIRED for QR attendance
     if (!$student['DeviceRegistered']) {
-        error_log("DEVICE NOT REGISTERED: Auto-registering device for StudentID: " . $student['StudentID']);
+        error_log("DEVICE NOT REGISTERED: StudentID: " . $student['StudentID'] . " attempted QR attendance without device registration");
+        echo json_encode([
+            'success' => false,
+            'message' => 'Device registration required. Please register your device first before scanning QR codes.',
+            'error_code' => 'DEVICE_NOT_REGISTERED'
+        ]);
+        exit();
+    }
 
-        // Auto-register device and clean up duplicate device fingerprints
-        // First, check if this device fingerprint is already registered to another student
-        if (isset($_POST['device_fingerprint'])) {
-            $deviceFingerprint = $_POST['device_fingerprint'];
-            error_log("DEVICE FINGERPRINT PROVIDED: " . $deviceFingerprint);
+    // Device is registered, verify the current device fingerprint matches
+    if (isset($_POST['device_fingerprint'])) {
+        $deviceFingerprint = $_POST['device_fingerprint'];
 
-            $existingDeviceStmt = $conn->prepare("SELECT StudentID, s.FullName FROM student_devices sd JOIN students s ON sd.StudentID = s.StudentID WHERE sd.DeviceFingerprint = ? AND sd.StudentID != ?");
-            $existingDeviceStmt->bind_param("si", $deviceFingerprint, $student['StudentID']);
-            $existingDeviceStmt->execute();
-            $existingDeviceRes = $existingDeviceStmt->get_result();
-            $existingDevice = $existingDeviceRes->fetch_assoc();
-            $existingDeviceStmt->close();
+        $deviceCheckStmt = $conn->prepare("SELECT COUNT(*) as count FROM student_devices WHERE StudentID = ? AND DeviceFingerprint = ? AND IsActive = TRUE");
+        $deviceCheckStmt->bind_param("is", $student['StudentID'], $deviceFingerprint);
+        $deviceCheckStmt->execute();
+        $deviceCheckRes = $deviceCheckStmt->get_result();
+        $deviceMatch = $deviceCheckRes->fetch_assoc()['count'] > 0;
+        $deviceCheckStmt->close();
 
-            if ($existingDevice) {
-                error_log("DEVICE SHARING DETECTED: Device {$deviceFingerprint} is already registered to StudentID: {$existingDevice['StudentID']} ({$existingDevice['FullName']})");
+        if (!$deviceMatch) {
+            // Check if this device belongs to another student
+            $otherStudentStmt = $conn->prepare("SELECT s.FullName FROM student_devices sd JOIN students s ON sd.StudentID = s.StudentID WHERE sd.DeviceFingerprint = ? AND sd.StudentID != ? AND sd.IsActive = TRUE");
+            $otherStudentStmt->bind_param("si", $deviceFingerprint, $student['StudentID']);
+            $otherStudentStmt->execute();
+            $otherStudentRes = $otherStudentStmt->get_result();
+            $otherStudent = $otherStudentRes->fetch_assoc();
+            $otherStudentStmt->close();
+
+            if ($otherStudent) {
+                error_log("DEVICE MISMATCH: Device {$deviceFingerprint} belongs to another student ({$otherStudent['FullName']})");
                 echo json_encode([
                     'success' => false,
-                    'message' => 'This device is already registered to another student (' . $existingDevice['FullName'] . '). Each student must use their own device.',
-                    'error_code' => 'DEVICE_ALREADY_REGISTERED'
+                    'message' => 'This device is registered to another student (' . $otherStudent['FullName'] . '). Please use your own registered device.',
+                    'error_code' => 'DEVICE_MISMATCH'
                 ]);
                 exit();
-            }
-
-            // Clean up any old device entries for this student
-            $cleanupStmt = $conn->prepare("DELETE FROM student_devices WHERE StudentID = ?");
-            $cleanupStmt->bind_param("i", $student['StudentID']);
-            $cleanupStmt->execute();
-            $cleanedRows = $cleanupStmt->affected_rows;
-            $cleanupStmt->close();
-            error_log("CLEANED UP {$cleanedRows} old device records for StudentID: " . $student['StudentID']);
-
-            // Register the new device
-            $insertDeviceStmt = $conn->prepare("INSERT INTO student_devices (StudentID, DeviceFingerprint, RegisteredAt) VALUES (?, ?, NOW())");
-            $insertDeviceStmt->bind_param("is", $student['StudentID'], $deviceFingerprint);
-            if ($insertDeviceStmt->execute()) {
-                error_log("DEVICE REGISTERED: Device {$deviceFingerprint} registered to StudentID: {$student['StudentID']}");
             } else {
-                error_log("DEVICE REGISTRATION FAILED: Could not insert device fingerprint for StudentID: " . $student['StudentID'] . ". Error: " . $insertDeviceStmt->error);
+                // Get the registered device fingerprint for this student for debugging
+                $registeredDeviceStmt = $conn->prepare("SELECT DeviceFingerprint FROM student_devices WHERE StudentID = ? AND IsActive = TRUE");
+                $registeredDeviceStmt->bind_param("i", $student['StudentID']);
+                $registeredDeviceStmt->execute();
+                $registeredDeviceRes = $registeredDeviceStmt->get_result();
+                $registeredDevice = $registeredDeviceRes->fetch_assoc();
+                $registeredDeviceStmt->close();
+                
+                $registeredFingerprint = $registeredDevice ? $registeredDevice['DeviceFingerprint'] : 'none';
+                
+                error_log("DEVICE NOT FOUND: Current fingerprint: {$deviceFingerprint}, Registered fingerprint: {$registeredFingerprint}, StudentID: {$student['StudentID']}");
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Device registration failed. Please contact administrator.',
-                    'error_code' => 'DEVICE_INSERT_FAILED'
+                    'message' => 'Device not recognized. Please re-register your device or contact administrator.',
+                    'error_code' => 'DEVICE_NOT_FOUND',
+                    'debug_info' => [
+                        'current_fingerprint' => $deviceFingerprint,
+                        'registered_fingerprint' => $registeredFingerprint,
+                        'student_id' => $student['StudentID']
+                    ]
                 ]);
                 exit();
             }
-            $insertDeviceStmt->close();
-        } else {
-            error_log("ERROR: No device fingerprint provided for auto-registration of StudentID: " . $student['StudentID']);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Device information missing. Please refresh the page and try again.',
-                'error_code' => 'NO_DEVICE_FINGERPRINT'
-            ]);
-            exit();
         }
-
-        $updateDeviceStmt = $conn->prepare("UPDATE students SET DeviceRegistered = TRUE WHERE StudentID = ?");
-        $updateDeviceStmt->bind_param("i", $student['StudentID']);
-        if ($updateDeviceStmt->execute()) {
-            error_log("AUTO-REGISTRATION SUCCESS: Device registered for StudentID: " . $student['StudentID']);
-        } else {
-            error_log("AUTO-REGISTRATION FAILED: Could not update DeviceRegistered flag for StudentID: " . $student['StudentID'] . ". Error: " . $updateDeviceStmt->error);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Device registration incomplete. Please contact administrator.',
-                'error_code' => 'DEVICE_FLAG_UPDATE_FAILED'
-            ]);
-            exit();
-        }
-        $updateDeviceStmt->close();
     } else {
-        // Device is registered, but check if the current device fingerprint matches
-        if (isset($_POST['device_fingerprint'])) {
-            $deviceFingerprint = $_POST['device_fingerprint'];
-
-            $deviceCheckStmt = $conn->prepare("SELECT COUNT(*) as count FROM student_devices WHERE StudentID = ? AND DeviceFingerprint = ?");
-            $deviceCheckStmt->bind_param("is", $student['StudentID'], $deviceFingerprint);
-            $deviceCheckStmt->execute();
-            $deviceCheckRes = $deviceCheckStmt->get_result();
-            $deviceMatch = $deviceCheckRes->fetch_assoc()['count'] > 0;
-            $deviceCheckStmt->close();
-
-            if (!$deviceMatch) {
-                // Check if this device belongs to another student
-                $otherStudentStmt = $conn->prepare("SELECT s.FullName FROM student_devices sd JOIN students s ON sd.StudentID = s.StudentID WHERE sd.DeviceFingerprint = ? AND sd.StudentID != ?");
-                $otherStudentStmt->bind_param("si", $deviceFingerprint, $student['StudentID']);
-                $otherStudentStmt->execute();
-                $otherStudentRes = $otherStudentStmt->get_result();
-                $otherStudent = $otherStudentRes->fetch_assoc();
-                $otherStudentStmt->close();
-
-                if ($otherStudent) {
-                    error_log("DEVICE MISMATCH: Device {$deviceFingerprint} belongs to another student: {$otherStudent['FullName']}");
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'This device is registered to another student. Please use your own registered device.',
-                        'error_code' => 'DEVICE_BELONGS_TO_OTHER_STUDENT'
-                    ]);
-                    exit();
-                } else {
-                    // Device fingerprint not found for this student - this can happen after admin device reset
-                    // Auto-register the current device (admin reset scenario)
-                    error_log("AUTO-REREGISTERING: Device fingerprint missing for StudentID {$student['StudentID']}, re-registering device {$deviceFingerprint}");
-
-                    // Clean up any old device entries for this student
-                    $cleanupStmt = $conn->prepare("DELETE FROM student_devices WHERE StudentID = ?");
-                    $cleanupStmt->bind_param("i", $student['StudentID']);
-                    $cleanupStmt->execute();
-                    $cleanupStmt->close();
-
-                    // Register the current device
-                    $insertDeviceStmt = $conn->prepare("INSERT INTO student_devices (StudentID, DeviceFingerprint, RegisteredAt) VALUES (?, ?, NOW())");
-                    $insertDeviceStmt->bind_param("is", $student['StudentID'], $deviceFingerprint);
-                    if ($insertDeviceStmt->execute()) {
-                        error_log("DEVICE RE-REGISTERED: Device {$deviceFingerprint} re-registered to StudentID: {$student['StudentID']}");
-                    } else {
-                        error_log("DEVICE RE-REGISTRATION FAILED: Could not re-register device for StudentID: " . $student['StudentID']);
-                        echo json_encode([
-                            'success' => false,
-                            'message' => 'Device registration failed. Please contact administrator.',
-                            'error_code' => 'DEVICE_REGISTRATION_FAILED'
-                        ]);
-                        exit();
-                    }
-                    $insertDeviceStmt->close();
-                }
-            }
-        }
+        error_log("NO DEVICE FINGERPRINT: StudentID: " . $student['StudentID'] . " attempted QR attendance without device fingerprint");
+        echo json_encode([
+            'success' => false,
+            'message' => 'Device information missing. Please refresh the page and try again.',
+            'error_code' => 'NO_DEVICE_FINGERPRINT'
+        ]);
+        exit();
     }
 
     // Find active QR session with this token - check both IsActive and ExpiresAt
@@ -341,7 +281,7 @@ try {
         $insertPendingStmt->close();
 
         error_log("INSERTED NEW PENDING QR SCAN: StudentID {$student['StudentID']} - new pending record created");
-        
+
         // Create notification for teacher about QR scan
         notifyQRScan($conn, $student['StudentID'], $qrSession['TeacherID'], $qrSession['SubjectID'], $qrSession['SessionID']);
     }

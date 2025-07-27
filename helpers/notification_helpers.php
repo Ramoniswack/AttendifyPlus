@@ -511,6 +511,111 @@ function notifyAdminAction($conn, $adminId, $action, $targetType, $targetName)
 }
 
 /**
+ * Create admin notification visible to all admins
+ * 
+ * @param mysqli $conn Database connection
+ * @param int $adminId Admin ID who performed the action
+ * @param string $action Action performed
+ * @param string $targetType Type of target
+ * @param string $targetName Name of target
+ * @return bool Success status
+ */
+function notifyAllAdmins($conn, $adminId, $action, $targetType, $targetName)
+{
+    // Get admin details
+    $adminStmt = $conn->prepare("SELECT a.FullName, a.LoginID FROM admins a WHERE a.AdminID = ?");
+    $adminStmt->bind_param("i", $adminId);
+    $adminStmt->execute();
+    $admin = $adminStmt->get_result()->fetch_assoc();
+
+    if (!$admin) {
+        return false;
+    }
+
+    $actionText = ucfirst($action);
+    $targetTypeText = ucfirst($targetType);
+    $icon = 'activity';
+
+    // Set appropriate icon based on action
+    switch ($action) {
+        case 'added':
+            $icon = 'user-plus';
+            break;
+        case 'edited':
+            $icon = 'edit';
+            break;
+        case 'deleted':
+            $icon = 'user-minus';
+            break;
+        case 'activated':
+            $icon = 'user-check';
+            break;
+        case 'deactivated':
+            $icon = 'user-x';
+            break;
+        default:
+            $icon = 'activity';
+    }
+
+    // Set appropriate icon based on target type
+    switch ($targetType) {
+        case 'admin':
+            $icon = 'shield';
+            break;
+        case 'teacher':
+            $icon = 'graduation-cap';
+            break;
+        case 'subject':
+            $icon = 'book-open';
+            break;
+        case 'student':
+            $icon = 'users';
+            break;
+    }
+
+    // Get all admin login IDs to notify all admins
+    $allAdminsStmt = $conn->prepare("SELECT a.LoginID FROM admins a JOIN login_tbl l ON a.LoginID = l.LoginID WHERE l.Role = 'admin' AND l.Status = 'active'");
+    $allAdminsStmt->execute();
+    $allAdmins = $allAdminsStmt->get_result();
+
+    $success = true;
+    $notificationCount = 0;
+    while ($adminRow = $allAdmins->fetch_assoc()) {
+        $adminParams = [
+            'user_id' => $adminRow['LoginID'],
+            'role' => 'admin',
+            'department_id' => null,
+            'subject_id' => null,
+            'teacher_id' => null,
+            'student_id' => null,
+            'title' => "$targetTypeText $actionText",
+            'message' => "Admin {$admin['FullName']} has $action $targetType: $targetName",
+            'icon' => $icon,
+            'type' => 'info',
+            'action_type' => 'admin_' . strtolower($action) . '_' . strtolower($targetType),
+            'action_data' => [
+                'admin_id' => $adminId,
+                'admin_name' => $admin['FullName'],
+                'action' => $action,
+                'target_type' => $targetType,
+                'target_name' => $targetName
+            ]
+        ];
+
+        if (createEnhancedNotification($conn, $adminParams)) {
+            $notificationCount++;
+        } else {
+            $success = false;
+        }
+    }
+
+    error_log("notifyAllAdmins: Created $notificationCount notifications for admin action: $action $targetType $targetName");
+
+    $allAdminsStmt->close();
+    return $success;
+}
+
+/**
  * Get notifications with enhanced filtering
  * 
  * @param mysqli $conn Database connection

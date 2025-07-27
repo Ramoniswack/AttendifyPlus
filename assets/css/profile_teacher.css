@@ -1,0 +1,693 @@
+/* Profile Teacher CSS - Dark Mode Responsive */
+
+/* Profile Photo */
+.profile-photo {
+  position: relative;
+}
+
+.profile-photo img {
+  border: 4px solid var(--card-light);
+  box-shadow: 0 4px 15px var(--shadow-light);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .profile-photo img {
+  border-color: var(--card-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+.profile-photo .rounded-circle {
+  border: 4px solid var(--card-light);
+  box-shadow: 0 4px 15px var(--shadow-light);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .profile-photo .rounded-circle {
+  border-color: var(--card-dark);
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+/* Profile Info */
+.profile-info {
+  color: var(--text-light);
+}
+
+body.dark-mode .profile-info {
+  color: var(--text-dark);
+}
+
+.profile-info .d-flex {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-light);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .profile-info .d-flex {
+  border-bottom-color: var(--border-dark);
+}
+
+.profile-info .d-flex:last-child {
+  border-bottom: none;
+}
+
+.profile-info i {
+  color: var(--accent-light);
+  opacity: 0.8;
+}
+
+body.dark-mode .profile-info i {
+  color: var(--accent-dark);
+}
+
+/* Form Enhancements */
+.form-control:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25);
+}
+
+body.dark-mode .form-control:focus {
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 0.2rem rgba(0, 255, 200, 0.25);
+}
+
+.form-label {
+  font-weight: 500;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+}
+
+body.dark-mode .form-label {
+  color: var(--text-dark);
+}
+
+/* Card Enhancements */
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px var(--shadow-light);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .card {
+  box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--shadow-light);
+}
+
+body.dark-mode .card:hover {
+  box-shadow: 0 8px 25px var(--shadow-dark);
+}
+
+.card-header {
+  background: var(--card-light);
+  border-bottom: 1px solid var(--border-light);
+  border-radius: 12px 12px 0 0 !important;
+  padding: 1.25rem 1.5rem;
+}
+
+body.dark-mode .card-header {
+  background: var(--card-dark);
+  border-bottom-color: var(--border-dark);
+}
+
+.card-title {
+  color: var(--text-light);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+body.dark-mode .card-title {
+  color: var(--text-dark);
+}
+
+.card-title i {
+  color: var(--accent-light);
+}
+
+body.dark-mode .card-title i {
+  color: var(--accent-dark);
+}
+
+/* Button Enhancements */
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary {
+  background: var(--accent-light);
+  border-color: var(--accent-light);
+}
+
+body.dark-mode .btn-primary {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: #000;
+}
+
+.btn-outline-primary {
+  border-color: var(--accent-light);
+  color: var(--accent-light);
+}
+
+body.dark-mode .btn-outline-primary {
+  border-color: var(--accent-dark);
+  color: var(--accent-dark);
+}
+
+.btn-outline-primary:hover {
+  background: var(--accent-light);
+  border-color: var(--accent-light);
+  color: white;
+}
+
+body.dark-mode .btn-outline-primary:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: #000;
+}
+
+.btn-outline-warning {
+  border-color: #ffc107;
+  color: #ffc107;
+}
+
+body.dark-mode .btn-outline-warning {
+  border-color: #f4d03f;
+  color: #f4d03f;
+}
+
+.btn-outline-warning:hover {
+  background: #ffc107;
+  border-color: #ffc107;
+  color: #000;
+}
+
+body.dark-mode .btn-outline-warning:hover {
+  background: #f4d03f;
+  border-color: #f4d03f;
+  color: #000;
+}
+
+/* Alert Enhancements */
+.alert {
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.alert-success {
+  background: rgba(25, 135, 84, 0.1);
+  color: #0f5132;
+  border-left: 4px solid #28a745;
+}
+
+body.dark-mode .alert-success {
+  background: rgba(25, 135, 84, 0.15);
+  color: #40d962;
+  border-left-color: #40d962;
+}
+
+.alert-danger {
+  background: rgba(220, 53, 69, 0.1);
+  color: #721c24;
+  border-left: 4px solid #dc3545;
+}
+
+body.dark-mode .alert-danger {
+  background: rgba(220, 53, 69, 0.15);
+  color: #ff6b6b;
+  border-left-color: #ff6b6b;
+}
+
+/* File Input Enhancement */
+.form-control[type="file"] {
+  padding: 0.5rem;
+  background: var(--card-light);
+  border: 2px dashed var(--border-light);
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .form-control[type="file"] {
+  background: var(--card-dark);
+  border-color: var(--border-dark);
+}
+
+.form-control[type="file"]:hover {
+  border-color: var(--accent-light);
+  background: rgba(26, 115, 232, 0.05);
+}
+
+body.dark-mode .form-control[type="file"]:hover {
+  border-color: var(--accent-dark);
+  background: rgba(0, 255, 200, 0.05);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .card-header {
+    padding: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .profile-photo img,
+  .profile-photo .rounded-circle {
+    width: 100px !important;
+    height: 100px !important;
+  }
+  
+  .profile-photo .rounded-circle i {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  .row.g-4 {
+    --bs-gutter-x: 1rem;
+    --bs-gutter-y: 1rem;
+  }
+  
+  .col-lg-8,
+  .col-lg-4 {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Animation Enhancements */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+.card:nth-child(4) { animation-delay: 0.4s; }
+
+/* Focus States for Accessibility */
+.btn:focus,
+.form-control:focus {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+body.dark-mode .btn:focus,
+body.dark-mode .form-control:focus {
+  outline-color: var(--accent-dark);
+}
+
+/* Print Styles */
+@media print {
+  body.dark-mode {
+    background: white !important;
+    color: black !important;
+  }
+  
+  body.dark-mode .card {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  .btn {
+    display: none !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  body.dark-mode {
+    --border-dark: #666;
+    --text-dark: #fff;
+    --card-dark: #000;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+} 
+
+/* Enhanced Mobile Responsiveness for Profile Teacher */
+
+/* Mobile-First Responsive Design */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .page-header .d-flex {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .page-header .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-header {
+    padding: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .profile-photo img,
+  .profile-photo .rounded-circle {
+    width: 80px !important;
+    height: 80px !important;
+  }
+  
+  .profile-photo .rounded-circle i {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .profile-info {
+    font-size: 0.875rem;
+  }
+  
+  .profile-info .d-flex {
+    padding: 0.75rem 0;
+  }
+  
+  .form-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .form-control,
+  .form-select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.75rem;
+  }
+  
+  .row.g-4 {
+    --bs-gutter-x: 1rem;
+    --bs-gutter-y: 1rem;
+  }
+  
+  .col-lg-8,
+  .col-lg-4 {
+    margin-bottom: 1rem;
+  }
+  
+  /* Stack form elements vertically on mobile */
+  .row.g-3 > div {
+    margin-bottom: 1rem;
+  }
+  
+  .row.g-3 > div:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-container {
+    padding: 0.75rem;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .page-title i {
+    align-self: flex-start;
+  }
+  
+  .card {
+    margin-bottom: 1rem;
+    border-radius: 8px;
+  }
+  
+  .card-header {
+    padding: 0.75rem;
+    border-radius: 8px 8px 0 0 !important;
+  }
+  
+  .card-body {
+    padding: 0.75rem;
+  }
+  
+  .card-title {
+    font-size: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .card-title i {
+    align-self: flex-start;
+  }
+  
+  .profile-photo img,
+  .profile-photo .rounded-circle {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  .profile-photo .rounded-circle i {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  
+  .profile-info {
+    font-size: 0.8rem;
+  }
+  
+  .profile-info .d-flex {
+    padding: 0.5rem 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .profile-info i {
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+  }
+  
+  .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .btn:last-child {
+    margin-bottom: 0;
+  }
+  
+  .form-control,
+  .form-select {
+    padding: 0.5rem;
+    font-size: 16px;
+  }
+  
+  .form-label {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .alert {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .alert .btn-close {
+    padding: 0.75rem;
+  }
+  
+  /* Make form groups stack properly */
+  .row.g-3 {
+    margin: 0;
+  }
+  
+  .row.g-3 > div {
+    padding: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .row.g-3 > div:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Profile summary adjustments */
+  .col-lg-4 .card {
+    margin-top: 1rem;
+  }
+  
+  .profile-photo {
+    margin-bottom: 1rem;
+  }
+  
+  .profile-info {
+    text-align: left;
+  }
+}
+
+/* Extra Small Devices */
+@media (max-width: 375px) {
+  .dashboard-container {
+    padding: 0.5rem;
+  }
+  
+  .page-title {
+    font-size: 1.25rem;
+  }
+  
+  .card-header {
+    padding: 0.5rem;
+  }
+  
+  .card-body {
+    padding: 0.5rem;
+  }
+  
+  .btn {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .form-control,
+  .form-select {
+    padding: 0.5rem;
+    font-size: 16px;
+  }
+  
+  .profile-photo img,
+  .profile-photo .rounded-circle {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .profile-photo .rounded-circle i {
+    width: 20px !important;
+    height: 20px !important;
+  }
+}
+
+/* Landscape Mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .page-header {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .page-header .d-flex {
+    width: auto;
+  }
+  
+  .page-header .btn {
+    width: auto;
+    margin-bottom: 0;
+  }
+  
+  .profile-photo img,
+  .profile-photo .rounded-circle {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  .profile-photo .rounded-circle i {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .btn {
+    min-height: 44px; /* Minimum touch target size */
+  }
+  
+  .form-control,
+  .form-select {
+    min-height: 44px;
+  }
+  
+  .card:hover {
+    transform: none;
+  }
+  
+  .btn:hover {
+    transform: none;
+  }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .profile-photo img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+} 

@@ -748,6 +748,54 @@ body.dark-mode .sidebar h5 {
   z-index: 1060 !important;
 }
 
+/* ===== SEMESTER MANAGEMENT AND STATS CARDS DARK MODE ===== */
+.bg-light {
+  background-color: #f8f9fa !important;
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+body.dark-mode .bg-light {
+  background-color: #2d3748 !important;
+  border: 1px solid #4a5568;
+}
+
+body.dark-mode .bg-light .text-muted {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode .bg-light .fw-semibold {
+  color: #ffffff !important;
+}
+
+body.dark-mode .bg-light .h4 {
+  color: #ffffff !important;
+}
+
+body.dark-mode .bg-light .text-primary {
+  color: #63b3ed !important;
+}
+
+body.dark-mode .bg-light .text-danger {
+  color: #fc8181 !important;
+}
+
+body.dark-mode .bg-light .btn-primary {
+  background-color: #3182ce;
+  border-color: #3182ce;
+}
+
+body.dark-mode .bg-light .btn-primary:hover {
+  background-color: #2c5aa0;
+  border-color: #2c5aa0;
+}
+
+body.dark-mode .bg-light .btn-primary:focus {
+  background-color: #2c5aa0;
+  border-color: #2c5aa0;
+  box-shadow: 0 0 0 0.25rem rgba(49, 130, 206, 0.25);
+}
+
 /* ===== RESPONSIVE DESIGN (EXACT MATCH FROM MANAGE_ADMIN.CSS) ===== */
 @media (max-width: 1200px) {
   .page-title {

@@ -8,7 +8,10 @@ if (!isset($_SESSION['UserID']) || strtolower($_SESSION['Role']) !== 'student') 
 include '../../config/db_config.php';
 
 // Get current student's StudentID
-$currentStudentQuery = "SELECT StudentID, SemesterID, DepartmentID, FullName, DeviceRegistered FROM students WHERE LoginID = ?";
+$currentStudentQuery = "SELECT s.StudentID, s.SemesterID, s.DepartmentID, s.FullName, s.DeviceRegistered, l.Email 
+                       FROM students s 
+                       JOIN login_tbl l ON s.LoginID = l.LoginID 
+                       WHERE s.LoginID = ?";
 $stmt = $conn->prepare($currentStudentQuery);
 $stmt->bind_param("i", $_SESSION['LoginID']);
 $stmt->execute();
@@ -250,10 +253,17 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
                     <div class="mini-stat-desc text-muted mt-1">
                         <?php if ($hasRegisteredDevice): ?>
                             <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i> Registered
+                            <br><button class="btn btn-sm btn-outline-warning mt-2" onclick="clearDeviceRegistration()">
+                                <i data-lucide="refresh-cw" style="width: 12px; height: 12px;"></i> Re-register Device
+                            </button>
                         <?php elseif ($pendingToken): ?>
                             <i data-lucide="clock" style="width: 14px; height: 14px;"></i> Registration Available
+                            <br><button class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#deviceRegistrationModal">
+                                <i data-lucide="smartphone" style="width: 12px; height: 12px;"></i> Register Now
+                            </button>
                         <?php else: ?>
                             <i data-lucide="x-circle" style="width: 14px; height: 14px;"></i> Not Registered
+                            <br><small class="text-muted">Contact admin for token</small>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -265,7 +275,7 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
                 <div class="mini-stat-card h-100 p-4">
                     <div class="mini-card-title mb-2">Notifications & Reminders</div>
                     <ul class="mini-notification-list">
-                        <li><span class="mini-notification-title">Tomorrow Holiday</span><br><span class="mini-notification-desc text-muted">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur...</span></li>
+                        <li><span class="mini-notification-title">Tomorrow Holiday</span><br><span class="mini-notification-desc text-muted">There will be No DLS class tomorrow, So All the Students are informed to join the classes from second period</span></li>
                     </ul>
                 </div>
             </div>
@@ -634,73 +644,77 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
 
         function confirmDeviceRegistration() {
             const statusDiv = document.getElementById('registrationStatus');
-            const confirmBtn = document.getElementById('confirmRegisterBtn');
             const modalFooter = document.querySelector('#deviceRegistrationModal .modal-footer');
+            const confirmBtn = document.getElementById('confirmRegisterBtn');
 
             // Show loading state
             statusDiv.style.display = 'block';
             modalFooter.style.display = 'none';
+            confirmBtn.disabled = true;
 
             // Generate device fingerprint
             const fingerprint = generateDeviceFingerprint();
+            const deviceName = 'Device-' + fingerprint.substring(0, 8);
 
+            // First, get the token for this student
             const formData = new FormData();
-            formData.append('fingerprint', fingerprint);
-            formData.append('user_agent', navigator.userAgent);
+            formData.append('email', '<?= htmlspecialchars($studentData['Email'] ?? '') ?>');
 
-            console.log('Sending device registration request...');
-            console.log('Fingerprint:', fingerprint.substring(0, 10) + '...');
+            console.log('Getting device registration token...');
 
-            // Use correct path - remove '../student/' prefix
-            fetch('student_devices.php', {
+            fetch('../../api/get_device_token.php', {
                     method: 'POST',
                     body: formData,
                     credentials: 'same-origin'
                 })
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    return response.text(); // Get as text first for debugging
-                })
-                .then(text => {
-                    console.log('Raw response:', text);
-                    try {
-                        const data = JSON.parse(text);
-                        console.log('Parsed response:', data);
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Token response:', data);
 
-                        if (data.success) {
-                            statusDiv.innerHTML = `
-                            <i data-lucide="check-circle" style="width: 48px; height: 48px;" class="text-success"></i>
-                            <p class="text-success mt-2 mb-0">${data.message}</p>
-                        `;
-                            setTimeout(() => location.reload(), 2000);
-                        } else {
-                            statusDiv.innerHTML = `
-                            <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
-                            <p class="text-danger mt-2 mb-0">Error: ${data.error || data.message}</p>
-                        `;
-                            modalFooter.style.display = 'flex';
-                        }
-                    } catch (e) {
-                        console.error('JSON parse error:', e);
+                    if (!data.success) {
+                        throw new Error(data.error || 'Failed to get registration token');
+                    }
+
+                    // Now register the device using the token
+                    const registerData = new FormData();
+                    registerData.append('token', data.token);
+                    registerData.append('fingerprint', fingerprint);
+                    registerData.append('device_name', deviceName);
+                    registerData.append('user_agent', navigator.userAgent);
+
+                    console.log('Registering device with token...');
+
+                    return fetch('../../api/register_device.php', {
+                        method: 'POST',
+                        body: registerData,
+                        credentials: 'same-origin'
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Registration response:', data);
+
+                    if (data.success) {
                         statusDiv.innerHTML = `
-                        <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
-                        <p class="text-danger mt-2 mb-0">Server error: ${text}</p>
+                        <i data-lucide="check-circle" style="width: 48px; height: 48px;" class="text-success"></i>
+                        <p class="text-success mt-2 mb-0">${data.message}</p>
+                        <small class="text-muted">Device: ${data.device_name}</small>
                     `;
-                        modalFooter.style.display = 'flex';
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        throw new Error(data.error || 'Registration failed');
                     }
                 })
                 .catch(error => {
-                    console.error('Fetch error:', error);
+                    console.error('Registration error:', error);
                     statusDiv.innerHTML = `
                     <i data-lucide="x-circle" style="width: 48px; height: 48px;" class="text-danger"></i>
-                    <p class="text-danger mt-2 mb-0">Network error: ${error.message}</p>
+                    <p class="text-danger mt-2 mb-0">Error: ${error.message}</p>
                 `;
                     modalFooter.style.display = 'flex';
                 })
                 .finally(() => {
+                    confirmBtn.disabled = false;
                     if (typeof lucide !== "undefined") {
                         lucide.createIcons();
                     }
@@ -708,21 +722,17 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
         }
 
         function generateDeviceFingerprint() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.textBaseline = 'top';
-            ctx.font = '14px Arial';
-            ctx.fillText('Device fingerprint', 2, 2);
-
             const fingerprint = [
                 navigator.userAgent,
                 navigator.language,
                 screen.width + 'x' + screen.height,
                 screen.colorDepth,
-                new Date().getTimezoneOffset(),
-                canvas.toDataURL(),
                 navigator.hardwareConcurrency || 'unknown',
-                navigator.platform
+                navigator.platform,
+                !!window.sessionStorage,
+                !!window.localStorage,
+                navigator.cookieEnabled,
+                navigator.onLine
             ].join('|');
 
             // Simple hash function
@@ -730,10 +740,49 @@ $assignmentSubmissionJSON = json_encode($assignmentSubmissionData);
             for (let i = 0; i < fingerprint.length; i++) {
                 const char = fingerprint.charCodeAt(i);
                 hash = ((hash << 5) - hash) + char;
-                hash = hash & hash; // Convert to 32bit integer
+                hash = hash & hash; // Convert to 32-bit integer
             }
 
             return Math.abs(hash).toString(16);
+        }
+
+        // Clear device registration function
+        function clearDeviceRegistration() {
+            if (confirm('Are you sure you want to clear your device registration? You will need to register your device again.')) {
+                fetch('../../api/clear_device_registration.php', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Device registration cleared successfully! Please register your device again.', 'success');
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showToast('Failed to clear device registration: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error clearing device registration:', error);
+                    showToast('Error clearing device registration', 'error');
+                });
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info', duration = 5000) {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            toast.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, duration);
         }
 
         // Auto-dismiss alerts after 5 seconds
