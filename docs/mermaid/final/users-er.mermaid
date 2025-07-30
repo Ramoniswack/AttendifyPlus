@@ -1,0 +1,69 @@
+---
+config:
+  layout: elk
+---
+erDiagram
+    login_tbl {
+        int LoginID PK
+        varchar Email UK
+        varchar Password
+        enum Role
+        enum Status
+        datetime CreatedDate
+    }
+    departments {
+        int DepartmentID PK
+        varchar DepartmentName UK
+        varchar DepartmentCode UK
+    }
+    semesters {
+        int SemesterID PK
+        int SemesterNumber
+    }
+    admins {
+        int AdminID PK
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int LoginID FK,UK
+    }
+    teachers {
+        int TeacherID PK
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int LoginID FK,UK
+    }
+    students {
+        int StudentID PK
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int DepartmentID FK
+        int SemesterID FK
+        year JoinYear
+        varchar ProgramCode
+        boolean DeviceRegistered
+        int LoginID FK,UK
+    }
+    subjects {
+        int SubjectID PK
+        varchar SubjectCode
+        varchar SubjectName
+        int CreditHour
+        int LectureHour
+        boolean IsElective
+        int DepartmentID FK
+        int SemesterID FK
+    }
+    login_tbl ||--|| admins : "has"
+    login_tbl ||--|| teachers : "has"
+    login_tbl ||--|| students : "has"
+    departments ||--o{ students : "belongs_to"
+    departments ||--o{ teachers : "has"
+    departments ||--o{ subjects : "offers"
+    semesters ||--o{ students : "enrolled_in"
+    semesters ||--o{ subjects : "taught_in"

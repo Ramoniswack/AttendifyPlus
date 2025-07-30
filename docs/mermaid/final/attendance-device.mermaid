@@ -1,0 +1,86 @@
+---
+config:
+  layout: elk
+---
+erDiagram
+    subjects {
+        int SubjectID PK
+        varchar SubjectCode
+        varchar SubjectName
+        int CreditHour
+        int LectureHour
+        boolean IsElective
+        int DepartmentID FK
+        int SemesterID FK
+    }
+    teacher_subject_map {
+        int MapID PK
+        int TeacherID FK
+        int SubjectID FK
+    }
+    teacher_department_map {
+        int MapID PK
+        int TeacherID FK
+        int DepartmentID FK
+    }
+    attendance_records {
+        int AttendanceID PK
+        int StudentID FK
+        int SubjectID FK
+        int TeacherID FK
+        datetime DateTime
+        enum Status
+        enum Method
+    }
+    qr_attendance_sessions {
+        int SessionID PK
+        int TeacherID FK
+        int SubjectID FK
+        date Date
+        varchar QRToken
+        datetime ExpiresAt
+        boolean IsActive
+        datetime CreatedAt
+    }
+    qr_attendance_pending {
+        int PendingID PK
+        int StudentID FK
+        int TeacherID FK
+        int SubjectID FK
+        int SessionID FK
+        datetime CreatedAt
+        varchar Status
+    }
+    device_registration_tokens {
+        int TokenID PK
+        int StudentID FK
+        varchar Token
+        datetime ExpiresAt
+        boolean Used
+        datetime CreatedAt
+    }
+    student_devices {
+        int DeviceID PK
+        int StudentID FK
+        varchar DeviceFingerprint
+        varchar DeviceName
+        text DeviceInfo
+        boolean IsActive
+        datetime RegisteredAt
+        datetime LastUsed
+    }
+    teachers ||--o{ teacher_subject_map : "teaches"
+    subjects ||--o{ teacher_subject_map : "taught_by"
+    teachers ||--o{ teacher_department_map : "works_in"
+    departments ||--o{ teacher_department_map : "has"
+    students ||--o{ attendance_records : "attends"
+    teachers ||--o{ attendance_records : "takes_attendance"
+    subjects ||--o{ attendance_records : "has_attendance"
+    teachers ||--o{ qr_attendance_sessions : "creates"
+    subjects ||--o{ qr_attendance_sessions : "has_sessions"
+    qr_attendance_sessions ||--o{ qr_attendance_pending : "generates"
+    students ||--o{ qr_attendance_pending : "scans_qr"
+    teachers ||--o{ qr_attendance_pending : "approves"
+    subjects ||--o{ qr_attendance_pending : "for"
+    students ||--o{ device_registration_tokens : "registers_device"
+    students ||--o{ student_devices : "owns_device"

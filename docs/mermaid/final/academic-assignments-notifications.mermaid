@@ -1,0 +1,138 @@
+---
+config:
+  layout: elk
+---
+erDiagram
+    materials {
+        int MaterialID PK
+        int TeacherID FK
+        int SubjectID FK
+        varchar Title
+        text Description
+        varchar FileName
+        varchar OriginalFileName
+        bigint FileSize
+        varchar FileType
+        varchar FilePath
+        datetime UploadDateTime
+        boolean IsActive
+        int DownloadCount
+        varchar Tags
+    }
+    material_access_logs {
+        int LogID PK
+        int MaterialID FK
+        int StudentID FK
+        int TeacherID FK
+        datetime AccessDateTime
+        enum ActionType
+        varchar IPAddress
+    }
+    assignments {
+        int AssignmentID PK
+        int TeacherID FK
+        int SubjectID FK
+        varchar Title
+        text Description
+        text Instructions
+        datetime DueDate
+        int MaxPoints
+        enum Status
+        datetime CreatedAt
+        datetime UpdatedAt
+        boolean IsActive
+        varchar AttachmentPath
+        varchar AttachmentFileName
+        bigint AttachmentFileSize
+        varchar AttachmentFileType
+        enum SubmissionType
+        boolean AllowLateSubmissions
+        text GradingRubric
+    }
+    assignment_submissions {
+        int SubmissionID PK
+        int AssignmentID FK
+        int StudentID FK
+        text SubmissionText
+        varchar FilePath
+        varchar OriginalFileName
+        bigint FileSize
+        datetime SubmittedAt
+        boolean IsLate
+        enum Status
+        decimal Grade
+        decimal MaxGrade
+        text Feedback
+        datetime GradedAt
+        int GradedBy FK
+    }
+    assignment_views {
+        int ViewID PK
+        int AssignmentID FK
+        int StudentID FK
+        datetime ViewedAt
+        int ViewCount
+        datetime LastViewedAt
+    }
+    assignment_submission_files {
+        int FileID PK
+        int SubmissionID FK
+        varchar FileName
+        varchar FilePath
+        bigint FileSize
+        varchar FileType
+        datetime UploadedAt
+    }
+    notifications {
+        int id PK
+        int user_id
+        varchar role
+        int department_id FK
+        int subject_id FK
+        int teacher_id FK
+        int student_id FK
+        varchar title
+        text message
+        varchar icon
+        varchar type
+        varchar action_type
+        json action_data
+        datetime created_at
+    }
+    notification_reads {
+        int id PK
+        int notification_id FK
+        int user_id
+        datetime read_at
+    }
+    student_academic_history {
+        int HistoryID PK
+        int StudentID
+        varchar FullName
+        varchar Contact
+        varchar Address
+        varchar PhotoURL
+        int DepartmentID FK
+        int SemesterID FK
+        year JoinYear
+        varchar ProgramCode
+        int LoginID
+        enum Status
+        text Reason
+        datetime ActionDate
+        int ActionBy FK
+    }
+    teachers ||--o{ materials : "uploads"
+    subjects ||--o{ materials : "has_materials"
+    materials ||--o{ material_access_logs : "tracked"
+    students ||--o{ material_access_logs : "accesses_material"
+    teachers ||--o{ material_access_logs : "logs"
+    teachers ||--o{ assignments : "creates"
+    subjects ||--o{ assignments : "has_assignments"
+    assignments ||--o{ assignment_submissions : "receives"
+    students ||--o{ assignment_submissions : "submits"
+    assignment_submissions ||--o{ assignment_submission_files : "contains"
+    assignments ||--o{ assignment_views : "viewed"
+    students ||--o{ assignment_views : "views"
+    notifications ||--o{ notification_reads : "read_by"
+    admins ||--o{ student_academic_history : "manages"
